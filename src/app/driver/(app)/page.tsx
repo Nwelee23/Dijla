@@ -1,28 +1,37 @@
-import { Inbox } from "lucide-react";
-
 import { DriverHeader } from "@/components/driver/driver-header";
+import { DriverOrderList } from "@/components/driver/driver-order-list";
 import { getProfile } from "@/lib/auth/user";
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
+import type { DriverOrder } from "@/lib/hooks/use-driver-orders";
 
 export async function generateMetadata() {
   const t = await getT();
   return { title: `${t.driverApp.title} | ${t.brand.name}` };
 }
 
+// Kept in step with DRIVER_SELECT in use-driver-orders, so the server's first
+// paint and the client's live refetch read the same shape.
+const DRIVER_SELECT =
+  "id, order_number, status, customer_name, customer_phone, customer_landmark, customer_lat, customer_lng, delivery_notes, subtotal, delivery_fee, total, payment_status, cash_collected, created_at, order_items(id, name_snapshot, price_snapshot, quantity, notes)";
+
 export default async function DriverHomePage() {
-  const [t, profile, supabase] = await Promise.all([
-    getT(),
-    getProfile(),
-    createClient(),
+  const [profile, supabase] = await Promise.all([getProfile(), createClient()]);
+
+  // Both scoped by RLS to this driver: the restaurant is their own row, the
+  // orders are only those assigned to them.
+  const [{ data: restaurant }, { data: orders }] = await Promise.all([
+    supabase.from("restaurants").select("name").maybeSingle(),
+    supabase
+      .from("orders")
+      .select(DRIVER_SELECT)
+      .in("status", ["ready", "out_for_delivery"]),
   ]);
 
-  // The restaurant this driver belongs to, for the header. RLS gives a driver a
-  // read-only view of their own restaurant row (0011), nothing more.
-  const { data: restaurant } = await supabase
-    .from("restaurants")
-    .select("name")
-    .maybeSingle();
+  const initial: DriverOrder[] = (orders ?? []).map((row) => {
+    const { order_items, ...order } = row;
+    return { ...order, items: order_items ?? [] };
+  });
 
   return (
     <>
@@ -33,16 +42,7 @@ export default async function DriverHomePage() {
       />
 
       <main className="mx-auto w-full max-w-md flex-1 p-4">
-        {/* The live assigned-deliveries list is built in 4.4. Until then this
-            is an honest empty state, not a dead screen: a signed-in driver sees
-            who they are and that nothing is waiting. */}
-        <div className="text-muted-foreground flex flex-col items-center gap-3 rounded-xl border border-dashed py-20 text-center">
-          <Inbox className="size-10 opacity-40" />
-          <div className="space-y-1">
-            <p className="text-foreground font-medium">{t.driverApp.noDeliveries}</p>
-            <p className="text-sm">{t.driverApp.noDeliveriesHint}</p>
-          </div>
-        </div>
+        <DriverOrderList initial={initial} />
       </main>
     </>
   );

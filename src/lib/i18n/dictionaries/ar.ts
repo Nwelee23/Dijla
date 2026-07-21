@@ -431,6 +431,15 @@ export const ar = {
     noDeliveries: "لا توجد طلبات موكَلة إليك الآن",
     noDeliveriesHint: "عند إسناد طلب توصيل إليك سيظهر هنا فوراً.",
     signOut: "خروج",
+    live: "مباشر",
+    reconnecting: "جارٍ إعادة الاتصال…",
+    soundOn: "الصوت مفعّل",
+    soundOff: "تفعيل الصوت",
+    soundBlocked: "تعذّر تشغيل الصوت. تحقّق من إعدادات المتصفح.",
+    newAssignment: "وصلك طلب توصيل جديد",
+    itemCount: "{count} صنف",
+    collect: "استلم {amount}",
+    paid: "مدفوع",
   },
 
   trial: {
