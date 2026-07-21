@@ -30,7 +30,7 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/dashboard/menu",
     label: "القائمة",
     icon: UtensilsCrossed,
-    enabled: false,
+    enabled: true,
     phase: "المهمة 1.5",
   },
   {
