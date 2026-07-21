@@ -345,6 +345,19 @@ export const en: Dictionary = {
     acknowledged: "Done",
   },
 
+  trial: {
+    daysLeft: "{count} days left in your trial",
+    lastDay: "Today is the last day of your trial",
+    endingSoon: "Your trial ends soon",
+    expiredTitle: "Your trial has ended",
+    expiredBody:
+      "Thanks for trying Dijla. Get in touch to activate your monthly subscription and keep taking orders.",
+    expiredNote:
+      "Your menu and QR codes still work — diners can still order, but the dashboard is locked until activation.",
+    contact: "Contact us",
+    activeTitle: "Subscription active",
+  },
+
   settings: {
     title: "Settings",
     subtitle: "Your restaurant details, opening hours and delivery fee.",
