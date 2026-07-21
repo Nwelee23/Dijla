@@ -1,7 +1,7 @@
 "use client";
 
 import { useOptimistic, useState, useTransition } from "react";
-import { ChevronDown, ChevronUp, Loader2, Pencil, Trash2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -9,7 +9,10 @@ import {
   reorderCategories,
   setCategoryActive,
 } from "@/app/dashboard/menu/actions";
-import { CategoryDialog } from "@/components/menu/category-dialog";
+import {
+  CategorySection,
+  type CategoryWithItems,
+} from "@/components/menu/category-section";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,18 +22,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Switch } from "@/components/ui/switch";
-import type { Tables } from "@/lib/supabase/types";
-import { cn } from "@/lib/utils";
 
-export type Category = Pick<
-  Tables<"menu_categories">,
-  "id" | "name" | "is_active" | "sort_order"
->;
+export type { CategoryWithItems };
 
-export function CategoryList({ categories }: { categories: Category[] }) {
+export function CategoryList({
+  categories,
+  restaurantId,
+}: {
+  categories: CategoryWithItems[];
+  restaurantId: string;
+}) {
   const [isPending, startTransition] = useTransition();
-  const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<CategoryWithItems | null>(
+    null
+  );
 
   // Reordering feels instant; the server call reconciles behind it.
   const [order, setOrder] = useOptimistic(categories);
@@ -49,11 +54,11 @@ export function CategoryList({ categories }: { categories: Category[] }) {
     });
   }
 
-  function toggleActive(category: Category, isActive: boolean) {
+  function toggleActive(id: string, isActive: boolean) {
     startTransition(async () => {
-      const result = await setCategoryActive(category.id, isActive);
+      const result = await setCategoryActive(id, isActive);
       if (!result.ok) toast.error(result.error);
-      else toast.success(isActive ? "تم تفعيل التصنيف" : "تم إخفاء التصنيف");
+      else toast.success(isActive ? "تم إظهار التصنيف" : "تم إخفاء التصنيف");
     });
   }
 
@@ -71,82 +76,21 @@ export function CategoryList({ categories }: { categories: Category[] }) {
 
   return (
     <>
-      <ul className="divide-y rounded-lg border">
+      <div className="space-y-4">
         {order.map((category, index) => (
-          <li
+          <CategorySection
             key={category.id}
-            className={cn(
-              "flex items-center gap-2 p-3",
-              !category.is_active && "bg-muted/40"
-            )}
-          >
-            <div className="flex flex-col">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-6"
-                aria-label="تحريك لأعلى"
-                disabled={index === 0 || isPending}
-                onClick={() => move(index, -1)}
-              >
-                <ChevronUp className="size-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-6"
-                aria-label="تحريك لأسفل"
-                disabled={index === order.length - 1 || isPending}
-                onClick={() => move(index, 1)}
-              >
-                <ChevronDown className="size-4" />
-              </Button>
-            </div>
-
-            <span
-              className={cn(
-                "min-w-0 flex-1 truncate font-medium",
-                !category.is_active && "text-muted-foreground"
-              )}
-            >
-              {category.name}
-              {!category.is_active && (
-                <span className="text-muted-foreground me-2 text-xs font-normal">
-                  {" "}
-                  — مخفي
-                </span>
-              )}
-            </span>
-
-            <Switch
-              checked={category.is_active ?? true}
-              onCheckedChange={(checked) => toggleActive(category, checked)}
-              disabled={isPending}
-              aria-label="تفعيل التصنيف"
-            />
-
-            <CategoryDialog
-              category={category}
-              trigger={
-                <Button variant="ghost" size="icon" aria-label="تعديل الاسم">
-                  <Pencil className="size-4" />
-                </Button>
-              }
-            />
-
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="حذف التصنيف"
-              className="text-destructive"
-              disabled={isPending}
-              onClick={() => setPendingDelete(category)}
-            >
-              <Trash2 className="size-4" />
-            </Button>
-          </li>
+            category={category}
+            restaurantId={restaurantId}
+            isFirst={index === 0}
+            isLast={index === order.length - 1}
+            disabled={isPending}
+            onMove={(direction) => move(index, direction)}
+            onToggleActive={(isActive) => toggleActive(category.id, isActive)}
+            onRequestDelete={() => setPendingDelete(category)}
+          />
         ))}
-      </ul>
+      </div>
 
       <Dialog
         open={pendingDelete !== null}
@@ -156,8 +100,9 @@ export function CategoryList({ categories }: { categories: Category[] }) {
           <DialogHeader>
             <DialogTitle>حذف «{pendingDelete?.name}»؟</DialogTitle>
             <DialogDescription>
-              الأصناف داخل هذا التصنيف لن تُحذف، لكنها ستصبح بدون تصنيف. إذا كنت
-              تريد إخفاءه مؤقتاً فقط، استخدم مفتاح التفعيل بدلاً من الحذف.
+              {pendingDelete && pendingDelete.items.length > 0
+                ? `الأصناف الـ ${pendingDelete.items.length} داخل هذا التصنيف لن تُحذف، لكنها ستنتقل إلى «بدون تصنيف». إذا كنت تريد إخفاءه مؤقتاً فقط، استخدم مفتاح الإظهار بدلاً من الحذف.`
+                : "إذا كنت تريد إخفاءه مؤقتاً فقط، استخدم مفتاح الإظهار بدلاً من الحذف."}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
