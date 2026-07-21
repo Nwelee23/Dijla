@@ -440,6 +440,18 @@ export const ar = {
     itemCount: "{count} صنف",
     collect: "استلم {amount}",
     paid: "مدفوع",
+    pickedUp: "استلمت الطلب",
+    pickedUpDone: "الطلب بالطريق",
+    markDelivered: "تم التسليم",
+    confirmDelivery: "تأكيد التسليم",
+    amountDue: "المبلغ المطلوب",
+    cashOnly: "الدفع نقداً عند الاستلام",
+    cashCollected: "المبلغ المُحصَّل",
+    cashHint: "المبلغ الافتراضي هو قيمة الطلب. عدّله إن دفع الزبون أقل.",
+    confirmDeliveredCollected: "تأكيد التسليم واستلام النقد",
+    deliveredDone: "تم تسليم الطلب",
+    actionFailed: "تعذّر تنفيذ العملية. حدّث الصفحة وحاول مجدداً.",
+    invalidCash: "المبلغ غير صحيح.",
   },
 
   trial: {

@@ -1,8 +1,12 @@
 "use client";
 
-import { MapPin, Navigation, Phone, Package } from "lucide-react";
+import { useState, useTransition } from "react";
+import { Check, Loader2, MapPin, Navigation, Phone, Package, PackageCheck } from "lucide-react";
+import { toast } from "sonner";
 
+import { markPickedUp } from "@/app/driver/actions";
 import { MapThumb } from "@/components/orders/map-thumb";
+import { DeliverSheet } from "@/components/driver/deliver-sheet";
 import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { formatIraqiPhone } from "@/lib/auth/phone";
@@ -22,10 +26,23 @@ import { cn, formatMoney } from "@/lib/utils";
  */
 export function DriverOrderCard({ order }: { order: DriverOrder }) {
   const t = useT();
+  const [isPending, startTransition] = useTransition();
+  const [deliverOpen, setDeliverOpen] = useState(false);
 
   const itemCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
   const hasPin = order.customer_lat !== null && order.customer_lng !== null;
   const isPaid = order.payment_status === "paid";
+
+  const isReady = order.status === "ready";
+  const isOut = order.status === "out_for_delivery";
+
+  function pickUp() {
+    startTransition(async () => {
+      const result = await markPickedUp(order.id);
+      if (!result.ok) toast.error(result.error);
+      else toast.success(t.driverApp.pickedUpDone);
+    });
+  }
 
   return (
     <article className="space-y-3 rounded-2xl border p-4 shadow-sm">
@@ -120,6 +137,33 @@ export function DriverOrderCard({ order }: { order: DriverOrder }) {
           </Button>
         )}
       </div>
+
+      {/* The one forward action, sized to be tapped without looking. Which one
+          it is depends on where the run has got to. */}
+      {isReady && (
+        <Button className="h-14 w-full text-base" disabled={isPending} onClick={pickUp}>
+          {isPending ? <Loader2 className="animate-spin" /> : <PackageCheck />}
+          {t.driverApp.pickedUp}
+        </Button>
+      )}
+
+      {isOut && (
+        <Button
+          className="h-14 w-full text-base"
+          disabled={isPending}
+          onClick={() => setDeliverOpen(true)}
+        >
+          <Check />
+          {t.driverApp.markDelivered}
+        </Button>
+      )}
+
+      <DeliverSheet
+        open={deliverOpen}
+        onOpenChange={setDeliverOpen}
+        orderId={order.id}
+        total={Number(order.total)}
+      />
     </article>
   );
 }

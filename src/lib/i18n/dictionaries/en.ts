@@ -429,6 +429,18 @@ export const en: Dictionary = {
     itemCount: "{count} items",
     collect: "Collect {amount}",
     paid: "Paid",
+    pickedUp: "Picked up",
+    pickedUpDone: "On the way",
+    markDelivered: "Delivered",
+    confirmDelivery: "Confirm delivery",
+    amountDue: "Amount due",
+    cashOnly: "Cash on delivery",
+    cashCollected: "Cash collected",
+    cashHint: "Defaults to the order total. Lower it if the customer paid less.",
+    confirmDeliveredCollected: "Confirm delivered and cash taken",
+    deliveredDone: "Order delivered",
+    actionFailed: "Could not complete that. Refresh and try again.",
+    invalidCash: "That amount is not valid.",
   },
 
   waiter: {
