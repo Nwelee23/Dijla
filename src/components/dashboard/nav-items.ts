@@ -47,7 +47,7 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/dashboard/drivers",
     label: "drivers",
     icon: Bike,
-    enabled: false,
+    enabled: true,
     phase: "phase4",
   },
   {
