@@ -321,6 +321,32 @@ export const ar = {
     },
   },
 
+  track: {
+    steps: {
+      new: "وصل طلبك",
+      accepted: "المطعم قبل الطلب",
+      preparing: "قيد التحضير",
+      ready: "جاهز",
+      delivered: "تم التقديم",
+      cancelled: "أُلغي الطلب",
+    },
+    cancelledBody: "تواصل مع الموظف لمعرفة السبب.",
+    readyBody: "طلبك جاهز — سيصلك حالاً.",
+    amountDue: "المبلغ المطلوب",
+    payCash: "الدفع نقداً عند التقديم",
+    callWaiter: "نادِ النادل",
+    calling: "جارٍ الإرسال…",
+    waiterCalled: "تم إبلاغ الموظف",
+    waiterFailed: "تعذّر إرسال النداء",
+    waiterRateLimited: "أرسلت نداءات كثيرة. انتظر قليلاً.",
+  },
+  waiter: {
+    banner: "{count} طاولة تطلب النادل",
+    table: "طاولة {number}",
+    acknowledge: "تمت الاستجابة",
+    acknowledged: "تم",
+  },
+
   settings: {
     title: "الإعدادات",
     subtitle: "بيانات مطعمك وأوقات عمله ورسوم التوصيل.",

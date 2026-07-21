@@ -319,6 +319,32 @@ export const en: Dictionary = {
     },
   },
 
+  track: {
+    steps: {
+      new: "Order received",
+      accepted: "Accepted by the kitchen",
+      preparing: "Being prepared",
+      ready: "Ready",
+      delivered: "Served",
+      cancelled: "Order cancelled",
+    },
+    cancelledBody: "Ask a member of staff what happened.",
+    readyBody: "Your order is ready — it's on its way.",
+    amountDue: "Amount due",
+    payCash: "Cash on delivery",
+    callWaiter: "Call a waiter",
+    calling: "Sending…",
+    waiterCalled: "A waiter has been notified",
+    waiterFailed: "Could not send the call",
+    waiterRateLimited: "Too many calls. Wait a moment.",
+  },
+  waiter: {
+    banner: "{count} tables are asking for a waiter",
+    table: "Table {number}",
+    acknowledge: "Handled",
+    acknowledged: "Done",
+  },
+
   settings: {
     title: "Settings",
     subtitle: "Your restaurant details, opening hours and delivery fee.",

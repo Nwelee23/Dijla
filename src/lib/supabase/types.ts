@@ -593,6 +593,7 @@ export type Database = {
       current_restaurant_id: { Args: never; Returns: string }
       get_menu_by_qr_token: { Args: { p_token: string }; Returns: Json }
       get_menu_by_slug: { Args: { p_slug: string }; Returns: Json }
+      get_order_status: { Args: { p_order_id: string }; Returns: Json }
       menu_payload: { Args: { p_restaurant: string }; Returns: Json }
       next_order_number: { Args: { rid: string }; Returns: number }
     }

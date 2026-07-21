@@ -17,11 +17,18 @@ export default async function OrdersPage() {
 
   // Rendered on the server so the board is already populated on first paint —
   // staff opening the tablet at the start of service should not watch a spinner.
-  const { data } = await supabase
-    .from("orders")
-    .select(SELECT)
-    .order("created_at", { ascending: false })
-    .limit(100);
+  const [{ data }, { data: calls }] = await Promise.all([
+    supabase
+      .from("orders")
+      .select(SELECT)
+      .order("created_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("waiter_calls")
+      .select("id, tables(table_number)")
+      .eq("acknowledged", false)
+      .order("created_at", { ascending: true }),
+  ]);
 
   const initialOrders: LiveOrder[] = (data ?? []).map((row) => ({
     id: row.id,
@@ -42,7 +49,13 @@ export default async function OrdersPage() {
         <p className="text-muted-foreground text-sm">{t.orders.subtitle}</p>
       </div>
 
-      <OrderBoard initialOrders={initialOrders} />
+      <OrderBoard
+        initialOrders={initialOrders}
+        initialCalls={(calls ?? []).map((row) => ({
+          id: row.id,
+          tableNumber: row.tables?.table_number ?? null,
+        }))}
+      />
     </div>
   );
 }

@@ -2,10 +2,11 @@
 
 import { useRef, useState, useTransition } from "react";
 import Image from "next/image";
-import { CheckCircle2, ImageOff, Loader2, Minus, Plus, Trash2 } from "lucide-react";
+import { ImageOff, Loader2, Minus, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { CartBar } from "@/components/customer/cart-bar";
+import { OrderTracker } from "@/components/customer/order-tracker";
 import { ItemSheet } from "@/components/customer/item-sheet";
 import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
@@ -90,24 +91,13 @@ export function MenuView({
 
   if (placed.order) {
     return (
-      <div className="flex flex-col items-center gap-5 py-16 text-center">
-        <CheckCircle2 className="size-16 text-emerald-600" />
-        <div className="space-y-1">
-          <h2 className="text-xl font-bold">{t.order.placedTitle}</h2>
-          <p className="text-muted-foreground text-sm">{t.order.placedBody}</p>
-        </div>
-
-        <div className="bg-primary/10 rounded-2xl px-8 py-4">
-          <p className="text-muted-foreground text-sm">{t.order.orderNumber}</p>
-          <p className="text-primary text-5xl font-bold tabular-nums">
-            {placed.order.orderNumber}
-          </p>
-        </div>
-
-        <Button variant="outline" onClick={placed.clearOrder}>
-          {t.order.newOrder}
-        </Button>
-      </div>
+      <OrderTracker
+        orderId={placed.order.orderId}
+        fallbackOrderNumber={placed.order.orderNumber}
+        qrToken={qrToken}
+        currency={currency}
+        onNewOrder={placed.clearOrder}
+      />
     );
   }
 

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useT } from "@/components/i18n/i18n-provider";
 import { KitchenView } from "@/components/orders/kitchen-view";
 import { OrderCard } from "@/components/orders/order-card";
+import { WaiterCalls, type Call } from "@/components/orders/waiter-calls";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRealtimeOrders, type LiveOrder } from "@/lib/hooks/use-realtime-orders";
@@ -17,7 +18,13 @@ import { cn } from "@/lib/utils";
 
 const SOUND_KEY = "dijla:orders:sound";
 
-export function OrderBoard({ initialOrders }: { initialOrders: LiveOrder[] }) {
+export function OrderBoard({
+  initialOrders,
+  initialCalls,
+}: {
+  initialOrders: LiveOrder[];
+  initialCalls: Call[];
+}) {
   const t = useT();
   const {
     orders,
@@ -93,6 +100,8 @@ export function OrderBoard({ initialOrders }: { initialOrders: LiveOrder[] }) {
           {showDone ? t.orders.hideDone : t.orders.showDone}
         </Button>
       </div>
+
+      <WaiterCalls initialCalls={initialCalls} />
 
       {unseen.size > 0 && (
         <div className="bg-primary text-primary-foreground flex items-center gap-3 rounded-xl p-3 shadow">
