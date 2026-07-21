@@ -1,23 +1,12 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { Brand } from "@/components/layout/brand";
-import { SignOutButton } from "@/components/layout/sign-out-button";
+import {
+  DashboardMobileNav,
+  DashboardSidebar,
+} from "@/components/dashboard/dashboard-nav";
+import { RestaurantHeader } from "@/components/dashboard/restaurant-header";
 import { getProfile, requireUser } from "@/lib/auth/user";
-import { cn } from "@/lib/utils";
-
-/**
- * Minimal dashboard shell. Task 1.3 replaces this with the real sidebar and
- * scopes the header to the signed-in restaurant.
- */
-const NAV = [
-  { href: "/dashboard", label: "الطلبات", enabled: false },
-  { href: "/dashboard/menu", label: "القائمة", enabled: false },
-  { href: "/dashboard/tables", label: "الطاولات", enabled: false },
-  { href: "/dashboard/drivers", label: "السائقون", enabled: false },
-  { href: "/dashboard/reports", label: "التقارير", enabled: false },
-  { href: "/dashboard/settings", label: "الإعدادات", enabled: false },
-];
+import { getRestaurant } from "@/lib/restaurant";
 
 export default async function DashboardLayout({
   children,
@@ -30,42 +19,20 @@ export default async function DashboardLayout({
   const profile = await getProfile();
   if (!profile) redirect("/onboarding");
 
+  // A profile without a readable restaurant means the row was deleted underneath
+  // the user. Send them back through onboarding rather than rendering an empty shell.
+  const restaurant = await getRestaurant();
+  if (!restaurant) redirect("/onboarding");
+
   return (
     <div className="flex flex-1 flex-col">
-      <header className="bg-background sticky top-0 z-40 border-b">
-        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-3 px-4">
-          <Brand href="/dashboard" />
-          <SignOutButton />
-        </div>
+      <RestaurantHeader restaurant={restaurant} ownerName={profile.full_name} />
+      <DashboardMobileNav />
 
-        <nav className="mx-auto w-full max-w-5xl overflow-x-auto px-4">
-          <ul className="flex min-w-max gap-1 pb-2 text-sm">
-            {NAV.map((item) => (
-              <li key={item.href}>
-                {item.enabled ? (
-                  <Link
-                    href={item.href}
-                    className="hover:bg-accent rounded-md px-3 py-1.5"
-                  >
-                    {item.label}
-                  </Link>
-                ) : (
-                  <span
-                    className={cn(
-                      "text-muted-foreground/60 cursor-not-allowed rounded-md px-3 py-1.5"
-                    )}
-                    title="يُبنى في مرحلة لاحقة"
-                  >
-                    {item.label}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </nav>
-      </header>
-
-      <div className="flex flex-1 flex-col">{children}</div>
+      <div className="flex flex-1">
+        <DashboardSidebar />
+        <main className="min-w-0 flex-1">{children}</main>
+      </div>
     </div>
   );
 }

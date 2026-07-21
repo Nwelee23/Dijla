@@ -1,3 +1,5 @@
+import { ClipboardList, MapPin, Phone } from "lucide-react";
+
 import {
   Card,
   CardContent,
@@ -5,42 +7,77 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getProfile, requireUser } from "@/lib/auth/user";
+import { formatIraqiPhone } from "@/lib/auth/phone";
+import { getRestaurant } from "@/lib/restaurant";
 
 export const metadata = {
-  title: "لوحة التحكم | دجلة",
+  title: "الطلبات | دجلة",
 };
 
-/**
- * Placeholder. The real dashboard shell is task 1.3.
- * `requireUser()` backs up the middleware rather than replacing it.
- */
 export default async function DashboardPage() {
-  const user = await requireUser();
-  const profile = await getProfile();
+  // The layout already guarantees this exists.
+  const restaurant = (await getRestaurant())!;
 
   return (
-    <main className="mx-auto w-full max-w-2xl p-4 sm:p-6">
+    <div className="mx-auto w-full max-w-3xl space-y-6 p-4 sm:p-6">
+      <div>
+        <h1 className="text-2xl font-bold">الطلبات</h1>
+        <p className="text-muted-foreground text-sm">
+          الطلبات المباشرة تصل هنا فور تفعيل الطلب عبر QR.
+        </p>
+      </div>
+
       <Card>
-        <CardHeader>
-          <CardTitle>لوحة التحكم</CardTitle>
-          <CardDescription>
-            الهيكل الكامل يُبنى في المهمة 1.3.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-1 text-sm">
-          <p>
-            <span className="text-muted-foreground">المستخدم: </span>
-            {user.email ?? user.phone}
-          </p>
-          <p>
-            <span className="text-muted-foreground">الملف الشخصي: </span>
-            {profile
-              ? `${profile.full_name ?? "بدون اسم"} — ${profile.role}`
-              : "غير موجود بعد (سيُنشأ في مرحلة التسجيل 1.2)"}
-          </p>
+        <CardContent className="text-muted-foreground flex flex-col items-center gap-3 py-10 text-center">
+          <ClipboardList className="size-10 opacity-40" />
+          <div className="space-y-1">
+            <p className="text-foreground font-medium">لا توجد طلبات بعد</p>
+            <p className="text-sm">
+              استقبال الطلبات يبدأ في المرحلة 2 — قائمة QR للطاولات.
+            </p>
+          </div>
         </CardContent>
       </Card>
-    </main>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>مطعمك</CardTitle>
+          <CardDescription>
+            تعديل هذه البيانات يصبح متاحاً من الإعدادات في المهمة 1.7.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground">الاسم</span>
+            <span className="font-medium">{restaurant.name}</span>
+          </div>
+
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground">رابط المطعم</span>
+            <code className="font-mono text-xs" dir="ltr">
+              /r/{restaurant.slug}
+            </code>
+          </div>
+
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground flex items-center gap-1.5">
+              <Phone className="size-3.5" />
+              الهاتف
+            </span>
+            <span dir="ltr">
+              {restaurant.phone ? formatIraqiPhone(restaurant.phone) : "—"}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground flex items-center gap-1.5">
+              <MapPin className="size-3.5" />
+              المنطقة
+            </span>
+            <span>{restaurant.area ?? "—"}</span>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
