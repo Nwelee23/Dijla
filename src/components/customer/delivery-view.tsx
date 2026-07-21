@@ -5,6 +5,7 @@ import { Clock, Minus, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { CartBar } from "@/components/customer/cart-bar";
+import { CheckoutSheet } from "@/components/customer/checkout-sheet";
 import { ItemSheet } from "@/components/customer/item-sheet";
 import { MenuList } from "@/components/customer/menu-list";
 import { useT } from "@/components/i18n/i18n-provider";
@@ -43,6 +44,7 @@ export function DeliveryView({
   const [selected, setSelected] = useState<MenuItem | null>(null);
   const [itemOpen, setItemOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const { currency } = menu.restaurant;
 
@@ -196,8 +198,18 @@ export function DeliveryView({
                 </div>
 
                 <Button
-                  variant="outline"
-                  className="h-12 w-full"
+                  className="h-12 w-full text-base"
+                  onClick={() => {
+                    setCartOpen(false);
+                    setCheckoutOpen(true);
+                  }}
+                >
+                  {t.checkout.title}
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  className="h-11 w-full"
                   onClick={() => setCartOpen(false)}
                 >
                   {t.customer.backToMenu}
@@ -207,6 +219,17 @@ export function DeliveryView({
           </div>
         </SheetContent>
       </Sheet>
+      <CheckoutSheet
+        open={checkoutOpen}
+        onOpenChange={setCheckoutOpen}
+        subtotal={subtotal}
+        deliveryFee={menu.restaurant.deliveryFee}
+        currency={currency}
+        isSubmitting={false}
+        onSubmit={() => {
+          // Wired to the server route in 3.3.
+        }}
+      />
     </>
   );
 }
