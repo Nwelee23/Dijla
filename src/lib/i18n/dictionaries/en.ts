@@ -321,6 +321,7 @@ export const en: Dictionary = {
     unassigned: "Driver unassigned",
     unassign: "Unassign",
     noDrivers: "No drivers registered",
+    noDriversOnline: "No drivers are available right now",
     assignFailed: "Could not assign. Try again.",
     showDone: "Show completed",
     hideDone: "Hide completed",

@@ -52,6 +52,15 @@ export function AssignDriver({
     t.drivers.status[(status ?? "offline") as keyof typeof t.drivers.status] ??
     status;
 
+  // Offline drivers are hidden — dispatch cannot hand a run to someone who has
+  // stepped away. The one already carrying this order stays listed even if they
+  // just went offline, so it can still be seen and taken back.
+  const selectable = drivers.filter(
+    (driver) =>
+      (driver.driver_status ?? "offline") !== "offline" ||
+      driver.id === assigned?.id
+  );
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -73,10 +82,12 @@ export function AssignDriver({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="start" className="w-56">
-        {drivers.length === 0 ? (
-          <DropdownMenuItem disabled>{t.orders.noDrivers}</DropdownMenuItem>
+        {selectable.length === 0 ? (
+          <DropdownMenuItem disabled>
+            {drivers.length === 0 ? t.orders.noDrivers : t.orders.noDriversOnline}
+          </DropdownMenuItem>
         ) : (
-          drivers.map((driver) => {
+          selectable.map((driver) => {
             const isAssigned = driver.id === assigned?.id;
             const offline = (driver.driver_status ?? "offline") === "offline";
             return (

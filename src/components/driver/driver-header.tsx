@@ -1,6 +1,7 @@
 import { Bike, LogOut } from "lucide-react";
 
 import { signOutDriver } from "@/app/driver/actions";
+import { DriverAvailability } from "@/components/driver/driver-availability";
 import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { getT } from "@/lib/i18n/server";
 import { Button } from "@/components/ui/button";
@@ -20,8 +21,6 @@ export async function DriverHeader({
   status: string;
 }) {
   const t = await getT();
-  const statusLabel =
-    t.drivers.status[status as keyof typeof t.drivers.status] ?? status;
 
   return (
     <header className="bg-background sticky top-0 z-10 border-b">
@@ -33,9 +32,11 @@ export async function DriverHeader({
         <div className="min-w-0 flex-1">
           <p className="truncate font-bold leading-tight">{driverName}</p>
           <p className="text-muted-foreground truncate text-xs">
-            {restaurantName} · {statusLabel}
+            {restaurantName}
           </p>
         </div>
+
+        <DriverAvailability status={status} />
 
         <LanguageSwitcher variant="ghost" />
 

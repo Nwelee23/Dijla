@@ -89,7 +89,39 @@ async function assignedOrder(orderId: string) {
     .maybeSingle();
 
   if (!data || data.driver_id !== user.id) return null;
-  return { admin, order: data };
+  // driver_id equals user.id here, so hand back a non-null string for the writes.
+  return { admin, order: data, driverId: user.id };
+}
+
+/**
+ * The driver's own availability. Their row, their choice — done through their
+ * own session, which own_profile already permits, so no service_role here.
+ *
+ * `busy` is not offered: it is set automatically for the length of a run (see
+ * markPickedUp / completeDelivery), not toggled by hand. The manual choice is
+ * only "I am working" or "I am done for now".
+ */
+export async function setAvailability(
+  status: "available" | "offline"
+): Promise<DriverActionResult> {
+  const t = await getT();
+  if (status !== "available" && status !== "offline") {
+    return { ok: false, error: t.driverApp.actionFailed };
+  }
+
+  const user = await getUser();
+  if (!user) return { ok: false, error: t.driverApp.actionFailed };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ driver_status: status })
+    .eq("id", user.id);
+
+  if (error) return { ok: false, error: t.driverApp.actionFailed };
+
+  revalidatePath("/driver");
+  return { ok: true };
 }
 
 /**
@@ -114,6 +146,13 @@ export async function markPickedUp(orderId: string): Promise<DriverActionResult>
     .eq("id", orderId);
 
   if (error) return { ok: false, error: t.driverApp.actionFailed };
+
+  // On the road now: mark the driver busy so dispatch stops handing them runs.
+  // service_role, so the self-update guard (0012) does not apply.
+  await found.admin
+    .from("profiles")
+    .update({ driver_status: "busy" })
+    .eq("id", found.driverId);
 
   revalidatePath("/driver");
   return { ok: true };
@@ -156,6 +195,24 @@ export async function completeDelivery(
     .eq("id", orderId);
 
   if (error) return { ok: false, error: t.driverApp.actionFailed };
+
+  // Free again once nothing else is in hand. Only flip a driver who is `busy`
+  // back to available — one who has stepped offline stays offline, and their
+  // other live runs (if any) keep them busy.
+  const { data: remaining } = await found.admin
+    .from("orders")
+    .select("id")
+    .eq("driver_id", found.driverId)
+    .in("status", ["ready", "out_for_delivery"])
+    .limit(1);
+
+  if (!remaining?.length) {
+    await found.admin
+      .from("profiles")
+      .update({ driver_status: "available" })
+      .eq("id", found.driverId)
+      .eq("driver_status", "busy");
+  }
 
   revalidatePath("/driver");
   return { ok: true };

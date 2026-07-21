@@ -323,6 +323,7 @@ export const ar = {
     unassigned: "تم إلغاء إسناد السائق",
     unassign: "إلغاء الإسناد",
     noDrivers: "لا يوجد سائقون مسجَّلون",
+    noDriversOnline: "لا يوجد سائقون متاحون الآن",
     assignFailed: "تعذّر الإسناد. حاول مرة أخرى.",
     showDone: "عرض المكتملة",
     hideDone: "إخفاء المكتملة",
