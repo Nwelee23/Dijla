@@ -1,5 +1,6 @@
 import { normalizeIraqiPhone } from "@/lib/auth/phone";
 import { getOpenState } from "@/lib/opening";
+import { canTakeDelivery, planFromRow } from "@/lib/plan";
 import {
   RATE_LIMIT_MAX_ORDERS,
   RATE_LIMIT_WINDOW_MINUTES,
@@ -155,8 +156,21 @@ export async function POST(request: Request) {
   // A channel the owner has switched off. The page hides it, but the page is
   // not the guard — anyone can post this body directly, and an owner who turned
   // delivery off has usually done it because they have nobody to drive it.
-  if (order.mode === "delivery" && !deliveryEnabled) {
-    return fail("delivery_disabled", 409);
+  //
+  // Delivery is also the paid feature, so the subscription is checked in the
+  // same breath. Both refusals return the same code on purpose: a customer is
+  // told the restaurant is not delivering right now, never that it is behind on
+  // a bill. That is between us and the owner.
+  if (order.mode === "delivery") {
+    const { data: plan } = await admin
+      .from("subscriptions")
+      .select("tier, status, end_date")
+      .eq("restaurant_id", restaurantId)
+      .maybeSingle();
+
+    if (!deliveryEnabled || !canTakeDelivery(planFromRow(plan))) {
+      return fail("delivery_disabled", 409);
+    }
   }
   if (order.mode === "pickup" && !pickupEnabled) {
     return fail("pickup_disabled", 409);

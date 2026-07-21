@@ -449,6 +449,13 @@ export const en: Dictionary = {
     deliverySectionHint: "What a customer can order from your public link.",
     deliveryEnabled: "Take delivery orders",
     deliveryEnabledHint: "The customer drops a pin and the food comes to them.",
+    deliveryLocked: "Delivery is part of the paid plan.",
+    deliveryProTitle: "Delivery is a pro feature",
+    deliveryProBody:
+      "Take delivery orders straight from your customers — never a commission on any of them. Get in touch to upgrade.",
+    deliveryTrialEnded:
+      "Your trial has ended. Table orders keep running, and delivery comes back as soon as you upgrade.",
+    deliveryNeedsPro: "Delivery needs the paid plan.",
     pickupEnabledHint: "The customer orders, then collects — no fee, no location.",
     pickupEnabled: "Take pickup orders",
     bothChannelsOff:

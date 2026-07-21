@@ -35,9 +35,12 @@ import { formatMoney } from "@/lib/utils";
 export function DeliveryView({
   menu,
   openState,
+  canDeliver,
 }: {
   menu: RestaurantMenu;
   openState: OpenState;
+  /** Subscription tier allows delivery. Decided server-side; see lib/plan.ts. */
+  canDeliver: boolean;
 }) {
   const t = useT();
   // Scoped by restaurant: someone ordering from two restaurants in one evening
@@ -110,9 +113,11 @@ export function DeliveryView({
   const { currency, deliveryEnabled, pickupEnabled, minOrder } = menu.restaurant;
 
   // Delivery first: it is what the link is usually shared for, so it becomes
-  // the default when both are on.
+  // the default when both are on. The tier is an upstream gate on the owner's
+  // switch — offering a channel the server will refuse is worse than not
+  // offering it, because the customer only finds out after typing everything.
   const offered = [
-    ...(deliveryEnabled ? (["delivery"] as const) : []),
+    ...(deliveryEnabled && canDeliver ? (["delivery"] as const) : []),
     ...(pickupEnabled ? (["pickup"] as const) : []),
   ];
   // Both switched off is a real configuration — a dine-in-only restaurant that

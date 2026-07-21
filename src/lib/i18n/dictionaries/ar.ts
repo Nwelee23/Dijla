@@ -453,6 +453,13 @@ export const ar = {
     deliverySectionHint: "ما يستطيع الزبون طلبه من رابط مطعمك العام.",
     deliveryEnabled: "استقبال طلبات التوصيل",
     deliveryEnabledHint: "الزبون يحدّد موقعه ويستلم الطلب في بيته.",
+    deliveryLocked: "التوصيل متاح في النسخة المدفوعة.",
+    deliveryProTitle: "التوصيل ميزة النسخة المدفوعة",
+    deliveryProBody:
+      "استقبل طلبات التوصيل مباشرة من زبائنك — بلا عمولة على أي طلب. تواصل معنا للترقية.",
+    deliveryTrialEnded:
+      "انتهت فترتك التجريبية. طلبات الطاولات مستمرة، والتوصيل يعود بمجرد الترقية.",
+    deliveryNeedsPro: "التوصيل يحتاج النسخة المدفوعة.",
     pickupEnabled: "استقبال طلبات الاستلام",
     pickupEnabledHint: "الزبون يطلب ثم يأتي بنفسه — بلا رسوم وبلا موقع.",
     bothChannelsOff:

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Bike, Loader2, Store, TriangleAlert } from "lucide-react";
+import { Bike, Loader2, Phone, Sparkles, Store, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 
 import { updateDeliverySettings } from "@/app/dashboard/settings/actions";
@@ -10,15 +10,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { formatIraqiPhone } from "@/lib/auth/phone";
 import type { Restaurant } from "@/lib/restaurant";
 import { formatMoney } from "@/lib/utils";
 
-export function DeliveryForm({ restaurant }: { restaurant: Restaurant }) {
+export function DeliveryForm({
+  restaurant,
+  canDeliver,
+  lock,
+}: {
+  restaurant: Restaurant;
+  canDeliver: boolean;
+  lock: "trial_ended" | "needs_pro" | null;
+}) {
   const t = useT();
   const [isPending, startTransition] = useTransition();
 
   const [deliveryEnabled, setDeliveryEnabled] = useState(
-    restaurant.delivery_enabled !== false
+    canDeliver && restaurant.delivery_enabled !== false
   );
   const [pickupEnabled, setPickupEnabled] = useState(
     restaurant.pickup_enabled !== false
@@ -29,6 +38,7 @@ export function DeliveryForm({ restaurant }: { restaurant: Restaurant }) {
   const [minOrder, setMinOrder] = useState(String(restaurant.min_order ?? 0));
 
   const currency = restaurant.currency ?? "IQD";
+  const support = process.env.NEXT_PUBLIC_SUPPORT_PHONE;
   const bothOff = !deliveryEnabled && !pickupEnabled;
 
   function submit() {
@@ -56,19 +66,43 @@ export function DeliveryForm({ restaurant }: { restaurant: Restaurant }) {
         submit();
       }}
     >
+      {lock && (
+        // The upsell, and the only place it appears. It is aimed at the owner,
+        // on their own dashboard — the customer link says nothing about it.
+        <div className="border-primary/40 bg-primary/5 space-y-2 rounded-xl border p-4">
+          <p className="flex items-center gap-2 font-bold">
+            <Sparkles className="size-4 shrink-0" />
+            {t.settings.deliveryProTitle}
+          </p>
+          <p className="text-muted-foreground text-sm">
+            {lock === "trial_ended"
+              ? t.settings.deliveryTrialEnded
+              : t.settings.deliveryProBody}
+          </p>
+          {support && (
+            <Button asChild variant="outline" size="sm">
+              <a href={`tel:${support}`} dir="ltr">
+                <Phone />
+                {formatIraqiPhone(support)}
+              </a>
+            </Button>
+          )}
+        </div>
+      )}
+
       <ul className="divide-y rounded-lg border">
         <li className="flex items-center gap-3 p-3">
           <Bike className="text-muted-foreground size-5 shrink-0" />
           <div className="min-w-0 flex-1">
             <p className="font-medium">{t.settings.deliveryEnabled}</p>
             <p className="text-muted-foreground text-xs">
-              {t.settings.deliveryEnabledHint}
+              {canDeliver ? t.settings.deliveryEnabledHint : t.settings.deliveryLocked}
             </p>
           </div>
           <Switch
             checked={deliveryEnabled}
             onCheckedChange={setDeliveryEnabled}
-            disabled={isPending}
+            disabled={isPending || !canDeliver}
             aria-label={t.settings.deliveryEnabled}
           />
         </li>
@@ -111,7 +145,7 @@ export function DeliveryForm({ restaurant }: { restaurant: Restaurant }) {
             dir="ltr"
             value={deliveryFee}
             onChange={(event) => setDeliveryFee(event.target.value)}
-            disabled={isPending || !deliveryEnabled}
+            disabled={isPending || !deliveryEnabled || !canDeliver}
           />
           <p className="text-muted-foreground text-xs">
             {t.settings.deliveryFeeHint}
@@ -129,7 +163,7 @@ export function DeliveryForm({ restaurant }: { restaurant: Restaurant }) {
             dir="ltr"
             value={minOrder}
             onChange={(event) => setMinOrder(event.target.value)}
-            disabled={isPending || !deliveryEnabled}
+            disabled={isPending || !deliveryEnabled || !canDeliver}
           />
           <p className="text-muted-foreground text-xs">
             {Number(minOrder) > 0

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { normalizeIraqiPhone } from "@/lib/auth/phone";
 import { getRestaurant } from "@/lib/restaurant";
+import { getSubscription } from "@/lib/subscription";
 import { slugify } from "@/lib/slug";
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
@@ -111,6 +112,14 @@ export async function updateDeliverySettings(
 
   const restaurant = await getRestaurant();
   if (!restaurant) return { ok: false, error: t.onboarding.restaurantNotFound };
+
+  // The card hides the switch, but the action is a POST endpoint like any other.
+  // Refused rather than silently coerced to false: an owner who somehow got here
+  // should be told delivery needs the pro tier, not quietly ignored.
+  const plan = await getSubscription();
+  if (input.deliveryEnabled && !plan.canTakeDelivery) {
+    return { ok: false, error: t.settings.deliveryNeedsPro };
+  }
 
   const supabase = await createClient();
   const { error } = await supabase

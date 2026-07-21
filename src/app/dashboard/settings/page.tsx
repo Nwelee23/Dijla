@@ -11,6 +11,7 @@ import {
 import { parseHours } from "@/lib/hours";
 import { getT } from "@/lib/i18n/server";
 import { getRestaurant } from "@/lib/restaurant";
+import { getSubscription } from "@/lib/subscription";
 
 export async function generateMetadata() {
   const t = await getT();
@@ -19,7 +20,11 @@ export async function generateMetadata() {
 
 export default async function SettingsPage() {
   // The dashboard layout already guarantees this exists.
-  const [restaurant, t] = await Promise.all([getRestaurant(), getT()]);
+  const [restaurant, t, plan] = await Promise.all([
+    getRestaurant(),
+    getT(),
+    getSubscription(),
+  ]);
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-6 p-4 sm:p-6">
@@ -48,7 +53,11 @@ export default async function SettingsPage() {
           <CardDescription>{t.settings.deliverySectionHint}</CardDescription>
         </CardHeader>
         <CardContent>
-          <DeliveryForm restaurant={restaurant!} />
+          <DeliveryForm
+            restaurant={restaurant!}
+            canDeliver={plan.canTakeDelivery}
+            lock={plan.deliveryLock}
+          />
         </CardContent>
       </Card>
 

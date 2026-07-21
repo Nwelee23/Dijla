@@ -6,6 +6,7 @@ import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { getT } from "@/lib/i18n/server";
 import { parseRestaurantMenu } from "@/lib/menu";
 import { getOpenState } from "@/lib/opening";
+import { canTakeDelivery, planFromRow } from "@/lib/plan";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -21,16 +22,29 @@ async function loadMenu(slug: string) {
   return parseRestaurantMenu(data);
 }
 
-/** Hours live in `settings`, which the public menu function never returns. */
-async function loadOpenState(restaurantId: string) {
+/**
+ * Hours live in `settings`, and the tier in `subscriptions` — neither is
+ * something the public menu function returns, and neither should be: `settings`
+ * is a grab-bag, and a customer has no business knowing what a restaurant pays
+ * us. Both are read here, server-side, and only their conclusions reach the
+ * browser.
+ */
+async function loadContext(restaurantId: string) {
   const admin = createAdminClient();
-  const { data } = await admin
-    .from("restaurants")
-    .select("settings")
-    .eq("id", restaurantId)
-    .maybeSingle();
 
-  return getOpenState(data?.settings);
+  const [restaurant, subscription] = await Promise.all([
+    admin.from("restaurants").select("settings").eq("id", restaurantId).maybeSingle(),
+    admin
+      .from("subscriptions")
+      .select("tier, status, end_date")
+      .eq("restaurant_id", restaurantId)
+      .maybeSingle(),
+  ]);
+
+  return {
+    openState: getOpenState(restaurant.data?.settings),
+    canDeliver: canTakeDelivery(planFromRow(subscription.data)),
+  };
 }
 
 export async function generateMetadata({
@@ -68,7 +82,7 @@ export default async function RestaurantMenuPage({
   }
 
   const { restaurant } = menu;
-  const open = await loadOpenState(restaurant.id);
+  const { openState, canDeliver } = await loadContext(restaurant.id);
 
   return (
     <main className="mx-auto w-full max-w-lg flex-1 px-4">
@@ -107,7 +121,7 @@ export default async function RestaurantMenuPage({
           </div>
         </div>
       ) : (
-        <DeliveryView menu={menu} openState={open} />
+        <DeliveryView menu={menu} openState={openState} canDeliver={canDeliver} />
       )}
     </main>
   );
