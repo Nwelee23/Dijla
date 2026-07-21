@@ -6,6 +6,8 @@ import { MenuView } from "@/components/customer/menu-view";
 import { interpolate } from "@/lib/i18n";
 import { getT } from "@/lib/i18n/server";
 import { parseDineInMenu } from "@/lib/menu";
+import { getOpenState } from "@/lib/opening";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -37,6 +39,23 @@ async function loadMenu(token: string) {
   return parseDineInMenu(data);
 }
 
+/**
+ * Opening hours live in `restaurants.settings`, which the public menu function
+ * deliberately never returns — the blob is free-form and will hold things that
+ * are not the diner's business. Read server-side and scoped to the restaurant
+ * the token already resolved to.
+ */
+async function loadOpenState(restaurantId: string) {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("restaurants")
+    .select("settings")
+    .eq("id", restaurantId)
+    .maybeSingle();
+
+  return getOpenState(data?.settings);
+}
+
 export default async function TableMenuPage({
   params,
 }: {
@@ -62,6 +81,7 @@ export default async function TableMenuPage({
   }
 
   const { restaurant, table } = menu;
+  const open = await loadOpenState(restaurant.id);
 
   return (
     <main className="mx-auto w-full max-w-lg flex-1 px-4">
@@ -103,7 +123,7 @@ export default async function TableMenuPage({
           </div>
         </div>
       ) : (
-        <MenuView menu={menu} qrToken={qr_token} />
+        <MenuView menu={menu} qrToken={qr_token} openState={open} />
       )}
     </main>
   );

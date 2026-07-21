@@ -273,6 +273,7 @@ export const en: Dictionary = {
       invalid_quantity: "That quantity isn't valid.",
       unavailable_items:
         "One of the dishes is no longer available. Refresh to see the current menu.",
+      closed: "The restaurant is closed and isn't taking orders.",
       rate_limited: "Too many orders in a short time. Wait a moment or ask a member of staff.",
       server_error: "The order couldn't be sent. Try again.",
       network: "No connection. Check your internet and try again.",
@@ -356,6 +357,16 @@ export const en: Dictionary = {
       "Your menu and QR codes still work — diners can still order, but the dashboard is locked until activation.",
     contact: "Contact us",
     activeTitle: "Subscription active",
+  },
+
+  closed: {
+    title: "The restaurant is closed right now",
+    todayHours: "Today: {open} — {close}",
+    closedToday: "Closed today",
+    browseOnly: "You can browse the menu, but ordering is only open during opening hours.",
+    cannotOrder: "The restaurant is closed and isn't taking orders.",
+    unavailableLine: "no longer available",
+    removedStale: "An item that is no longer available was removed from your order.",
   },
 
   settings: {

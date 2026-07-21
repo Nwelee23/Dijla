@@ -51,6 +51,7 @@ export type OrderError =
   | "too_many_lines"
   | "invalid_quantity"
   | "unavailable_items"
+  | "closed"
   | "rate_limited"
   | "server_error";
 

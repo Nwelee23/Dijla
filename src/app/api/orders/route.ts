@@ -1,3 +1,4 @@
+import { getOpenState } from "@/lib/opening";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   RATE_LIMIT_MAX_ORDERS,
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
   // 1. The token decides the restaurant. Nothing else in the request does.
   const { data: table } = await admin
     .from("tables")
-    .select("id, restaurant_id, is_active, restaurants(id, is_active)")
+    .select("id, restaurant_id, is_active, restaurants(id, is_active, settings)")
     .eq("qr_token", qrToken)
     .maybeSingle();
 
@@ -55,7 +56,14 @@ export async function POST(request: Request) {
     return fail("invalid_table", 404);
   }
 
-  // 2. Rate limit per table, so a leaked sticker cannot flood a kitchen.
+  // 2. Refuse orders outside opening hours. Checked here and not only in the UI:
+  //    an order placed at 3am lands on a screen nobody is watching, and the
+  //    diner is left waiting for food that will never come.
+  if (!getOpenState(restaurant.settings).isOpen) {
+    return fail("closed", 409);
+  }
+
+  // 3. Rate limit per table, so a leaked sticker cannot flood a kitchen.
   const since = new Date(
     Date.now() - RATE_LIMIT_WINDOW_MINUTES * 60_000
   ).toISOString();
@@ -70,7 +78,7 @@ export async function POST(request: Request) {
     return fail("rate_limited", 429);
   }
 
-  // 3. Re-read the menu. This is the authoritative price list.
+  // 4. Re-read the menu. This is the authoritative price list.
   const itemIds = [...new Set(lines.map((line) => line.itemId))];
   const { data: items } = await admin
     .from("menu_items")
@@ -107,7 +115,7 @@ export async function POST(request: Request) {
   const subtotal = priced.reduce((sum, line) => sum + line.lineTotal, 0);
   const total = subtotal; // Dine-in carries no delivery fee.
 
-  // 4. Per-restaurant counter, so staff say "order 14", not a uuid.
+  // 5. Per-restaurant counter, so staff say "order 14", not a uuid.
   const { data: orderNumber, error: numberError } = await admin.rpc(
     "next_order_number",
     { rid: table.restaurant_id }

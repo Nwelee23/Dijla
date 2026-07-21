@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import Image from "next/image";
-import { ImageOff, Loader2, Minus, Plus, Trash2 } from "lucide-react";
+import { Clock, ImageOff, Loader2, Minus, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { CartBar } from "@/components/customer/cart-bar";
@@ -18,16 +18,20 @@ import {
 } from "@/components/ui/sheet";
 import { useCart } from "@/lib/hooks/use-cart";
 import { usePlacedOrder } from "@/lib/hooks/use-placed-order";
+import { interpolate } from "@/lib/i18n";
 import type { DineInMenu, MenuItem } from "@/lib/menu";
+import type { OpenState } from "@/lib/opening";
 import type { OrderError, PlaceOrderResponse } from "@/lib/orders";
-import { formatMoney } from "@/lib/utils";
+import { cn, formatMoney } from "@/lib/utils";
 
 export function MenuView({
   menu,
   qrToken,
+  openState,
 }: {
   menu: DineInMenu;
   qrToken: string;
+  openState: OpenState;
 }) {
   const t = useT();
   const cart = useCart(menu.table.id);
@@ -44,6 +48,23 @@ export function MenuView({
 
   const { currency } = menu.restaurant;
 
+  // A cart can outlive the menu it was built from — the phone was locked for an
+  // hour and the kitchen sold out in the meantime. Work out which lines are
+  // still orderable during render rather than mutating the cart in an effect.
+  const liveIds = new Set(
+    menu.categories.flatMap((category) => category.items.map((item) => item.id))
+  );
+  const orderableLines = cart.lines.filter((line) => liveIds.has(line.itemId));
+  const hasStaleLines = orderableLines.length !== cart.lines.length;
+  const orderableTotal = orderableLines.reduce(
+    (sum, line) => sum + line.price * line.quantity,
+    0
+  );
+  const orderableCount = orderableLines.reduce(
+    (sum, line) => sum + line.quantity,
+    0
+  );
+
   function placeOrder() {
     requestId.current ??= crypto.randomUUID();
 
@@ -58,7 +79,7 @@ export function MenuView({
             requestId: requestId.current,
             // Only ids, quantities and notes leave the phone. The server
             // re-reads every price, so nothing here can change the bill.
-            lines: cart.lines.map((line) => ({
+            lines: orderableLines.map((line) => ({
               itemId: line.itemId,
               quantity: line.quantity,
               note: line.note,
@@ -103,6 +124,26 @@ export function MenuView({
 
   return (
     <>
+      {!openState.isOpen && (
+        <div className="mb-4 space-y-1 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/40">
+          <p className="flex items-center gap-2 font-bold text-amber-900 dark:text-amber-200">
+            <Clock className="size-4 shrink-0" />
+            {t.closed.title}
+          </p>
+          <p className="text-sm text-amber-900/80 dark:text-amber-200/80">
+            {openState.today.closed
+              ? t.closed.closedToday
+              : interpolate(t.closed.todayHours, {
+                  open: openState.today.open,
+                  close: openState.today.close,
+                })}
+          </p>
+          <p className="text-sm text-amber-900/80 dark:text-amber-200/80">
+            {t.closed.browseOnly}
+          </p>
+        </div>
+      )}
+
       {/* Bottom padding clears the sticky cart bar so the last dish stays tappable. */}
       <div className="space-y-8 pb-28">
         {menu.categories.map((category) => (
@@ -118,7 +159,13 @@ export function MenuView({
                   <button
                     type="button"
                     onClick={() => openItem(item)}
-                    className="hover:bg-accent/50 active:bg-accent flex w-full items-center gap-3 rounded-xl border p-3 text-start transition-colors"
+                    disabled={!openState.isOpen}
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-xl border p-3 text-start transition-colors",
+                      openState.isOpen
+                        ? "hover:bg-accent/50 active:bg-accent"
+                        : "opacity-70"
+                    )}
                   >
                     <div className="bg-muted relative size-20 shrink-0 overflow-hidden rounded-lg">
                       {item.imageUrl ? (
@@ -166,12 +213,14 @@ export function MenuView({
         }}
       />
 
-      <CartBar
-        count={cart.count}
-        subtotal={cart.subtotal}
-        currency={currency}
-        onReview={() => setCartOpen(true)}
-      />
+      {openState.isOpen && (
+        <CartBar
+          count={orderableCount}
+        subtotal={orderableTotal}
+          currency={currency}
+          onReview={() => setCartOpen(true)}
+        />
+      )}
 
       <Sheet open={cartOpen} onOpenChange={setCartOpen}>
         <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
@@ -199,9 +248,15 @@ export function MenuView({
                             {line.note}
                           </p>
                         )}
-                        <p className="text-muted-foreground text-sm tabular-nums">
-                          {formatMoney(line.price * line.quantity, currency)}
-                        </p>
+                        {liveIds.has(line.itemId) ? (
+                          <p className="text-muted-foreground text-sm tabular-nums">
+                            {formatMoney(line.price * line.quantity, currency)}
+                          </p>
+                        ) : (
+                          <p className="text-destructive text-sm font-medium">
+                            {t.closed.unavailableLine}
+                          </p>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-1">
@@ -243,17 +298,23 @@ export function MenuView({
                   ))}
                 </ul>
 
+                {hasStaleLines && (
+                  <p className="text-destructive text-sm">
+                    {t.closed.removedStale}
+                  </p>
+                )}
+
                 <div className="flex items-center justify-between border-t pt-3 text-lg font-bold">
                   <span>{t.customer.subtotal}</span>
                   <span className="tabular-nums">
-                    {formatMoney(cart.subtotal, currency)}
+                    {formatMoney(orderableTotal, currency)}
                   </span>
                 </div>
 
                 <Button
                   className="h-12 w-full text-base"
                   onClick={placeOrder}
-                  disabled={isSending}
+                  disabled={isSending || orderableLines.length === 0}
                 >
                   {isSending && <Loader2 className="animate-spin" />}
                   {isSending ? t.order.placing : t.order.place}
