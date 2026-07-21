@@ -18,6 +18,7 @@ function isProtected(pathname: string) {
 
 /**
  * Refreshes the auth cookie on every request and guards protected routes.
+ * Called from src/proxy.ts (Next 16 renamed the middleware convention to proxy).
  *
  * The cookie plumbing is fiddly on purpose: Supabase may hand back a rotated
  * token, and that new cookie has to ride along on the response we actually

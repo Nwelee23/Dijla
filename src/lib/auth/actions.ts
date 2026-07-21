@@ -9,9 +9,6 @@ import { normalizeIraqiPhone } from "./phone";
 
 export type AuthResult = { ok: true } | { ok: false; error: string };
 
-/** Digits in the emailed code. Must match Supabase `mailer_otp_length`. */
-export const EMAIL_OTP_LENGTH = 6;
-
 /**
  * Step 1 of email sign-in: send the code. This is the primary flow — delivery
  * runs through Brevo SMTP configured in the Supabase dashboard.
