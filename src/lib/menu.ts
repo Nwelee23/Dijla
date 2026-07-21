@@ -28,6 +28,8 @@ export type MenuRestaurant = {
   slug: string;
   logoUrl: string | null;
   currency: string;
+  /** Only present on the delivery payload. */
+  deliveryFee: number;
 };
 
 export type MenuTable = {
@@ -114,6 +116,7 @@ function parseRestaurant(value: unknown): MenuRestaurant | null {
     slug,
     logoUrl: asString(value.logo_url),
     currency: asString(value.currency) ?? "IQD",
+    deliveryFee: asNumber(value.delivery_fee) ?? 0,
   };
 }
 
@@ -125,6 +128,21 @@ function parseTable(value: unknown): MenuTable | null {
   if (!id || !tableNumber) return null;
 
   return { id, tableNumber, label: asString(value.label) };
+}
+
+export type RestaurantMenu = {
+  restaurant: MenuRestaurant;
+  categories: MenuCategory[];
+};
+
+/** The delivery-link payload: a restaurant and its menu, with no table. */
+export function parseRestaurantMenu(payload: unknown): RestaurantMenu | null {
+  if (!isRecord(payload)) return null;
+
+  const restaurant = parseRestaurant(payload.restaurant);
+  if (!restaurant) return null;
+
+  return { restaurant, categories: parseCategories(payload.categories) };
 }
 
 /** Returns null for anything that isn't a complete, usable dine-in menu. */

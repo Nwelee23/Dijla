@@ -1,11 +1,10 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
-import { Clock, Loader2, Minus, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Clock, Minus, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { CartBar } from "@/components/customer/cart-bar";
-import { OrderTracker } from "@/components/customer/order-tracker";
 import { ItemSheet } from "@/components/customer/item-sheet";
 import { MenuList } from "@/components/customer/menu-list";
 import { useT } from "@/components/i18n/i18n-provider";
@@ -17,110 +16,47 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useCart } from "@/lib/hooks/use-cart";
-import { usePlacedOrder } from "@/lib/hooks/use-placed-order";
 import { interpolate } from "@/lib/i18n";
-import type { DineInMenu, MenuItem } from "@/lib/menu";
+import type { MenuItem, RestaurantMenu } from "@/lib/menu";
 import type { OpenState } from "@/lib/opening";
-import type { OrderError, PlaceOrderResponse } from "@/lib/orders";
 import { formatMoney } from "@/lib/utils";
 
-export function MenuView({
+/**
+ * The delivery-link entry point.
+ *
+ * Same menu and cart as the dine-in page; the difference is what happens at
+ * checkout — there is no table, so the customer has to say who and where they
+ * are. That step arrives in 3.2 and 3.3.
+ */
+export function DeliveryView({
   menu,
-  qrToken,
   openState,
 }: {
-  menu: DineInMenu;
-  qrToken: string;
+  menu: RestaurantMenu;
   openState: OpenState;
 }) {
   const t = useT();
-  const cart = useCart(menu.table.id);
-  const placed = usePlacedOrder(menu.table.id);
+  // Scoped by restaurant: someone ordering from two restaurants in one evening
+  // must not have their baskets merge.
+  const cart = useCart(`r:${menu.restaurant.id}`);
 
   const [selected, setSelected] = useState<MenuItem | null>(null);
   const [itemOpen, setItemOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const [isSending, startSending] = useTransition();
-
-  // Held across retries so a resend after a dropped response is recognised as
-  // the same order, and cleared once one actually lands.
-  const requestId = useRef<string | null>(null);
 
   const { currency } = menu.restaurant;
 
-  // A cart can outlive the menu it was built from — the phone was locked for an
-  // hour and the kitchen sold out in the meantime. Work out which lines are
-  // still orderable during render rather than mutating the cart in an effect.
+  // A basket can outlive the menu it was built from.
   const liveIds = new Set(
     menu.categories.flatMap((category) => category.items.map((item) => item.id))
   );
   const orderableLines = cart.lines.filter((line) => liveIds.has(line.itemId));
   const hasStaleLines = orderableLines.length !== cart.lines.length;
-  const orderableTotal = orderableLines.reduce(
+  const subtotal = orderableLines.reduce(
     (sum, line) => sum + line.price * line.quantity,
     0
   );
-  const orderableCount = orderableLines.reduce(
-    (sum, line) => sum + line.quantity,
-    0
-  );
-
-  function placeOrder() {
-    requestId.current ??= crypto.randomUUID();
-
-    startSending(async () => {
-      let result: PlaceOrderResponse;
-      try {
-        const response = await fetch("/api/orders", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            qrToken,
-            requestId: requestId.current,
-            // Only ids, quantities and notes leave the phone. The server
-            // re-reads every price, so nothing here can change the bill.
-            lines: orderableLines.map((line) => ({
-              itemId: line.itemId,
-              quantity: line.quantity,
-              note: line.note,
-            })),
-          }),
-        });
-        result = (await response.json()) as PlaceOrderResponse;
-      } catch {
-        toast.error(t.order.errors.network);
-        return;
-      }
-
-      if (!result.ok) {
-        const key = result.error as OrderError;
-        toast.error(t.order.errors[key] ?? t.order.errors.server_error);
-        return;
-      }
-
-      requestId.current = null;
-      placed.save(result.orderId, result.orderNumber);
-      cart.clear();
-      setCartOpen(false);
-    });
-  }
-
-  function openItem(item: MenuItem) {
-    setSelected(item);
-    setItemOpen(true);
-  }
-
-  if (placed.order) {
-    return (
-      <OrderTracker
-        orderId={placed.order.orderId}
-        fallbackOrderNumber={placed.order.orderNumber}
-        qrToken={qrToken}
-        currency={currency}
-        onNewOrder={placed.clearOrder}
-      />
-    );
-  }
+  const count = orderableLines.reduce((sum, line) => sum + line.quantity, 0);
 
   return (
     <>
@@ -148,7 +84,10 @@ export function MenuView({
         categories={menu.categories}
         currency={currency}
         disabled={!openState.isOpen}
-        onSelect={openItem}
+        onSelect={(item) => {
+          setSelected(item);
+          setItemOpen(true);
+        }}
       />
 
       <ItemSheet
@@ -164,8 +103,8 @@ export function MenuView({
 
       {openState.isOpen && (
         <CartBar
-          count={orderableCount}
-        subtotal={orderableTotal}
+          count={count}
+          subtotal={subtotal}
           currency={currency}
           onReview={() => setCartOpen(true)}
         />
@@ -178,7 +117,7 @@ export function MenuView({
           </SheetHeader>
 
           <div className="space-y-4 px-4 pb-6">
-            {cart.lines.length === 0 ? (
+            {orderableLines.length === 0 ? (
               <p className="text-muted-foreground py-6 text-center">
                 {t.customer.emptyCart}
               </p>
@@ -218,9 +157,7 @@ export function MenuView({
                               ? t.customer.removeLine
                               : t.customer.decrease
                           }
-                          onClick={() =>
-                            cart.setQuantity(index, line.quantity - 1)
-                          }
+                          onClick={() => cart.setQuantity(index, line.quantity - 1)}
                         >
                           {line.quantity === 1 ? (
                             <Trash2 className="text-destructive" />
@@ -236,9 +173,7 @@ export function MenuView({
                           size="icon"
                           className="size-9"
                           aria-label={t.customer.increase}
-                          onClick={() =>
-                            cart.setQuantity(index, line.quantity + 1)
-                          }
+                          onClick={() => cart.setQuantity(index, line.quantity + 1)}
                         >
                           <Plus />
                         </Button>
@@ -256,24 +191,14 @@ export function MenuView({
                 <div className="flex items-center justify-between border-t pt-3 text-lg font-bold">
                   <span>{t.customer.subtotal}</span>
                   <span className="tabular-nums">
-                    {formatMoney(orderableTotal, currency)}
+                    {formatMoney(subtotal, currency)}
                   </span>
                 </div>
 
                 <Button
-                  className="h-12 w-full text-base"
-                  onClick={placeOrder}
-                  disabled={isSending || orderableLines.length === 0}
-                >
-                  {isSending && <Loader2 className="animate-spin" />}
-                  {isSending ? t.order.placing : t.order.place}
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  className="h-11 w-full"
+                  variant="outline"
+                  className="h-12 w-full"
                   onClick={() => setCartOpen(false)}
-                  disabled={isSending}
                 >
                   {t.customer.backToMenu}
                 </Button>
