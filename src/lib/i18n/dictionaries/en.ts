@@ -401,6 +401,10 @@ export const en: Dictionary = {
 
   location: {
     useMyLocation: "Use my location",
+    outsideIraq:
+      "The location your browser reported is outside Iraq — usually a VPN or a weak location signal. Move the pin by hand, or write the nearest landmark.",
+    mapFailed:
+      "The map could not load. Write the nearest landmark and your order will still reach you — a landmark on its own is enough.",
     locating: "Finding you…",
     denied: "Location access was blocked. Place your pin on the map instead.",
     failed: "Could not find your location. Place your pin on the map instead.",

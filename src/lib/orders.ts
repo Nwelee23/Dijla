@@ -6,6 +6,8 @@
  * here rather than left to whatever the browser happened to send.
  */
 
+import { isPlausibleIraqPin } from "@/lib/geo";
+
 /** Distinct lines in one order. A menu has tens of dishes, not hundreds. */
 export const MAX_ORDER_LINES = 40;
 
@@ -142,9 +144,11 @@ export function parseOrderRequest(
 
   const lat = parseCoordinate(customerRaw.lat, 90);
   const lng = parseCoordinate(customerRaw.lng, 180);
-  // A pin is only a pin if both halves survived. Half a coordinate is worse
-  // than none: it would put the driver on the equator.
-  const hasPin = lat !== null && lng !== null;
+  // A pin is only a pin if both halves survived, and if it lands somewhere a
+  // driver could actually go. Half a coordinate would put the driver on the
+  // equator; an IP-geolocated one behind a VPN would send them to Frankfurt.
+  // Both are worse than no pin, because a pin gets believed.
+  const hasPin = isPlausibleIraqPin(lat, lng);
 
   // Delivery needs somewhere to go. Iraqi addresses are not navigable, so it is
   // a pin or a landmark — an order with neither cannot be delivered by anyone.

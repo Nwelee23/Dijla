@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type * as L from "leaflet";
-import { Crosshair, Loader2, MapPin } from "lucide-react";
+import { Crosshair, Loader2, MapPin, TriangleAlert } from "lucide-react";
 
 import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
+import { isPlausibleIraqPin } from "@/lib/geo";
 
 import "leaflet/dist/leaflet.css";
 
@@ -48,12 +49,24 @@ export function LocationPicker({
   const [isLocating, setIsLocating] = useState(false);
   const [accuracy, setAccuracy] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [mapFailed, setMapFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
     (async () => {
-      const leaflet = (await import("leaflet")).default;
+      let leaflet: typeof L;
+      try {
+        leaflet = (await import("leaflet")).default;
+      } catch {
+        // A failed chunk on a bad connection used to leave an empty grey box
+        // and no explanation, with the customer waiting for a map that was
+        // never coming. The landmark alone is a valid delivery address here,
+        // so say that instead of showing nothing.
+        if (!cancelled) setMapFailed(true);
+        return;
+      }
+
       if (cancelled || !containerRef.current || mapRef.current) return;
 
       const start = value ?? NAJAF;
@@ -127,9 +140,19 @@ export function LocationPicker({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         };
-        setAccuracy(position.coords.accuracy);
         setIsLocating(false);
 
+        // The browser will happily geolocate by IP when it has no GPS, and
+        // behind a VPN that is another country — with an accuracy figure that
+        // looks just as confident. The server drops such a pin, so say so here
+        // rather than let the customer submit believing they gave a location.
+        if (!isPlausibleIraqPin(pin.lat, pin.lng)) {
+          setAccuracy(null);
+          setError(t.location.outsideIraq);
+          return;
+        }
+
+        setAccuracy(position.coords.accuracy);
         markerRef.current?.setLatLng([pin.lat, pin.lng]);
         mapRef.current?.setView([pin.lat, pin.lng], 17);
         onChangeRef.current(pin);
@@ -147,6 +170,15 @@ export function LocationPicker({
       { enableHighAccuracy: true, timeout: 15_000, maximumAge: 0 }
     );
   }, [t]);
+
+  if (mapFailed) {
+    return (
+      <p className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+        <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+        {t.location.mapFailed}
+      </p>
+    );
+  }
 
   return (
     <div className="space-y-2">
