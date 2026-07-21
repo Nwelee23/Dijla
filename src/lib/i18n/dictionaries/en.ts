@@ -397,6 +397,24 @@ export const en: Dictionary = {
     updateFailed: "Could not update the driver. Try again.",
   },
 
+  driverAuth: {
+    title: "Driver sign-in",
+    subtitle: "Enter your phone number and the code the restaurant gave you.",
+    code: "Sign-in code",
+    codePlaceholder: "The 8-character code",
+    signIn: "Sign in",
+    invalidCode: "That phone number or code is wrong.",
+    disabled: "Your account is disabled. Contact the restaurant.",
+    disabledNotice: "Your account is currently disabled. Contact your restaurant to re-enable it.",
+  },
+
+  driverApp: {
+    title: "My deliveries",
+    noDeliveries: "Nothing assigned to you right now",
+    noDeliveriesHint: "When a delivery is assigned to you it will appear here immediately.",
+    signOut: "Sign out",
+  },
+
   waiter: {
     banner: "{count} tables are asking for a waiter",
     table: "Table {number}",

@@ -22,6 +22,11 @@ export default async function DashboardLayout({
   const profile = await getProfile();
   if (!profile) redirect("/onboarding");
 
+  // A driver has a restaurant and would otherwise render the dashboard shell —
+  // send them to their own app. The driver layout does the mirror bounce, so
+  // the two never overlap.
+  if (profile.role === "driver") redirect("/driver");
+
   // A profile without a readable restaurant means the row was deleted underneath
   // the user. Send them back through onboarding rather than rendering an empty shell.
   const restaurant = await getRestaurant();
