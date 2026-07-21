@@ -235,6 +235,29 @@ export const en: Dictionary = {
       "The current address ({origin}) only works on your own machine. Do not print these codes — set NEXT_PUBLIC_APP_URL to the deployed site address first.",
   },
 
+  customer: {
+    tableLabel: "Table {number}",
+    invalidTitle: "This code isn't valid",
+    invalidBody:
+      "The code may be out of date, or the restaurant may be closed right now. Ask a member of staff for another code or for the menu.",
+    emptyMenuTitle: "The menu isn't available yet",
+    emptyMenuBody: "This restaurant hasn't added any dishes yet. Ask a member of staff to order.",
+    addToOrder: "Add to order",
+    quantity: "Quantity",
+    increase: "Increase",
+    decrease: "Decrease",
+    itemNote: "Note (optional)",
+    itemNotePlaceholder: "No onions, a little spicy…",
+    added: "Added to your order",
+    yourOrder: "Your order",
+    items: "items",
+    subtotal: "Subtotal",
+    reviewOrder: "Review order",
+    emptyCart: "You haven't chosen anything yet",
+    removeLine: "Remove",
+    backToMenu: "Back to menu",
+  },
+
   settings: {
     title: "Settings",
     subtitle: "Your restaurant details, opening hours and delivery fee.",

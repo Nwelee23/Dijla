@@ -237,6 +237,29 @@ export const ar = {
       "الرابط الحالي ({origin}) يعمل على جهازك فقط. لا تطبع هذه الرموز — اضبط NEXT_PUBLIC_APP_URL على عنوان الموقع المنشور أولاً.",
   },
 
+  customer: {
+    tableLabel: "طاولة {number}",
+    invalidTitle: "هذا الرمز غير صالح",
+    invalidBody:
+      "قد يكون الرمز قديماً أو المطعم مغلقاً حالياً. اطلب من الموظف رمزاً آخر أو اسأل عن القائمة.",
+    emptyMenuTitle: "القائمة غير متاحة الآن",
+    emptyMenuBody: "المطعم لم يضف أصنافاً بعد. اسأل الموظف عن الطلب.",
+    addToOrder: "أضف إلى الطلب",
+    quantity: "الكمية",
+    increase: "زيادة",
+    decrease: "إنقاص",
+    itemNote: "ملاحظة (اختياري)",
+    itemNotePlaceholder: "بدون بصل، حار قليلاً…",
+    added: "أُضيف إلى طلبك",
+    yourOrder: "طلبك",
+    items: "صنف",
+    subtotal: "المجموع",
+    reviewOrder: "مراجعة الطلب",
+    emptyCart: "لم تختر شيئاً بعد",
+    removeLine: "إزالة",
+    backToMenu: "العودة للقائمة",
+  },
+
   settings: {
     title: "الإعدادات",
     subtitle: "بيانات مطعمك وأوقات عمله ورسوم التوصيل.",

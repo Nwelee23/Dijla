@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cairo, Noto_Sans_Arabic } from "next/font/google";
+import { Cairo } from "next/font/google";
 import { Direction } from "radix-ui";
 
 import { I18nProvider } from "@/components/i18n/i18n-provider";
@@ -14,17 +14,6 @@ import "./globals.css";
 const cairo = Cairo({
   variable: "--font-sans",
   subsets: ["arabic", "latin"],
-  display: "swap",
-});
-
-/**
- * Sorani uses Arabic script plus letters Cairo does not cover (ڕ ڵ ۆ ێ ڤ).
- * Browsers fall back per glyph, so listing Noto after Cairo keeps Arabic looking
- * like Cairo while Kurdish letters still render instead of showing tofu boxes.
- */
-const notoArabic = Noto_Sans_Arabic({
-  variable: "--font-arabic-fallback",
-  subsets: ["arabic"],
   display: "swap",
 });
 
@@ -66,7 +55,7 @@ export default async function RootLayout({
     <html
       lang={tag}
       dir={dir}
-      className={`${cairo.variable} ${notoArabic.variable} h-full antialiased`}
+      className={`${cairo.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <I18nProvider locale={locale} dictionary={dictionary}>

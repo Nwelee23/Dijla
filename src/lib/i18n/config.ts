@@ -1,9 +1,10 @@
 /**
- * Dijla speaks four languages. Two are right-to-left and two are left-to-right,
- * so direction is a property of the locale, never an assumption in a component.
+ * Arabic is the product's first language; English is the second. One is
+ * right-to-left and one is left-to-right, so direction is a property of the
+ * locale and never an assumption baked into a component.
  */
 
-export const LOCALES = ["ar", "ckb", "kmr", "en"] as const;
+export const LOCALES = ["ar", "en"] as const;
 export type Locale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = "ar";
@@ -21,10 +22,6 @@ export type LocaleMeta = {
 
 export const LOCALE_META: Record<Locale, LocaleMeta> = {
   ar: { name: "العربية", dir: "rtl", tag: "ar-IQ" },
-  // Sorani — Arabic script, right-to-left. The Kurdish of Erbil and Sulaymaniyah.
-  ckb: { name: "کوردیی ناوەندی", dir: "rtl", tag: "ckb-IQ" },
-  // Kurmanji — Latin script, left-to-right.
-  kmr: { name: "Kurdî (Kurmancî)", dir: "ltr", tag: "kmr" },
   en: { name: "English", dir: "ltr", tag: "en" },
 };
 

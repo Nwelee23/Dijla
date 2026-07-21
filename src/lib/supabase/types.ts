@@ -161,6 +161,29 @@ export type Database = {
           },
         ]
       }
+      order_counters: {
+        Row: {
+          last_number: number
+          restaurant_id: string
+        }
+        Insert: {
+          last_number?: number
+          restaurant_id: string
+        }
+        Update: {
+          last_number?: number
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_counters_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           id: string
@@ -526,6 +549,10 @@ export type Database = {
         Returns: string
       }
       current_restaurant_id: { Args: never; Returns: string }
+      get_menu_by_qr_token: { Args: { p_token: string }; Returns: Json }
+      get_menu_by_slug: { Args: { p_slug: string }; Returns: Json }
+      menu_payload: { Args: { p_restaurant: string }; Returns: Json }
+      next_order_number: { Args: { rid: string }; Returns: number }
     }
     Enums: {
       [_ in never]: never
