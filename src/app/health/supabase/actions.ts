@@ -16,6 +16,12 @@ export type ConnectionCheck = {
  * including the service_role key, reaches the browser.
  */
 export async function checkSupabaseConnection(): Promise<ConnectionCheck[]> {
+  // Server Actions are callable over HTTP regardless of which page renders them,
+  // so the guard on the page is not enough on its own.
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Diagnostics are disabled in production.");
+  }
+
   const checks: ConnectionCheck[] = [];
 
   // 1. Reachability — a real round-trip to the REST endpoint with the anon key.

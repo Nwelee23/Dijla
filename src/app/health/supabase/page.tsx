@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { CheckCircle2, XCircle } from "lucide-react";
 
 import {
@@ -20,6 +21,10 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function SupabaseHealthPage() {
+  // Development only. In production this page would let any visitor trigger
+  // service_role admin calls and read back infrastructure state.
+  if (process.env.NODE_ENV === "production") notFound();
+
   const checks = await checkSupabaseConnection();
 
   return (
