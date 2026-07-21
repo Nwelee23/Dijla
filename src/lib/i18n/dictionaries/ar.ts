@@ -224,6 +224,19 @@ export const ar = {
     qrToken: "رمز الطاولة",
   },
 
+  qr: {
+    show: "عرض رمز QR",
+    tableTitle: "طاولة {number}",
+    downloadPng: "تنزيل PNG",
+    print: "طباعة",
+    printAll: "اطبع كل الرموز",
+    printSheet: "ورقة رموز QR",
+    printSheetHint: "{count} طاولة — جاهزة للطباعة على ورق A4.",
+    scanToOrder: "امسح للطلب",
+    localhostWarning:
+      "الرابط الحالي ({origin}) يعمل على جهازك فقط. لا تطبع هذه الرموز — اضبط NEXT_PUBLIC_APP_URL على عنوان الموقع المنشور أولاً.",
+  },
+
   settings: {
     title: "الإعدادات",
     subtitle: "بيانات مطعمك وأوقات عمله ورسوم التوصيل.",

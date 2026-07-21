@@ -28,3 +28,41 @@ export function generateQrToken(): string {
 export function tableUrl(qrToken: string, origin: string): string {
   return `${origin.replace(/\/$/, "")}/t/${qrToken}`;
 }
+
+/**
+ * Error correction level M recovers ~15% of the symbol.
+ *
+ * These stickers live on restaurant tables and collect grease, scratches and
+ * spilled tea. L would print slightly smaller; M survives a rough month, which
+ * matters more than a millimetre.
+ */
+const ERROR_CORRECTION = "M" as const;
+
+/**
+ * QR as inline SVG, for on-screen display and printing.
+ *
+ * Vector rather than raster on purpose: a printed sticker is only as sharp as
+ * the source, and an SVG stays crisp at any size while costing a fraction of a
+ * PNG in page weight — which matters on the print-all sheet, where thirty of
+ * them render at once.
+ */
+export async function qrSvg(url: string): Promise<string> {
+  const QRCode = await import("qrcode");
+  return QRCode.toString(url, {
+    type: "svg",
+    errorCorrectionLevel: ERROR_CORRECTION,
+    margin: 1,
+  });
+}
+
+/** QR as a PNG buffer, for the per-table download. */
+export async function qrPng(url: string): Promise<Buffer> {
+  const QRCode = await import("qrcode");
+  return QRCode.toBuffer(url, {
+    type: "png",
+    errorCorrectionLevel: ERROR_CORRECTION,
+    margin: 2,
+    // Large enough to print at ~8cm without visible pixel edges.
+    width: 1024,
+  });
+}

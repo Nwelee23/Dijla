@@ -222,6 +222,19 @@ export const en: Dictionary = {
     qrToken: "Table code",
   },
 
+  qr: {
+    show: "Show QR code",
+    tableTitle: "Table {number}",
+    downloadPng: "Download PNG",
+    print: "Print",
+    printAll: "Print all codes",
+    printSheet: "QR code sheet",
+    printSheetHint: "{count} tables — ready to print on A4.",
+    scanToOrder: "Scan to order",
+    localhostWarning:
+      "The current address ({origin}) only works on your own machine. Do not print these codes — set NEXT_PUBLIC_APP_URL to the deployed site address first.",
+  },
+
   settings: {
     title: "Settings",
     subtitle: "Your restaurant details, opening hours and delivery fee.",

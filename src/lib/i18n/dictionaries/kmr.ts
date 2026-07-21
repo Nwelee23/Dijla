@@ -223,6 +223,19 @@ export const kmr: Dictionary = {
     qrToken: "Koda maseyê",
   },
 
+  qr: {
+    show: "Koda QR nîşan bide",
+    tableTitle: "Maseya {number}",
+    downloadPng: "PNG dakêşe",
+    print: "Çap bike",
+    printAll: "Hemû kodan çap bike",
+    printSheet: "Rûpela kodên QR",
+    printSheetHint: "{count} mase — ji bo çapkirina li ser kaxeza A4 amade ye.",
+    scanToOrder: "Ji bo siparîşê bixwîne",
+    localhostWarning:
+      "Girêdana heyî ({origin}) tenê li ser amûra te dixebite. Van kodan çap neke — pêşî NEXT_PUBLIC_APP_URL li ser navnîşana malpera weşandî saz bike.",
+  },
+
   settings: {
     title: "Mîheng",
     subtitle: "Agahiyên xwaringehê, demjimêrên kar û heqê gihandinê.",

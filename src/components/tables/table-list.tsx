@@ -35,7 +35,17 @@ type Confirm =
   | { kind: "regenerate"; table: RestaurantTable }
   | null;
 
-export function TableList({ tables }: { tables: RestaurantTable[] }) {
+/**
+ * `qrSlots` holds a server-rendered QR dialog per table id. Generating the SVG
+ * on the server keeps the `qrcode` package out of the phone's bundle entirely.
+ */
+export function TableList({
+  tables,
+  qrSlots,
+}: {
+  tables: RestaurantTable[];
+  qrSlots?: Record<string, React.ReactNode>;
+}) {
   const t = useT();
   const [isPending, startTransition] = useTransition();
   const [confirm, setConfirm] = useState<Confirm>(null);
@@ -112,6 +122,8 @@ export function TableList({ tables }: { tables: RestaurantTable[] }) {
               disabled={isPending}
               aria-label={t.tables.activeSwitch}
             />
+
+            {qrSlots?.[table.id]}
 
             <TableDialog
               table={table}

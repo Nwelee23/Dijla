@@ -223,6 +223,19 @@ export const ckb: Dictionary = {
     qrToken: "کۆدی مێز",
   },
 
+  qr: {
+    show: "پیشاندانی کۆدی QR",
+    tableTitle: "مێزی {number}",
+    downloadPng: "داگرتنی PNG",
+    print: "چاپکردن",
+    printAll: "هەموو کۆدەکان چاپ بکە",
+    printSheet: "پەڕەی کۆدەکانی QR",
+    printSheetHint: "{count} مێز — ئامادەیە بۆ چاپکردن لەسەر کاغەزی A4.",
+    scanToOrder: "بۆ داواکردن سکان بکە",
+    localhostWarning:
+      "بەستەری ئێستا ({origin}) تەنها لەسەر ئامێری خۆت کار دەکات. ئەم کۆدانە چاپ مەکە — سەرەتا NEXT_PUBLIC_APP_URL بۆ ناونیشانی ماڵپەڕە بڵاوکراوەکە ڕێک بخە.",
+  },
+
   settings: {
     title: "ڕێکخستنەکان",
     subtitle: "زانیاری چێشتخانە و کاتەکانی کارکردن و کرێی گەیاندن.",
