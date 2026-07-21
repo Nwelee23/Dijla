@@ -603,15 +603,16 @@ export type Database = {
       driver_cash_today: {
         Args: never
         Returns: {
+          cash_total: number
+          delivered_count: number
           driver_id: string
           driver_name: string
-          delivered_count: number
-          cash_total: number
         }[]
       }
       get_menu_by_qr_token: { Args: { p_token: string }; Returns: Json }
       get_menu_by_slug: { Args: { p_slug: string }; Returns: Json }
       get_order_status: { Args: { p_order_id: string }; Returns: Json }
+      is_restaurant_staff: { Args: never; Returns: boolean }
       menu_payload: { Args: { p_restaurant: string }; Returns: Json }
       next_order_number: { Args: { rid: string }; Returns: number }
     }
