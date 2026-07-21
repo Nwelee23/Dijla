@@ -14,9 +14,15 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import type { OrderType as AnyOrderType } from "@/lib/order-status";
 import { cn, formatMoney } from "@/lib/utils";
 
-export type OrderType = "delivery" | "pickup";
+/**
+ * The two a public link offers. Dine-in is not a choice made here — it comes
+ * from having scanned a table's QR code. Derived rather than retyped so the
+ * toggle cannot drift from the statuses the kitchen board knows.
+ */
+export type OrderType = Exclude<AnyOrderType, "dine_in">;
 
 export type CheckoutDetails = {
   type: OrderType;

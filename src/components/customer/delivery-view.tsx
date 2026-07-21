@@ -98,7 +98,9 @@ export function DeliveryView({
       }
 
       requestId.current = null;
-      placed.save(result.orderId, result.orderNumber);
+      // The type rides along so the tracker knows whether this order still has
+      // a drive ahead of it after the kitchen is done.
+      placed.save(result.orderId, result.orderNumber, details.type);
       cart.clear();
       setCheckoutOpen(false);
     });
@@ -125,6 +127,7 @@ export function DeliveryView({
         orderId={placed.order.orderId}
         fallbackOrderNumber={placed.order.orderNumber}
         qrToken={null}
+        type={placed.order.type}
         currency={currency}
         onNewOrder={placed.clearOrder}
       />

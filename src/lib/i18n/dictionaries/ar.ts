@@ -328,18 +328,39 @@ export const ar = {
   },
 
   track: {
+    // Wording for a dine-in order. Delivery and pickup differ only where the
+    // step means something different to the person waiting, and override below.
     steps: {
       new: "وصل طلبك",
       accepted: "المطعم قبل الطلب",
       preparing: "قيد التحضير",
       ready: "جاهز",
+      out_for_delivery: "خرج للتوصيل",
       delivered: "تم التقديم",
       cancelled: "أُلغي الطلب",
     },
+    byType: {
+      delivery: { ready: "جاهز للتوصيل", delivered: "تم التسليم" },
+      pickup: { ready: "جاهز للاستلام", delivered: "تم الاستلام" },
+    },
     cancelledBody: "تواصل مع الموظف لمعرفة السبب.",
-    readyBody: "طلبك جاهز — سيصلك حالاً.",
+    readyBody: {
+      dine_in: "طلبك جاهز — سيصلك حالاً.",
+      delivery: "طلبك جاهز — سيخرج للتوصيل قريباً.",
+      pickup: "طلبك جاهز — تفضّل لاستلامه من المطعم.",
+    },
+    outForDeliveryBody: "طلبك بالطريق إليك الآن.",
+    deliveredBody: {
+      dine_in: "بالعافية.",
+      delivery: "وصل طلبك. بالعافية.",
+      pickup: "تم استلام طلبك. بالعافية.",
+    },
     amountDue: "المبلغ المطلوب",
-    payCash: "الدفع نقداً عند التقديم",
+    payCash: {
+      dine_in: "الدفع نقداً عند التقديم",
+      delivery: "الدفع نقداً عند الاستلام",
+      pickup: "الدفع نقداً عند الاستلام من المطعم",
+    },
     callWaiter: "نادِ النادل",
     calling: "جارٍ الإرسال…",
     waiterCalled: "تم إبلاغ الموظف",

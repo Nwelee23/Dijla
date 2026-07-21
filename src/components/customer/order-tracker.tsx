@@ -7,15 +7,14 @@ import { toast } from "sonner";
 import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { useOrderStatus } from "@/lib/hooks/use-order-status";
+import { trackingSteps, type OrderType } from "@/lib/order-status";
 import { formatMoney, cn } from "@/lib/utils";
-
-/** The steps a dine-in order walks through, in order. */
-const STEPS = ["new", "accepted", "preparing", "ready"] as const;
 
 export function OrderTracker({
   orderId,
   fallbackOrderNumber,
   qrToken,
+  type = "dine_in",
   currency,
   onNewOrder,
 }: {
@@ -23,6 +22,7 @@ export function OrderTracker({
   fallbackOrderNumber: number;
   /** Null for delivery and pickup — there is no table to call a waiter to. */
   qrToken: string | null;
+  type?: OrderType;
   currency: string;
   onNewOrder: () => void;
 }) {
@@ -33,9 +33,20 @@ export function OrderTracker({
 
   const status = live?.status ?? "new";
   const orderNumber = live?.orderNumber ?? fallbackOrderNumber;
-  const currentStep = STEPS.indexOf(status as (typeof STEPS)[number]);
   const isCancelled = status === "cancelled";
-  const isDelivered = status === "delivered";
+
+  const steps = trackingSteps(type, status);
+  const currentStep = steps.indexOf(status as (typeof steps)[number]);
+
+  // Only where waiting for it means something different: a pickup customer
+  // reads "ready" as "leave the house now", a diner as "look up".
+  const overrides = (t.track.byType as Record<string, Record<string, string>>)[
+    type
+  ];
+  const stepLabel = (step: string) =>
+    overrides?.[step] ?? (t.track.steps as Record<string, string>)[step] ?? step;
+
+  const byType = <T,>(map: Record<string, T>) => map[type] ?? map.dine_in;
 
   function callWaiter() {
     startCalling(async () => {
@@ -80,10 +91,9 @@ export function OrderTracker({
         </div>
       ) : (
         <ol className="space-y-1">
-          {STEPS.map((step, index) => {
-            // Delivered means every step behind it is done.
-            const reached = isDelivered || index <= currentStep;
-            const isCurrent = !isDelivered && index === currentStep;
+          {steps.map((step, index) => {
+            const reached = index <= currentStep;
+            const isCurrent = index === currentStep;
 
             return (
               <li
@@ -114,7 +124,7 @@ export function OrderTracker({
                     isCurrent && "text-primary font-bold"
                   )}
                 >
-                  {t.track.steps[step]}
+                  {stepLabel(step)}
                 </span>
               </li>
             );
@@ -124,7 +134,19 @@ export function OrderTracker({
 
       {status === "ready" && (
         <p className="text-center font-medium text-emerald-700 dark:text-emerald-400">
-          {t.track.readyBody}
+          {byType(t.track.readyBody)}
+        </p>
+      )}
+
+      {status === "out_for_delivery" && (
+        <p className="text-center font-medium text-violet-700 dark:text-violet-400">
+          {t.track.outForDeliveryBody}
+        </p>
+      )}
+
+      {status === "delivered" && (
+        <p className="text-muted-foreground text-center font-medium">
+          {byType(t.track.deliveredBody)}
         </p>
       )}
 
@@ -134,7 +156,9 @@ export function OrderTracker({
           <p className="text-2xl font-bold tabular-nums">
             {formatMoney(live.total, currency)}
           </p>
-          <p className="text-muted-foreground text-xs">{t.track.payCash}</p>
+          <p className="text-muted-foreground text-xs">
+            {byType(t.track.payCash)}
+          </p>
         </div>
       )}
 

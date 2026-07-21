@@ -2,10 +2,17 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
+import type { OrderType } from "@/lib/order-status";
+
 export type PlacedOrder = {
   orderId: string;
   orderNumber: number;
   placedAt: number;
+  /**
+   * Optional: entries written before 3.5 do not carry it, and the tracker
+   * recovers from its absence rather than demanding a re-order.
+   */
+  type?: OrderType;
 };
 
 const STORAGE_PREFIX = "dijla:order:";
@@ -88,8 +95,8 @@ export function usePlacedOrder(tableId: string) {
   );
 
   const save = useCallback(
-    (orderId: string, orderNumber: number) =>
-      write(storageKey, { orderId, orderNumber, placedAt: Date.now() }),
+    (orderId: string, orderNumber: number, type: OrderType = "dine_in") =>
+      write(storageKey, { orderId, orderNumber, placedAt: Date.now(), type }),
     [storageKey]
   );
 

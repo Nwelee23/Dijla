@@ -49,6 +49,44 @@ export function nextStatus(status: string, type: string): OrderStatus | null {
   return flow[status as OrderStatus] ?? null;
 }
 
+/**
+ * The same ladder, as the customer watches it.
+ *
+ * It ends at `delivered` rather than `ready`, because the customer's question
+ * is not "is it cooked" but "is it here yet" — and for a delivery order the
+ * longest wait of the whole flow is the one after the kitchen is done. A
+ * tracker without `out_for_delivery` sits at "ready" while the driver is
+ * already outside, which reads as stuck.
+ */
+const TRACKED_BY_TYPE: Record<OrderType, readonly OrderStatus[]> = {
+  dine_in: ["new", "accepted", "preparing", "ready", "delivered"],
+  pickup: ["new", "accepted", "preparing", "ready", "delivered"],
+  delivery: [
+    "new",
+    "accepted",
+    "preparing",
+    "ready",
+    "out_for_delivery",
+    "delivered",
+  ],
+};
+
+export function trackingSteps(
+  type: string | undefined,
+  status: string
+): readonly OrderStatus[] {
+  const steps = TRACKED_BY_TYPE[type as OrderType] ?? TRACKED_BY_TYPE.dine_in;
+
+  // Self-healing. The type is remembered on the device, so an order placed
+  // before we started recording it — or on a phone that lost its storage —
+  // arrives here as undefined. The status gives the type away: nothing but a
+  // delivery ever reaches `out_for_delivery`, so rather than render a ladder
+  // the order has already stepped off, widen to the one that contains it.
+  const fits =
+    status === "cancelled" || steps.includes(status as OrderStatus);
+  return fits ? steps : TRACKED_BY_TYPE.delivery;
+}
+
 /** Orders still needing attention. Anything else has left the floor. */
 export const ACTIVE_STATUSES: OrderStatus[] = [
   "new",
