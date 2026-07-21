@@ -536,6 +536,45 @@ export type Database = {
           },
         ]
       }
+      waiter_calls: {
+        Row: {
+          acknowledged: boolean
+          created_at: string
+          id: string
+          restaurant_id: string
+          table_id: string
+        }
+        Insert: {
+          acknowledged?: boolean
+          created_at?: string
+          id?: string
+          restaurant_id: string
+          table_id: string
+        }
+        Update: {
+          acknowledged?: boolean
+          created_at?: string
+          id?: string
+          restaurant_id?: string
+          table_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waiter_calls_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waiter_calls_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

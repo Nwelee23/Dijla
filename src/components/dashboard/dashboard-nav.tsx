@@ -10,8 +10,7 @@ import { cn } from "@/lib/utils";
 
 function useIsActive(href: string) {
   const pathname = usePathname();
-  // "/dashboard" must not light up on every child route.
-  return href === "/dashboard" ? pathname === href : pathname.startsWith(href);
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 function NavLink({ item, className }: { item: NavItem; className?: string }) {

@@ -23,7 +23,7 @@ export type NavItem = {
 
 export const NAV_ITEMS: NavItem[] = [
   {
-    href: "/dashboard",
+    href: "/dashboard/orders",
     label: "orders",
     icon: ClipboardList,
     enabled: true,
