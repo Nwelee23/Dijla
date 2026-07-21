@@ -5,11 +5,12 @@ import { Bike, ChevronLeft, Clock, Loader2, MapPin, Navigation, Phone, Store, Us
 import { toast } from "sonner";
 
 import { setOrderStatus } from "@/app/dashboard/orders/actions";
+import { AssignDriver } from "@/components/orders/assign-driver";
 import { MapThumb } from "@/components/orders/map-thumb";
 import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { interpolate } from "@/lib/i18n";
-import type { LiveOrder } from "@/lib/hooks/use-realtime-orders";
+import type { LiveOrder, OrderDriver } from "@/lib/hooks/use-realtime-orders";
 import { formatIraqiPhone } from "@/lib/auth/phone";
 import { navigationUrl } from "@/lib/map-tiles";
 import {
@@ -31,10 +32,12 @@ function elapsed(t: ReturnType<typeof useT>, createdAt: string | null) {
 
 export function OrderCard({
   order,
+  drivers,
   isUnseen,
   onAcknowledge,
 }: {
   order: LiveOrder;
+  drivers: OrderDriver[];
   isUnseen: boolean;
   onAcknowledge: () => void;
 }) {
@@ -47,6 +50,12 @@ export function OrderCard({
   const isDelivery = order.type === "delivery";
   const isPickup = order.type === "pickup";
   const hasPin = order.customer_lat !== null && order.customer_lng !== null;
+
+  // A driver is worth assigning once the food is being made and until it has
+  // gone: a brand-new order might still be cancelled, and a delivered or
+  // cancelled one has no run left to give.
+  const canAssign =
+    isDelivery && status !== "new" && status !== "delivered" && status !== "cancelled";
 
   function move(to: OrderStatus) {
     startTransition(async () => {
@@ -150,6 +159,14 @@ export function OrderCard({
                 </a>
               </Button>
             </div>
+          )}
+
+          {canAssign && (
+            <AssignDriver
+              orderId={order.id}
+              assigned={order.driver}
+              drivers={drivers}
+            />
           )}
         </div>
       ) : (

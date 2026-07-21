@@ -1,5 +1,9 @@
 import { OrderBoard } from "@/components/orders/order-board";
-import type { LiveOrder } from "@/lib/hooks/use-realtime-orders";
+import {
+  ORDERS_SELECT,
+  shapeOrder,
+  type LiveOrder,
+} from "@/lib/hooks/use-realtime-orders";
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -8,19 +12,16 @@ export async function generateMetadata() {
   return { title: t.meta.orders };
 }
 
-const SELECT =
-  "id, order_number, status, table_id, subtotal, delivery_fee, total, created_at, type, customer_name, customer_phone, customer_landmark, customer_lat, customer_lng, delivery_notes, order_items(id, order_id, name_snapshot, price_snapshot, quantity, notes), tables(table_number)";
-
 export default async function OrdersPage() {
   const t = await getT();
   const supabase = await createClient();
 
   // Rendered on the server so the board is already populated on first paint —
   // staff opening the tablet at the start of service should not watch a spinner.
-  const [{ data }, { data: calls }] = await Promise.all([
+  const [{ data }, { data: calls }, { data: drivers }] = await Promise.all([
     supabase
       .from("orders")
-      .select(SELECT)
+      .select(ORDERS_SELECT)
       .order("created_at", { ascending: false })
       .limit(100),
     supabase
@@ -28,16 +29,19 @@ export default async function OrdersPage() {
       .select("id, tables(table_number)")
       .eq("acknowledged", false)
       .order("created_at", { ascending: true }),
+    // The roster the assign control offers. RLS gives staff their own
+    // restaurant's profiles; the filter narrows to active drivers.
+    supabase
+      .from("profiles")
+      .select("id, full_name, driver_status")
+      .eq("role", "driver")
+      .eq("is_active", true)
+      .order("full_name", { ascending: true }),
   ]);
 
-  const initialOrders: LiveOrder[] = (data ?? []).map((row) => {
-    const { order_items, tables, ...order } = row;
-    return {
-      ...order,
-      items: order_items ?? [],
-      tableNumber: tables?.table_number ?? null,
-    };
-  });
+  const initialOrders: LiveOrder[] = (
+    data as Parameters<typeof shapeOrder>[0][] | null ?? []
+  ).map(shapeOrder);
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 p-4 sm:p-6">
@@ -52,6 +56,7 @@ export default async function OrdersPage() {
           id: row.id,
           tableNumber: row.tables?.table_number ?? null,
         }))}
+        drivers={drivers ?? []}
       />
     </div>
   );

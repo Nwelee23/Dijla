@@ -317,6 +317,13 @@ export const ar = {
     updated: "تم تحديث الحالة",
     updateFailed: "تعذّر تحديث الحالة",
     navigate: "التنقّل إلى الموقع",
+    assignDriver: "إسناد إلى سائق",
+    assignedDriver: "السائق المكلَّف",
+    assigned: "تم إسناد الطلب للسائق",
+    unassigned: "تم إلغاء إسناد السائق",
+    unassign: "إلغاء الإسناد",
+    noDrivers: "لا يوجد سائقون مسجَّلون",
+    assignFailed: "تعذّر الإسناد. حاول مرة أخرى.",
     showDone: "عرض المكتملة",
     hideDone: "إخفاء المكتملة",
     status: {

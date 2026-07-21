@@ -38,3 +38,49 @@ export async function setOrderStatus(
   revalidatePath("/dashboard/orders");
   return { ok: true };
 }
+
+/**
+ * Assign a delivery order to one of the restaurant's own drivers, reassign it,
+ * or (with driverId null) take it back.
+ *
+ * The validation that matters is that the driver is ours. RLS lets staff update
+ * any column of their own orders, including driver_id, so nothing at the row
+ * level stops an owner pointing driver_id at a stranger's account — and doing so
+ * would hand that stranger read access to this order through the driver policy.
+ * So the target is checked here: it must be an active driver profile belonging
+ * to this restaurant, read through the caller's own RLS (which only exposes this
+ * restaurant's profiles) so an id from another tenant simply is not found.
+ */
+export async function assignDriver(
+  orderId: string,
+  driverId: string | null
+): Promise<ActionResult> {
+  const t = await getT();
+  const supabase = await createClient();
+
+  if (driverId) {
+    const { data: driver } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", driverId)
+      .eq("role", "driver")
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (!driver) return { ok: false, error: t.orders.assignFailed };
+  }
+
+  // Only delivery orders carry a driver. Scoped to type as well, so a dine-in
+  // or pickup id cannot be given one by crafting a request.
+  const { data, error } = await supabase
+    .from("orders")
+    .update({ driver_id: driverId })
+    .eq("id", orderId)
+    .eq("type", "delivery")
+    .select("id");
+
+  if (error || !data?.length) return { ok: false, error: t.orders.assignFailed };
+
+  revalidatePath("/dashboard/orders");
+  return { ok: true };
+}

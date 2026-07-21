@@ -315,6 +315,13 @@ export const en: Dictionary = {
     updated: "Status updated",
     updateFailed: "Could not update the status",
     navigate: "Navigate",
+    assignDriver: "Assign a driver",
+    assignedDriver: "Assigned driver",
+    assigned: "Order assigned to the driver",
+    unassigned: "Driver unassigned",
+    unassign: "Unassign",
+    noDrivers: "No drivers registered",
+    assignFailed: "Could not assign. Try again.",
     showDone: "Show completed",
     hideDone: "Hide completed",
     status: {

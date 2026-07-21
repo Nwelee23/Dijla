@@ -10,7 +10,11 @@ import { OrderCard } from "@/components/orders/order-card";
 import { WaiterCalls, type Call } from "@/components/orders/waiter-calls";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useRealtimeOrders, type LiveOrder } from "@/lib/hooks/use-realtime-orders";
+import {
+  useRealtimeOrders,
+  type LiveOrder,
+  type OrderDriver,
+} from "@/lib/hooks/use-realtime-orders";
 import { interpolate } from "@/lib/i18n";
 import { isActive } from "@/lib/order-status";
 import { armAudio, playOrderAlert } from "@/lib/sound";
@@ -21,9 +25,11 @@ const SOUND_KEY = "dijla:orders:sound";
 export function OrderBoard({
   initialOrders,
   initialCalls,
+  drivers,
 }: {
   initialOrders: LiveOrder[];
   initialCalls: Call[];
+  drivers: OrderDriver[];
 }) {
   const t = useT();
   const {
@@ -136,6 +142,7 @@ export function OrderBoard({
                 <OrderCard
                   key={order.id}
                   order={order}
+                  drivers={drivers}
                   isUnseen={unseen.has(order.id)}
                   onAcknowledge={() => acknowledge(order.id)}
                 />
