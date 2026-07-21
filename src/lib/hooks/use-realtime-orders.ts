@@ -7,7 +7,21 @@ import type { Tables } from "@/lib/supabase/types";
 
 export type OrderRow = Pick<
   Tables<"orders">,
-  "id" | "order_number" | "status" | "table_id" | "total" | "created_at" | "type"
+  | "id"
+  | "order_number"
+  | "status"
+  | "table_id"
+  | "subtotal"
+  | "delivery_fee"
+  | "total"
+  | "created_at"
+  | "type"
+  | "customer_name"
+  | "customer_phone"
+  | "customer_landmark"
+  | "customer_lat"
+  | "customer_lng"
+  | "delivery_notes"
 >;
 
 export type OrderItemRow = Pick<
@@ -21,7 +35,7 @@ export type LiveOrder = OrderRow & {
 };
 
 const SELECT =
-  "id, order_number, status, table_id, total, created_at, type, order_items(id, order_id, name_snapshot, price_snapshot, quantity, notes), tables(table_number)";
+  "id, order_number, status, table_id, subtotal, delivery_fee, total, created_at, type, customer_name, customer_phone, customer_landmark, customer_lat, customer_lng, delivery_notes, order_items(id, order_id, name_snapshot, price_snapshot, quantity, notes), tables(table_number)";
 
 type Fetched = OrderRow & {
   order_items: OrderItemRow[];
@@ -29,16 +43,11 @@ type Fetched = OrderRow & {
 };
 
 function shape(row: Fetched): LiveOrder {
+  const { order_items, tables, ...order } = row;
   return {
-    id: row.id,
-    order_number: row.order_number,
-    status: row.status,
-    table_id: row.table_id,
-    total: row.total,
-    created_at: row.created_at,
-    type: row.type,
-    items: row.order_items ?? [],
-    tableNumber: row.tables?.table_number ?? null,
+    ...order,
+    items: order_items ?? [],
+    tableNumber: tables?.table_number ?? null,
   };
 }
 

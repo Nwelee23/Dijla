@@ -9,7 +9,7 @@ export async function generateMetadata() {
 }
 
 const SELECT =
-  "id, order_number, status, table_id, total, created_at, type, order_items(id, order_id, name_snapshot, price_snapshot, quantity, notes), tables(table_number)";
+  "id, order_number, status, table_id, subtotal, delivery_fee, total, created_at, type, customer_name, customer_phone, customer_landmark, customer_lat, customer_lng, delivery_notes, order_items(id, order_id, name_snapshot, price_snapshot, quantity, notes), tables(table_number)";
 
 export default async function OrdersPage() {
   const t = await getT();
@@ -30,17 +30,14 @@ export default async function OrdersPage() {
       .order("created_at", { ascending: true }),
   ]);
 
-  const initialOrders: LiveOrder[] = (data ?? []).map((row) => ({
-    id: row.id,
-    order_number: row.order_number,
-    status: row.status,
-    table_id: row.table_id,
-    total: row.total,
-    created_at: row.created_at,
-    type: row.type,
-    items: row.order_items ?? [],
-    tableNumber: row.tables?.table_number ?? null,
-  }));
+  const initialOrders: LiveOrder[] = (data ?? []).map((row) => {
+    const { order_items, tables, ...order } = row;
+    return {
+      ...order,
+      items: order_items ?? [],
+      tableNumber: tables?.table_number ?? null,
+    };
+  });
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 p-4 sm:p-6">

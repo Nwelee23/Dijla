@@ -313,6 +313,7 @@ export const ar = {
     cancelBody: "لا يمكن التراجع. أخبر الطاولة قبل الإلغاء.",
     updated: "تم تحديث الحالة",
     updateFailed: "تعذّر تحديث الحالة",
+    navigate: "التنقّل إلى الموقع",
     showDone: "عرض المكتملة",
     hideDone: "إخفاء المكتملة",
     status: {

@@ -1,17 +1,20 @@
 "use client";
 
 import { useTransition } from "react";
-import { ChevronLeft, Clock, Loader2, X } from "lucide-react";
+import { Bike, ChevronLeft, Clock, Loader2, MapPin, Navigation, Phone, Store, User, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { setOrderStatus } from "@/app/dashboard/orders/actions";
+import { MapThumb } from "@/components/orders/map-thumb";
 import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { interpolate } from "@/lib/i18n";
 import type { LiveOrder } from "@/lib/hooks/use-realtime-orders";
+import { formatIraqiPhone } from "@/lib/auth/phone";
+import { navigationUrl } from "@/lib/map-tiles";
 import {
-  NEXT_STATUS,
   STATUS_STYLES,
+  nextStatus,
   statusLabel,
   type OrderStatus,
 } from "@/lib/order-status";
@@ -39,7 +42,11 @@ export function OrderCard({
   const [isPending, startTransition] = useTransition();
 
   const status = order.status as OrderStatus;
-  const next = NEXT_STATUS[status] ?? null;
+  const next = nextStatus(status, order.type);
+
+  const isDelivery = order.type === "delivery";
+  const isPickup = order.type === "pickup";
+  const hasPin = order.customer_lat !== null && order.customer_lng !== null;
 
   function move(to: OrderStatus) {
     startTransition(async () => {
@@ -88,11 +95,70 @@ export function OrderCard({
         </span>
       </header>
 
-      <p className="font-semibold">
-        {order.tableNumber
-          ? interpolate(t.orders.table, { number: order.tableNumber })
-          : t.orders.noTable}
-      </p>
+      {isDelivery || isPickup ? (
+        <div className="space-y-2">
+          <p className="flex items-center gap-2 font-semibold">
+            {isDelivery ? <Bike className="size-4" /> : <Store className="size-4" />}
+            {isDelivery ? t.checkout.delivery : t.checkout.pickup}
+          </p>
+
+          {order.customer_name && (
+            <p className="flex items-center gap-2 text-sm">
+              <User className="text-muted-foreground size-4 shrink-0" />
+              {order.customer_name}
+            </p>
+          )}
+
+          {order.customer_phone && (
+            // Tap to call: staff ring the customer from the same screen rather
+            // than copying a number into the phone app mid-service.
+            <a
+              href={`tel:${order.customer_phone}`}
+              className="text-primary flex items-center gap-2 font-medium"
+              dir="ltr"
+            >
+              <Phone className="size-4 shrink-0" />
+              {formatIraqiPhone(order.customer_phone)}
+            </a>
+          )}
+
+          {order.customer_landmark && (
+            <p className="flex items-start gap-2 text-sm">
+              <MapPin className="text-muted-foreground mt-0.5 size-4 shrink-0" />
+              {order.customer_landmark}
+            </p>
+          )}
+
+          {order.delivery_notes && (
+            <p className="text-muted-foreground text-sm">{order.delivery_notes}</p>
+          )}
+
+          {isDelivery && hasPin && (
+            <div className="space-y-2">
+              <MapThumb
+                lat={Number(order.customer_lat)}
+                lng={Number(order.customer_lng)}
+              />
+              <Button asChild variant="outline" size="sm">
+                <a
+                  href={navigationUrl(Number(order.customer_lat), Number(order.customer_lng))}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <Navigation />
+                  {t.orders.navigate}
+                </a>
+              </Button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <p className="font-semibold">
+          {order.tableNumber
+            ? interpolate(t.orders.table, { number: order.tableNumber })
+            : t.orders.noTable}
+        </p>
+      )}
 
       <ul className="space-y-1.5">
         {order.items.map((item) => (
@@ -117,9 +183,17 @@ export function OrderCard({
       </ul>
 
       <div className="flex items-center justify-between gap-2 border-t pt-3">
-        <span className="text-lg font-bold tabular-nums">
-          {formatMoney(Number(order.total))}
-        </span>
+        <div>
+          {Number(order.delivery_fee) > 0 && (
+            <p className="text-muted-foreground text-xs tabular-nums">
+              {formatMoney(Number(order.subtotal))} + {t.checkout.deliveryFee}{" "}
+              {formatMoney(Number(order.delivery_fee))}
+            </p>
+          )}
+          <span className="text-lg font-bold tabular-nums">
+            {formatMoney(Number(order.total))}
+          </span>
+        </div>
 
         <div className="flex items-center gap-2">
           {status !== "cancelled" && status !== "delivered" && (

@@ -311,6 +311,7 @@ export const en: Dictionary = {
     cancelBody: "This cannot be undone. Tell the table before cancelling.",
     updated: "Status updated",
     updateFailed: "Could not update the status",
+    navigate: "Navigate",
     showDone: "Show completed",
     hideDone: "Hide completed",
     status: {
