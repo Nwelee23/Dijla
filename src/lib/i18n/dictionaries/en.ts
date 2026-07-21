@@ -258,6 +258,27 @@ export const en: Dictionary = {
     backToMenu: "Back to menu",
   },
 
+  order: {
+    place: "Send order",
+    placing: "Sending…",
+    placedTitle: "Your order is in",
+    orderNumber: "Order number",
+    placedBody: "The kitchen has your order. Its status will show here.",
+    newOrder: "New order",
+    errors: {
+      invalid_request: "Something went wrong with the order. Refresh and try again.",
+      invalid_table: "This table is no longer available. Ask a member of staff.",
+      empty_order: "You haven't chosen anything.",
+      too_many_lines: "That order is too large. Send it in two parts.",
+      invalid_quantity: "That quantity isn't valid.",
+      unavailable_items:
+        "One of the dishes is no longer available. Refresh to see the current menu.",
+      rate_limited: "Too many orders in a short time. Wait a moment or ask a member of staff.",
+      server_error: "The order couldn't be sent. Try again.",
+      network: "No connection. Check your internet and try again.",
+    },
+  },
+
   settings: {
     title: "Settings",
     subtitle: "Your restaurant details, opening hours and delivery fee.",

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import Image from "next/image";
-import { ImageOff, Minus, Plus, Trash2 } from "lucide-react";
+import { CheckCircle2, ImageOff, Loader2, Minus, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { CartBar } from "@/components/customer/cart-bar";
@@ -16,22 +16,99 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useCart } from "@/lib/hooks/use-cart";
+import { usePlacedOrder } from "@/lib/hooks/use-placed-order";
 import type { DineInMenu, MenuItem } from "@/lib/menu";
+import type { OrderError, PlaceOrderResponse } from "@/lib/orders";
 import { formatMoney } from "@/lib/utils";
 
-export function MenuView({ menu }: { menu: DineInMenu }) {
+export function MenuView({
+  menu,
+  qrToken,
+}: {
+  menu: DineInMenu;
+  qrToken: string;
+}) {
   const t = useT();
   const cart = useCart(menu.table.id);
+  const placed = usePlacedOrder(menu.table.id);
 
   const [selected, setSelected] = useState<MenuItem | null>(null);
   const [itemOpen, setItemOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  const [isSending, startSending] = useTransition();
+
+  // Held across retries so a resend after a dropped response is recognised as
+  // the same order, and cleared once one actually lands.
+  const requestId = useRef<string | null>(null);
 
   const { currency } = menu.restaurant;
+
+  function placeOrder() {
+    requestId.current ??= crypto.randomUUID();
+
+    startSending(async () => {
+      let result: PlaceOrderResponse;
+      try {
+        const response = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            qrToken,
+            requestId: requestId.current,
+            // Only ids, quantities and notes leave the phone. The server
+            // re-reads every price, so nothing here can change the bill.
+            lines: cart.lines.map((line) => ({
+              itemId: line.itemId,
+              quantity: line.quantity,
+              note: line.note,
+            })),
+          }),
+        });
+        result = (await response.json()) as PlaceOrderResponse;
+      } catch {
+        toast.error(t.order.errors.network);
+        return;
+      }
+
+      if (!result.ok) {
+        const key = result.error as OrderError;
+        toast.error(t.order.errors[key] ?? t.order.errors.server_error);
+        return;
+      }
+
+      requestId.current = null;
+      placed.save(result.orderId, result.orderNumber);
+      cart.clear();
+      setCartOpen(false);
+    });
+  }
 
   function openItem(item: MenuItem) {
     setSelected(item);
     setItemOpen(true);
+  }
+
+  if (placed.order) {
+    return (
+      <div className="flex flex-col items-center gap-5 py-16 text-center">
+        <CheckCircle2 className="size-16 text-emerald-600" />
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold">{t.order.placedTitle}</h2>
+          <p className="text-muted-foreground text-sm">{t.order.placedBody}</p>
+        </div>
+
+        <div className="bg-primary/10 rounded-2xl px-8 py-4">
+          <p className="text-muted-foreground text-sm">{t.order.orderNumber}</p>
+          <p className="text-primary text-5xl font-bold tabular-nums">
+            {placed.order.orderNumber}
+          </p>
+        </div>
+
+        <Button variant="outline" onClick={placed.clearOrder}>
+          {t.order.newOrder}
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -184,9 +261,19 @@ export function MenuView({ menu }: { menu: DineInMenu }) {
                 </div>
 
                 <Button
-                  variant="outline"
-                  className="h-12 w-full"
+                  className="h-12 w-full text-base"
+                  onClick={placeOrder}
+                  disabled={isSending}
+                >
+                  {isSending && <Loader2 className="animate-spin" />}
+                  {isSending ? t.order.placing : t.order.place}
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  className="h-11 w-full"
                   onClick={() => setCartOpen(false)}
+                  disabled={isSending}
                 >
                   {t.customer.backToMenu}
                 </Button>

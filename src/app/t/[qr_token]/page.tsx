@@ -103,7 +103,7 @@ export default async function TableMenuPage({
           </div>
         </div>
       ) : (
-        <MenuView menu={menu} />
+        <MenuView menu={menu} qrToken={qr_token} />
       )}
     </main>
   );
