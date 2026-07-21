@@ -10,6 +10,7 @@ import { OrderCard } from "@/components/orders/order-card";
 import { WaiterCalls, type Call } from "@/components/orders/waiter-calls";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLiveDrivers } from "@/lib/hooks/use-live-drivers";
 import {
   useRealtimeOrders,
   type LiveOrder,
@@ -25,13 +26,14 @@ const SOUND_KEY = "dijla:orders:sound";
 export function OrderBoard({
   initialOrders,
   initialCalls,
-  drivers,
+  drivers: initialDrivers,
 }: {
   initialOrders: LiveOrder[];
   initialCalls: Call[];
   drivers: OrderDriver[];
 }) {
   const t = useT();
+  const drivers = useLiveDrivers(initialDrivers);
   const {
     orders,
     isLive,
