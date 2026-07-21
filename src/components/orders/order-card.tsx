@@ -98,6 +98,15 @@ export function OrderCard({
           </span>
         )}
 
+        {/* Dispatch's cue: a delivery being worked with nobody to carry it.
+            Amber, so it reads across the board without shouting like a new order. */}
+        {canAssign && !order.driver && (
+          <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+            <Bike className="size-3.5" />
+            {t.orders.needsDriver}
+          </span>
+        )}
+
         <span className="text-muted-foreground ms-auto flex items-center gap-1 text-sm">
           <Clock className="size-3.5" />
           {elapsed(t, order.created_at)}

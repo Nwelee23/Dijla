@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { Bike, Check, Loader2, UserX } from "lucide-react";
+import { Bike, Check, Loader2, TriangleAlert, UserX } from "lucide-react";
 import { toast } from "sonner";
 
 import { assignDriver } from "@/app/dashboard/orders/actions";
@@ -61,23 +61,38 @@ export function AssignDriver({
       driver.id === assigned?.id
   );
 
+  // An assigned driver who has gone offline is still holding the order — the
+  // owner needs to see that to decide whether to reassign, so the button turns
+  // to a warning rather than staying a calm "assigned".
+  const assignedOffline =
+    assigned != null && (assigned.driver_status ?? "offline") === "offline";
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant={assigned ? "outline" : "secondary"}
+          variant={assignedOffline ? "outline" : assigned ? "outline" : "secondary"}
           size="sm"
           disabled={isPending}
-          className="w-full justify-start"
+          className={cn(
+            "w-full justify-start",
+            assignedOffline &&
+              "border-amber-300 text-amber-900 dark:border-amber-900 dark:text-amber-200"
+          )}
         >
           {isPending ? (
             <Loader2 className="animate-spin" />
+          ) : assignedOffline ? (
+            <TriangleAlert className="shrink-0" />
           ) : (
             <Bike className="shrink-0" />
           )}
           {assigned
             ? assigned.full_name ?? t.orders.assignedDriver
             : t.orders.assignDriver}
+          {assignedOffline && (
+            <span className="text-xs font-normal">· {t.orders.driverOffline}</span>
+          )}
         </Button>
       </DropdownMenuTrigger>
 

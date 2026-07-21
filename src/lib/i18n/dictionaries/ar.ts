@@ -318,6 +318,8 @@ export const ar = {
     updateFailed: "تعذّر تحديث الحالة",
     navigate: "التنقّل إلى الموقع",
     assignDriver: "إسناد إلى سائق",
+    needsDriver: "بحاجة لسائق",
+    driverOffline: "غير متصل",
     assignedDriver: "السائق المكلَّف",
     assigned: "تم إسناد الطلب للسائق",
     unassigned: "تم إلغاء إسناد السائق",
