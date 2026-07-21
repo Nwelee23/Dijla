@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import { Clock, Minus, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { CartBar } from "@/components/customer/cart-bar";
-import { CheckoutSheet } from "@/components/customer/checkout-sheet";
+import { CheckoutSheet, type CheckoutDetails } from "@/components/customer/checkout-sheet";
+import { OrderTracker } from "@/components/customer/order-tracker";
 import { ItemSheet } from "@/components/customer/item-sheet";
 import { MenuList } from "@/components/customer/menu-list";
 import { useT } from "@/components/i18n/i18n-provider";
@@ -17,9 +18,11 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useCart } from "@/lib/hooks/use-cart";
+import { usePlacedOrder } from "@/lib/hooks/use-placed-order";
 import { interpolate } from "@/lib/i18n";
 import type { MenuItem, RestaurantMenu } from "@/lib/menu";
 import type { OpenState } from "@/lib/opening";
+import type { PlaceOrderResponse } from "@/lib/orders";
 import { formatMoney } from "@/lib/utils";
 
 /**
@@ -45,6 +48,62 @@ export function DeliveryView({
   const [itemOpen, setItemOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [isSending, startSending] = useTransition();
+  const placed = usePlacedOrder(`r:${menu.restaurant.id}`);
+
+  // Held across retries so a resend after a dropped response is recognised as
+  // the same order rather than cooking it twice.
+  const requestId = useRef<string | null>(null);
+
+  function placeOrder(details: CheckoutDetails) {
+    requestId.current ??= crypto.randomUUID();
+
+    startSending(async () => {
+      let result: PlaceOrderResponse;
+      try {
+        const response = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            requestId: requestId.current,
+            slug: menu.restaurant.slug,
+            type: details.type,
+            customer: {
+              name: details.name,
+              phone: details.phone,
+              landmark: details.landmark,
+              notes: details.notes,
+              lat: details.pin?.lat ?? null,
+              lng: details.pin?.lng ?? null,
+            },
+            // Only ids, quantities and notes leave the phone. The server
+            // re-reads every price and the delivery fee.
+            lines: orderableLines.map((line) => ({
+              itemId: line.itemId,
+              quantity: line.quantity,
+              note: line.note,
+            })),
+          }),
+        });
+        result = (await response.json()) as PlaceOrderResponse;
+      } catch {
+        toast.error(t.order.errors.network);
+        return;
+      }
+
+      if (!result.ok) {
+        const messages = t.order.errors as Record<string, string>;
+        toast.error(messages[result.error] ?? t.order.errors.server_error);
+        return;
+      }
+
+      requestId.current = null;
+      placed.save(result.orderId, result.orderNumber);
+      cart.clear();
+      setCheckoutOpen(false);
+    });
+  }
+
 
   const { currency } = menu.restaurant;
 
@@ -59,6 +118,18 @@ export function DeliveryView({
     0
   );
   const count = orderableLines.reduce((sum, line) => sum + line.quantity, 0);
+
+  if (placed.order) {
+    return (
+      <OrderTracker
+        orderId={placed.order.orderId}
+        fallbackOrderNumber={placed.order.orderNumber}
+        qrToken={null}
+        currency={currency}
+        onNewOrder={placed.clearOrder}
+      />
+    );
+  }
 
   return (
     <>
@@ -225,10 +296,8 @@ export function DeliveryView({
         subtotal={subtotal}
         deliveryFee={menu.restaurant.deliveryFee}
         currency={currency}
-        isSubmitting={false}
-        onSubmit={() => {
-          // Wired to the server route in 3.3.
-        }}
+        isSubmitting={isSending}
+        onSubmit={placeOrder}
       />
     </>
   );

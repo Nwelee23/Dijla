@@ -21,7 +21,8 @@ export function OrderTracker({
 }: {
   orderId: string;
   fallbackOrderNumber: number;
-  qrToken: string;
+  /** Null for delivery and pickup — there is no table to call a waiter to. */
+  qrToken: string | null;
   currency: string;
   onNewOrder: () => void;
 }) {
@@ -138,7 +139,7 @@ export function OrderTracker({
       )}
 
       <div className="flex flex-col gap-2">
-        {!isCancelled && (
+        {qrToken && !isCancelled && (
           <Button
             variant="outline"
             className="h-12"

@@ -1,12 +1,14 @@
+import { normalizeIraqiPhone } from "@/lib/auth/phone";
 import { getOpenState } from "@/lib/opening";
-import { createAdminClient } from "@/lib/supabase/admin";
 import {
   RATE_LIMIT_MAX_ORDERS,
   RATE_LIMIT_WINDOW_MINUTES,
   parseOrderRequest,
   type OrderError,
+  type PlaceOrderRequest,
   type PlaceOrderResponse,
 } from "@/lib/orders";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 function fail(error: OrderError, status: number) {
   return Response.json({ ok: false, error } satisfies PlaceOrderResponse, {
@@ -14,21 +16,83 @@ function fail(error: OrderError, status: number) {
   });
 }
 
+type Admin = ReturnType<typeof createAdminClient>;
+
+/** What the request resolved to: which restaurant, and which table if any. */
+type Target = {
+  restaurantId: string;
+  tableId: string | null;
+  settings: unknown;
+  deliveryFee: number;
+};
+
 /**
- * Anonymous dine-in order placement.
+ * Dine-in is vouched for by the table's token; delivery and pickup by the
+ * restaurant's public slug. Either way the identifier in the request decides
+ * the restaurant — nothing else in the body is allowed to.
+ */
+async function resolveTarget(
+  admin: Admin,
+  request: PlaceOrderRequest
+): Promise<{ ok: true; value: Target } | { ok: false; error: OrderError }> {
+  if (request.mode === "dine_in") {
+    const { data: table } = await admin
+      .from("tables")
+      .select("id, restaurant_id, is_active, restaurants(is_active, settings, delivery_fee)")
+      .eq("qr_token", request.qrToken)
+      .maybeSingle();
+
+    const restaurant = table?.restaurants;
+    if (!table?.is_active || !restaurant?.is_active) {
+      return { ok: false, error: "invalid_table" };
+    }
+
+    return {
+      ok: true,
+      value: {
+        restaurantId: table.restaurant_id,
+        tableId: table.id,
+        settings: restaurant.settings,
+        deliveryFee: Number(restaurant.delivery_fee ?? 0),
+      },
+    };
+  }
+
+  const { data: restaurant } = await admin
+    .from("restaurants")
+    .select("id, is_active, settings, delivery_fee")
+    .eq("slug", request.slug)
+    .maybeSingle();
+
+  if (!restaurant?.is_active) return { ok: false, error: "invalid_restaurant" };
+
+  return {
+    ok: true,
+    value: {
+      restaurantId: restaurant.id,
+      tableId: null,
+      settings: restaurant.settings,
+      deliveryFee: Number(restaurant.delivery_fee ?? 0),
+    },
+  };
+}
+
+/**
+ * Anonymous order placement, for dine-in, delivery and pickup.
  *
- * This is the one write path open to someone with no account, so it assumes the
- * request is hostile:
+ * This is the one write path open to someone with no account, so it treats
+ * every request as hostile:
  *
  * - The browser sends item ids and quantities. It never sends a price, and any
- *   it did send would be ignored — every unit price and the totals are re-read
- *   from the database here. A diner editing localStorage cannot change the bill.
- * - Items are checked to belong to this restaurant, to be available, and to sit
- *   in an active category — the same rule that decides what the menu shows, so
- *   a hidden dish cannot be ordered by crafting a request.
- * - The service_role key bypasses RLS, which is exactly why nothing from the
- *   request is trusted as an identity: the qr_token is the only thing that
- *   decides which restaurant this order can touch.
+ *   it did send is ignored — unit prices, the delivery fee and the totals are
+ *   all re-read from the database here. Editing localStorage cannot move the
+ *   bill by a dinar.
+ * - Items must belong to this restaurant, be available, and sit in an active
+ *   category: the same rule that decides what the menu shows, so a hidden dish
+ *   cannot be ordered by crafting a request.
+ * - The service_role key bypasses RLS, which is exactly why nothing in the body
+ *   is trusted as identity — only the qr_token or the slug decides which
+ *   restaurant an order can touch.
  */
 export async function POST(request: Request) {
   let body: unknown;
@@ -41,49 +105,50 @@ export async function POST(request: Request) {
   const parsed = parseOrderRequest(body);
   if (!parsed.ok) return fail(parsed.error, 400);
 
-  const { qrToken, requestId, lines } = parsed.value;
+  const order = parsed.value;
   const admin = createAdminClient();
 
-  // 1. The token decides the restaurant. Nothing else in the request does.
-  const { data: table } = await admin
-    .from("tables")
-    .select("id, restaurant_id, is_active, restaurants(id, is_active, settings)")
-    .eq("qr_token", qrToken)
-    .maybeSingle();
+  const target = await resolveTarget(admin, order);
+  if (!target.ok) return fail(target.error, 404);
 
-  const restaurant = table?.restaurants;
-  if (!table?.is_active || !restaurant?.is_active) {
-    return fail("invalid_table", 404);
-  }
+  const { restaurantId, tableId, settings, deliveryFee } = target.value;
 
-  // 2. Refuse orders outside opening hours. Checked here and not only in the UI:
-  //    an order placed at 3am lands on a screen nobody is watching, and the
-  //    diner is left waiting for food that will never come.
-  if (!getOpenState(restaurant.settings).isOpen) {
-    return fail("closed", 409);
-  }
+  // Refuse orders outside opening hours. Checked here and not only in the UI:
+  // an order placed at 3am lands on a screen nobody is watching, and the
+  // customer is left waiting for food that will never come.
+  if (!getOpenState(settings).isOpen) return fail("closed", 409);
 
-  // 3. Rate limit per table, so a leaked sticker cannot flood a kitchen.
+  // Rate limit. Dine-in is bounded per table, since the token is the thing that
+  // could leak; delivery is bounded per phone number, which is the closest
+  // thing to an identity an anonymous customer has.
   const since = new Date(
     Date.now() - RATE_LIMIT_WINDOW_MINUTES * 60_000
   ).toISOString();
 
-  const { count: recentCount } = await admin
+  const normalisedPhone =
+    order.mode === "dine_in" ? null : normalizeIraqiPhone(order.customer.phone);
+
+  let recent = admin
     .from("orders")
     .select("id", { count: "exact", head: true })
-    .eq("table_id", table.id)
     .gte("created_at", since);
 
-  if ((recentCount ?? 0) >= RATE_LIMIT_MAX_ORDERS) {
-    return fail("rate_limited", 429);
-  }
+  recent =
+    order.mode === "dine_in"
+      ? recent.eq("table_id", tableId!)
+      : recent
+          .eq("restaurant_id", restaurantId)
+          .eq("customer_phone", normalisedPhone ?? order.customer.phone);
 
-  // 4. Re-read the menu. This is the authoritative price list.
-  const itemIds = [...new Set(lines.map((line) => line.itemId))];
+  const { count: recentCount } = await recent;
+  if ((recentCount ?? 0) >= RATE_LIMIT_MAX_ORDERS) return fail("rate_limited", 429);
+
+  // Re-read the menu. This is the authoritative price list.
+  const itemIds = [...new Set(order.lines.map((line) => line.itemId))];
   const { data: items } = await admin
     .from("menu_items")
     .select("id, name, price, is_available, menu_categories(is_active)")
-    .eq("restaurant_id", table.restaurant_id)
+    .eq("restaurant_id", restaurantId)
     .in("id", itemIds);
 
   const byId = new Map(
@@ -93,13 +158,11 @@ export async function POST(request: Request) {
   );
 
   // Every requested id must survive that filter, or the order is refused
-  // outright — quietly dropping a line would hand the diner food they did not
-  // order and a bill that does not match.
-  if (byId.size !== itemIds.length) {
-    return fail("unavailable_items", 409);
-  }
+  // outright — quietly dropping a line would hand the customer food they did
+  // not order and a bill that does not match.
+  if (byId.size !== itemIds.length) return fail("unavailable_items", 409);
 
-  const priced = lines.map((line) => {
+  const priced = order.lines.map((line) => {
     const item = byId.get(line.itemId)!;
     const unitPrice = Number(item.price);
     return {
@@ -113,32 +176,48 @@ export async function POST(request: Request) {
   });
 
   const subtotal = priced.reduce((sum, line) => sum + line.lineTotal, 0);
-  const total = subtotal; // Dine-in carries no delivery fee.
+  // The fee comes from the restaurant's own row, never from the request.
+  // Pickup and dine-in carry none.
+  const fee = order.mode === "delivery" ? deliveryFee : 0;
+  const total = subtotal + fee;
 
-  // 5. Per-restaurant counter, so staff say "order 14", not a uuid.
+  // Per-restaurant counter, so staff say "order 14", not a uuid.
   const { data: orderNumber, error: numberError } = await admin.rpc(
     "next_order_number",
-    { rid: table.restaurant_id }
+    { rid: restaurantId }
   );
 
   if (numberError || typeof orderNumber !== "number") {
     return fail("server_error", 500);
   }
 
-  const { data: order, error: orderError } = await admin
+  const customer =
+    order.mode === "dine_in"
+      ? {}
+      : {
+          customer_name: order.customer.name,
+          customer_phone: normalisedPhone ?? order.customer.phone,
+          customer_landmark: order.customer.landmark || null,
+          delivery_notes: order.customer.notes || null,
+          customer_lat: order.customer.lat,
+          customer_lng: order.customer.lng,
+        };
+
+  const { data: created, error: orderError } = await admin
     .from("orders")
     .insert({
-      restaurant_id: table.restaurant_id,
-      table_id: table.id,
+      restaurant_id: restaurantId,
+      table_id: tableId,
       order_number: orderNumber,
-      client_request_id: requestId,
-      type: "dine_in",
+      client_request_id: order.requestId,
+      type: order.mode,
       status: "new",
       subtotal,
-      delivery_fee: 0,
+      delivery_fee: fee,
       total,
       payment_method: "cash",
       payment_status: "unpaid",
+      ...customer,
     })
     .select("id, order_number")
     .single();
@@ -151,7 +230,7 @@ export async function POST(request: Request) {
       const { data: existing } = await admin
         .from("orders")
         .select("id, order_number")
-        .eq("client_request_id", requestId)
+        .eq("client_request_id", order.requestId)
         .maybeSingle();
 
       if (existing) {
@@ -165,11 +244,11 @@ export async function POST(request: Request) {
     return fail("server_error", 500);
   }
 
-  if (!order) return fail("server_error", 500);
+  if (!created) return fail("server_error", 500);
 
   const { error: itemsError } = await admin.from("order_items").insert(
     priced.map((line) => ({
-      order_id: order.id,
+      order_id: created.id,
       menu_item_id: line.itemId,
       name_snapshot: line.nameSnapshot,
       price_snapshot: line.priceSnapshot,
@@ -182,13 +261,13 @@ export async function POST(request: Request) {
   if (itemsError) {
     // An order with no lines is worse than no order: the kitchen sees a ticket
     // it cannot cook. Roll it back rather than leave that on a screen.
-    await admin.from("orders").delete().eq("id", order.id);
+    await admin.from("orders").delete().eq("id", created.id);
     return fail("server_error", 500);
   }
 
   return Response.json({
     ok: true,
-    orderId: order.id,
-    orderNumber: order.order_number,
+    orderId: created.id,
+    orderNumber: created.order_number,
   } satisfies PlaceOrderResponse);
 }

@@ -14,6 +14,8 @@ export const MAX_LINE_QUANTITY = 50;
 
 /** Matches the customer note input. */
 export const MAX_NOTE_LENGTH = 140;
+export const MAX_LANDMARK_LENGTH = 160;
+export const MAX_NAME_LENGTH = 80;
 
 /**
  * Orders one table may place inside the window. A table of eight ordering in
@@ -28,16 +30,36 @@ export type OrderLineInput = {
   note: string;
 };
 
-export type PlaceOrderRequest = {
-  qrToken: string;
-  /**
-   * One id per submission, reused across retries. A unique index on the column
-   * makes the database decide what a duplicate is, so a double-tap or a retry
-   * after a lost response returns the original order rather than cooking twice.
-   */
-  requestId: string;
-  lines: OrderLineInput[];
+export type CustomerInput = {
+  name: string;
+  phone: string;
+  landmark: string;
+  notes: string;
+  lat: number | null;
+  lng: number | null;
 };
+
+/**
+ * One id per submission, reused across retries. A unique index on the column
+ * makes the database decide what a duplicate is, so a double-tap or a retry
+ * after a lost response returns the original order rather than cooking twice.
+ */
+type Common = { requestId: string; lines: OrderLineInput[] };
+
+/**
+ * Two ways to place an order, and the difference is who vouches for it.
+ *
+ * Dine-in is vouched for by the table's token — the diner is sitting in the
+ * restaurant, so there is nothing to ask them. Delivery and pickup have no
+ * token, so the customer has to say who they are and, for delivery, where.
+ */
+export type PlaceOrderRequest =
+  | ({ mode: "dine_in"; qrToken: string } & Common)
+  | ({
+      mode: "delivery" | "pickup";
+      slug: string;
+      customer: CustomerInput;
+    } & Common);
 
 export type PlaceOrderResponse =
   | { ok: true; orderId: string; orderNumber: number }
@@ -47,6 +69,10 @@ export type PlaceOrderResponse =
 export type OrderError =
   | "invalid_request"
   | "invalid_table"
+  | "invalid_restaurant"
+  | "needs_name"
+  | "needs_phone"
+  | "needs_location"
   | "empty_order"
   | "too_many_lines"
   | "invalid_quantity"
@@ -71,24 +97,91 @@ export function parseOrderRequest(
 
   const raw = body as Record<string, unknown>;
 
-  if (typeof raw.qrToken !== "string" || raw.qrToken.length === 0) {
-    return { ok: false, error: "invalid_request" };
-  }
   if (typeof raw.requestId !== "string" || !UUID.test(raw.requestId)) {
     return { ok: false, error: "invalid_request" };
   }
-  if (!Array.isArray(raw.lines)) {
-    return { ok: false, error: "invalid_request" };
-  }
-  if (raw.lines.length === 0) {
-    return { ok: false, error: "empty_order" };
-  }
-  if (raw.lines.length > MAX_ORDER_LINES) {
-    return { ok: false, error: "too_many_lines" };
+
+  const lines = parseLines(raw.lines);
+  if (!lines.ok) return lines;
+
+  const common = { requestId: raw.requestId, lines: lines.value };
+
+  // Dine-in: the token is the whole identity.
+  if (typeof raw.qrToken === "string" && raw.qrToken.length > 0) {
+    return { ok: true, value: { mode: "dine_in", qrToken: raw.qrToken, ...common } };
   }
 
+  if (typeof raw.slug !== "string" || raw.slug.length === 0) {
+    return { ok: false, error: "invalid_request" };
+  }
+  if (raw.type !== "delivery" && raw.type !== "pickup") {
+    return { ok: false, error: "invalid_request" };
+  }
+
+  const customerRaw =
+    typeof raw.customer === "object" && raw.customer !== null
+      ? (raw.customer as Record<string, unknown>)
+      : {};
+
+  const name = typeof customerRaw.name === "string" ? customerRaw.name.trim() : "";
+  const phone = typeof customerRaw.phone === "string" ? customerRaw.phone.trim() : "";
+  const landmark =
+    typeof customerRaw.landmark === "string"
+      ? customerRaw.landmark.trim().slice(0, MAX_LANDMARK_LENGTH)
+      : "";
+  const notes =
+    typeof customerRaw.notes === "string"
+      ? customerRaw.notes.trim().slice(0, MAX_LANDMARK_LENGTH)
+      : "";
+
+  if (!name) return { ok: false, error: "needs_name" };
+  if (!phone) return { ok: false, error: "needs_phone" };
+
+  const lat = parseCoordinate(customerRaw.lat, 90);
+  const lng = parseCoordinate(customerRaw.lng, 180);
+  // A pin is only a pin if both halves survived. Half a coordinate is worse
+  // than none: it would put the driver on the equator.
+  const hasPin = lat !== null && lng !== null;
+
+  // Delivery needs somewhere to go. Iraqi addresses are not navigable, so it is
+  // a pin or a landmark — an order with neither cannot be delivered by anyone.
+  if (raw.type === "delivery" && !hasPin && !landmark) {
+    return { ok: false, error: "needs_location" };
+  }
+
+  return {
+    ok: true,
+    value: {
+      mode: raw.type,
+      slug: raw.slug,
+      customer: {
+        name: name.slice(0, MAX_NAME_LENGTH),
+        phone,
+        landmark,
+        notes,
+        // Pickup carries no location at all, even if the browser sent one.
+        lat: raw.type === "delivery" && hasPin ? lat : null,
+        lng: raw.type === "delivery" && hasPin ? lng : null,
+      },
+      ...common,
+    },
+  };
+}
+
+function parseCoordinate(value: unknown, limit: number): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  return Math.abs(value) <= limit ? value : null;
+}
+
+function parseLines(
+  value: unknown
+): { ok: true; value: OrderLineInput[] } | { ok: false; error: OrderError } {
+  if (!Array.isArray(value)) return { ok: false, error: "invalid_request" };
+  if (value.length === 0) return { ok: false, error: "empty_order" };
+  if (value.length > MAX_ORDER_LINES) return { ok: false, error: "too_many_lines" };
+
   const lines: OrderLineInput[] = [];
-  for (const entry of raw.lines) {
+  for (const entry of value) {
     if (typeof entry !== "object" || entry === null) {
       return { ok: false, error: "invalid_request" };
     }
@@ -107,7 +200,6 @@ export function parseOrderRequest(
     }
 
     const note = typeof line.note === "string" ? line.note.trim() : "";
-
     lines.push({
       itemId: line.itemId,
       quantity: line.quantity,
@@ -115,5 +207,5 @@ export function parseOrderRequest(
     });
   }
 
-  return { ok: true, value: { qrToken: raw.qrToken, requestId: raw.requestId, lines } };
+  return { ok: true, value: lines };
 }

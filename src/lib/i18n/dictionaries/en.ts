@@ -274,6 +274,10 @@ export const en: Dictionary = {
       unavailable_items:
         "One of the dishes is no longer available. Refresh to see the current menu.",
       closed: "The restaurant is closed and isn't taking orders.",
+      invalid_restaurant: "This restaurant isn't available right now.",
+      needs_name: "A name is required.",
+      needs_phone: "A phone number is required.",
+      needs_location: "Set your location on the map, or write the nearest landmark.",
       rate_limited: "Too many orders in a short time. Wait a moment or ask a member of staff.",
       server_error: "The order couldn't be sent. Try again.",
       network: "No connection. Check your internet and try again.",

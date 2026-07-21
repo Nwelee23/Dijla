@@ -21,7 +21,7 @@ import { usePlacedOrder } from "@/lib/hooks/use-placed-order";
 import { interpolate } from "@/lib/i18n";
 import type { DineInMenu, MenuItem } from "@/lib/menu";
 import type { OpenState } from "@/lib/opening";
-import type { OrderError, PlaceOrderResponse } from "@/lib/orders";
+import type { PlaceOrderResponse } from "@/lib/orders";
 import { formatMoney } from "@/lib/utils";
 
 export function MenuView({
@@ -93,8 +93,8 @@ export function MenuView({
       }
 
       if (!result.ok) {
-        const key = result.error as OrderError;
-        toast.error(t.order.errors[key] ?? t.order.errors.server_error);
+        const messages = t.order.errors as Record<string, string>;
+        toast.error(messages[result.error] ?? t.order.errors.server_error);
         return;
       }
 
