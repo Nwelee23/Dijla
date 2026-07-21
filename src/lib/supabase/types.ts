@@ -414,14 +414,17 @@ export type Database = {
           area: string | null
           created_at: string | null
           currency: string | null
+          delivery_enabled: boolean
           delivery_fee: number | null
           id: string
           is_active: boolean | null
           lat: number | null
           lng: number | null
           logo_url: string | null
+          min_order: number
           name: string
           phone: string | null
+          pickup_enabled: boolean
           settings: Json | null
           slug: string
         }
@@ -429,14 +432,17 @@ export type Database = {
           area?: string | null
           created_at?: string | null
           currency?: string | null
+          delivery_enabled?: boolean
           delivery_fee?: number | null
           id?: string
           is_active?: boolean | null
           lat?: number | null
           lng?: number | null
           logo_url?: string | null
+          min_order?: number
           name: string
           phone?: string | null
+          pickup_enabled?: boolean
           settings?: Json | null
           slug: string
         }
@@ -444,14 +450,17 @@ export type Database = {
           area?: string | null
           created_at?: string | null
           currency?: string | null
+          delivery_enabled?: boolean
           delivery_fee?: number | null
           id?: string
           is_active?: boolean | null
           lat?: number | null
           lng?: number | null
           logo_url?: string | null
+          min_order?: number
           name?: string
           phone?: string | null
+          pickup_enabled?: boolean
           settings?: Json | null
           slug?: string
         }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Clock, Minus, Plus, Trash2 } from "lucide-react";
+import { Clock, Info, Minus, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { CartBar } from "@/components/customer/cart-bar";
@@ -107,7 +107,17 @@ export function DeliveryView({
   }
 
 
-  const { currency } = menu.restaurant;
+  const { currency, deliveryEnabled, pickupEnabled, minOrder } = menu.restaurant;
+
+  // Delivery first: it is what the link is usually shared for, so it becomes
+  // the default when both are on.
+  const offered = [
+    ...(deliveryEnabled ? (["delivery"] as const) : []),
+    ...(pickupEnabled ? (["pickup"] as const) : []),
+  ];
+  // Both switched off is a real configuration — a dine-in-only restaurant that
+  // still wants its menu online. Show the menu, take no orders.
+  const takesOrders = offered.length > 0;
 
   // A basket can outlive the menu it was built from.
   const liveIds = new Set(
@@ -136,7 +146,19 @@ export function DeliveryView({
 
   return (
     <>
-      {!openState.isOpen && (
+      {!takesOrders && (
+        <div className="mb-4 space-y-1 rounded-xl border p-4">
+          <p className="flex items-center gap-2 font-bold">
+            <Info className="size-4 shrink-0" />
+            {t.closed.ordersOffTitle}
+          </p>
+          <p className="text-muted-foreground text-sm">
+            {t.closed.ordersOffBody}
+          </p>
+        </div>
+      )}
+
+      {takesOrders && !openState.isOpen && (
         <div className="mb-4 space-y-1 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/40">
           <p className="flex items-center gap-2 font-bold text-amber-900 dark:text-amber-200">
             <Clock className="size-4 shrink-0" />
@@ -159,7 +181,7 @@ export function DeliveryView({
       <MenuList
         categories={menu.categories}
         currency={currency}
-        disabled={!openState.isOpen}
+        disabled={!openState.isOpen || !takesOrders}
         onSelect={(item) => {
           setSelected(item);
           setItemOpen(true);
@@ -177,7 +199,7 @@ export function DeliveryView({
         }}
       />
 
-      {openState.isOpen && (
+      {openState.isOpen && takesOrders && (
         <CartBar
           count={count}
           subtotal={subtotal}
@@ -298,6 +320,8 @@ export function DeliveryView({
         onOpenChange={setCheckoutOpen}
         subtotal={subtotal}
         deliveryFee={menu.restaurant.deliveryFee}
+        minOrder={minOrder}
+        offered={offered}
         currency={currency}
         isSubmitting={isSending}
         onSubmit={placeOrder}

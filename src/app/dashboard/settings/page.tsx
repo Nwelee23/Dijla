@@ -1,3 +1,4 @@
+import { DeliveryForm } from "@/components/settings/delivery-form";
 import { HoursForm } from "@/components/settings/hours-form";
 import { ProfileForm } from "@/components/settings/profile-form";
 import {
@@ -38,6 +39,16 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent>
           <ProfileForm restaurant={restaurant!} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t.settings.deliverySection}</CardTitle>
+          <CardDescription>{t.settings.deliverySectionHint}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DeliveryForm restaurant={restaurant!} />
         </CardContent>
       </Card>
 

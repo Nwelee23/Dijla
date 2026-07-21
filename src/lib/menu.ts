@@ -30,6 +30,11 @@ export type MenuRestaurant = {
   currency: string;
   /** Only present on the delivery payload. */
   deliveryFee: number;
+  /** Which checkout options the owner takes. Absent on the dine-in payload. */
+  deliveryEnabled: boolean;
+  pickupEnabled: boolean;
+  /** Delivery only. 0 means no minimum. */
+  minOrder: number;
 };
 
 export type MenuTable = {
@@ -117,6 +122,13 @@ function parseRestaurant(value: unknown): MenuRestaurant | null {
     logoUrl: asString(value.logo_url),
     currency: asString(value.currency) ?? "IQD",
     deliveryFee: asNumber(value.delivery_fee) ?? 0,
+    // Absent means the database has not been migrated yet, or this is the
+    // dine-in payload, which carries no channel toggles. Both read as "take the
+    // order" — the same thing the app did before these existed. A missing field
+    // must never be the reason a restaurant stops selling.
+    deliveryEnabled: value.delivery_enabled !== false,
+    pickupEnabled: value.pickup_enabled !== false,
+    minOrder: asNumber(value.min_order) ?? 0,
   };
 }
 

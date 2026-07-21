@@ -77,6 +77,9 @@ export type OrderError =
   | "too_many_lines"
   | "invalid_quantity"
   | "unavailable_items"
+  | "delivery_disabled"
+  | "pickup_disabled"
+  | "below_min_order"
   | "closed"
   | "rate_limited"
   | "server_error";

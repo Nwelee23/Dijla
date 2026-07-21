@@ -32,9 +32,6 @@ export function ProfileForm({ restaurant }: { restaurant: Restaurant }) {
   );
   const [area, setArea] = useState(restaurant.area ?? "");
   const [logoUrl, setLogoUrl] = useState<string | null>(restaurant.logo_url);
-  const [deliveryFee, setDeliveryFee] = useState(
-    String(restaurant.delivery_fee ?? 0)
-  );
 
   const slugChanged = slug !== restaurant.slug;
 
@@ -46,7 +43,6 @@ export function ProfileForm({ restaurant }: { restaurant: Restaurant }) {
         phone,
         area,
         logoUrl,
-        deliveryFee: Number(deliveryFee),
       });
 
       if (!result.ok) {
@@ -138,24 +134,6 @@ export function ProfileForm({ restaurant }: { restaurant: Restaurant }) {
             </SelectContent>
           </Select>
         </div>
-      </div>
-
-      <div className="grid gap-2">
-        <Label htmlFor="delivery-fee">{t.settings.deliveryFee}</Label>
-        <Input
-          id="delivery-fee"
-          type="number"
-          inputMode="numeric"
-          min={0}
-          step={250}
-          dir="ltr"
-          value={deliveryFee}
-          onChange={(event) => setDeliveryFee(event.target.value)}
-          disabled={isPending}
-        />
-        <p className="text-muted-foreground text-xs">
-          {t.settings.deliveryFeeHint}
-        </p>
       </div>
 
       <Button type="submit" disabled={isPending}>

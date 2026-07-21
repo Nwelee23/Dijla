@@ -24,7 +24,33 @@ type Target = {
   tableId: string | null;
   settings: unknown;
   deliveryFee: number;
+  deliveryEnabled: boolean;
+  pickupEnabled: boolean;
+  minOrder: number;
 };
+
+/**
+ * Channel settings, read from the restaurant's own row.
+ *
+ * A row from before 0010 has none of these columns. Missing reads as open, so
+ * deploying this ahead of the migration changes nothing — and a restaurant is
+ * never switched off by a field that simply is not there yet.
+ */
+type RestaurantRow = {
+  delivery_fee?: number | string | null;
+  delivery_enabled?: boolean | null;
+  pickup_enabled?: boolean | null;
+  min_order?: number | string | null;
+};
+
+function channels(restaurant: RestaurantRow) {
+  return {
+    deliveryFee: Number(restaurant.delivery_fee ?? 0),
+    deliveryEnabled: restaurant.delivery_enabled !== false,
+    pickupEnabled: restaurant.pickup_enabled !== false,
+    minOrder: Number(restaurant.min_order ?? 0),
+  };
+}
 
 /**
  * Dine-in is vouched for by the table's token; delivery and pickup by the
@@ -35,10 +61,15 @@ async function resolveTarget(
   admin: Admin,
   request: PlaceOrderRequest
 ): Promise<{ ok: true; value: Target } | { ok: false; error: OrderError }> {
+  // `*` rather than a column list, deliberately: this is a service-role read of
+  // one row we already trust entirely, and naming a column that does not exist
+  // yet makes PostgREST reject the whole query. Listing them would mean every
+  // order on the platform failing in the window between this deploying and 0010
+  // being applied.
   if (request.mode === "dine_in") {
     const { data: table } = await admin
       .from("tables")
-      .select("id, restaurant_id, is_active, restaurants(is_active, settings, delivery_fee)")
+      .select("id, restaurant_id, is_active, restaurants(*)")
       .eq("qr_token", request.qrToken)
       .maybeSingle();
 
@@ -53,14 +84,14 @@ async function resolveTarget(
         restaurantId: table.restaurant_id,
         tableId: table.id,
         settings: restaurant.settings,
-        deliveryFee: Number(restaurant.delivery_fee ?? 0),
+        ...channels(restaurant),
       },
     };
   }
 
   const { data: restaurant } = await admin
     .from("restaurants")
-    .select("id, is_active, settings, delivery_fee")
+    .select("*")
     .eq("slug", request.slug)
     .maybeSingle();
 
@@ -72,7 +103,7 @@ async function resolveTarget(
       restaurantId: restaurant.id,
       tableId: null,
       settings: restaurant.settings,
-      deliveryFee: Number(restaurant.delivery_fee ?? 0),
+      ...channels(restaurant),
     },
   };
 }
@@ -111,7 +142,25 @@ export async function POST(request: Request) {
   const target = await resolveTarget(admin, order);
   if (!target.ok) return fail(target.error, 404);
 
-  const { restaurantId, tableId, settings, deliveryFee } = target.value;
+  const {
+    restaurantId,
+    tableId,
+    settings,
+    deliveryFee,
+    deliveryEnabled,
+    pickupEnabled,
+    minOrder,
+  } = target.value;
+
+  // A channel the owner has switched off. The page hides it, but the page is
+  // not the guard — anyone can post this body directly, and an owner who turned
+  // delivery off has usually done it because they have nobody to drive it.
+  if (order.mode === "delivery" && !deliveryEnabled) {
+    return fail("delivery_disabled", 409);
+  }
+  if (order.mode === "pickup" && !pickupEnabled) {
+    return fail("pickup_disabled", 409);
+  }
 
   // Refuse orders outside opening hours. Checked here and not only in the UI:
   // an order placed at 3am lands on a screen nobody is watching, and the
@@ -176,6 +225,15 @@ export async function POST(request: Request) {
   });
 
   const subtotal = priced.reduce((sum, line) => sum + line.lineTotal, 0);
+
+  // Minimum order, measured against the food and not the bill: counting the
+  // delivery fee toward the minimum would let a 3,000 basket clear a 5,000
+  // floor on the strength of the fee alone, which is the opposite of what the
+  // floor is for. Delivery only — pickup involves no trip to be worth making.
+  if (order.mode === "delivery" && minOrder > 0 && subtotal < minOrder) {
+    return fail("below_min_order", 409);
+  }
+
   // The fee comes from the restaurant's own row, never from the request.
   // Pickup and dine-in carry none.
   const fee = order.mode === "delivery" ? deliveryFee : 0;

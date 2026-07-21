@@ -18,7 +18,6 @@ export type ProfileInput = {
   phone: string;
   area: string;
   logoUrl: string | null;
-  deliveryFee: number;
 };
 
 /** Revalidate the layout too: the header carries the name and logo. */
@@ -43,10 +42,6 @@ export async function updateRestaurantProfile(
     }
   }
 
-  if (!Number.isFinite(input.deliveryFee) || input.deliveryFee < 0) {
-    return { ok: false, error: t.settings.invalidDeliveryFee };
-  }
-
   const restaurant = await getRestaurant();
   if (!restaurant) return { ok: false, error: t.onboarding.restaurantNotFound };
 
@@ -59,7 +54,6 @@ export async function updateRestaurantProfile(
       phone,
       area: input.area.trim() || null,
       logo_url: input.logoUrl,
-      delivery_fee: input.deliveryFee,
     })
     .eq("id", restaurant.id);
 
@@ -85,6 +79,55 @@ export async function updateRestaurantProfile(
     }
   }
 
+  revalidate();
+  return { ok: true };
+}
+
+export type DeliveryInput = {
+  deliveryEnabled: boolean;
+  pickupEnabled: boolean;
+  deliveryFee: number;
+  minOrder: number;
+};
+
+/**
+ * The channels a public link offers, and what they cost.
+ *
+ * Both switches may be off at once: a dine-in-only restaurant still wants a
+ * `/r/[slug]` link to show its menu, it just does not want anyone posting an
+ * order it has nobody to fulfil. That is a valid configuration, not an error.
+ */
+export async function updateDeliverySettings(
+  input: DeliveryInput
+): Promise<ActionResult> {
+  const t = await getT();
+
+  if (!Number.isFinite(input.deliveryFee) || input.deliveryFee < 0) {
+    return { ok: false, error: t.settings.invalidDeliveryFee };
+  }
+  if (!Number.isFinite(input.minOrder) || input.minOrder < 0) {
+    return { ok: false, error: t.settings.invalidMinOrder };
+  }
+
+  const restaurant = await getRestaurant();
+  if (!restaurant) return { ok: false, error: t.onboarding.restaurantNotFound };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("restaurants")
+    .update({
+      delivery_enabled: input.deliveryEnabled,
+      pickup_enabled: input.pickupEnabled,
+      delivery_fee: input.deliveryFee,
+      min_order: input.minOrder,
+    })
+    .eq("id", restaurant.id);
+
+  if (error) return { ok: false, error: error.message };
+
+  // The public menu page reads these; without this it keeps offering a channel
+  // the owner has just closed until the cache expires on its own.
+  revalidatePath("/r/[slug]", "page");
   revalidate();
   return { ok: true };
 }

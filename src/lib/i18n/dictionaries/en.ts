@@ -278,6 +278,9 @@ export const en: Dictionary = {
       needs_name: "A name is required.",
       needs_phone: "A phone number is required.",
       needs_location: "Set your location on the map, or write the nearest landmark.",
+      delivery_disabled: "This restaurant is not taking delivery orders right now.",
+      pickup_disabled: "This restaurant is not taking pickup orders right now.",
+      below_min_order: "Your order is under the delivery minimum. Add a little more.",
       rate_limited: "Too many orders in a short time. Wait a moment or ask a member of staff.",
       server_error: "The order couldn't be sent. Try again.",
       network: "No connection. Check your internet and try again.",
@@ -391,6 +394,9 @@ export const en: Dictionary = {
     cannotOrder: "The restaurant is closed and isn't taking orders.",
     unavailableLine: "no longer available",
     removedStale: "An item that is no longer available was removed from your order.",
+    ordersOffTitle: "Ordering is not available from this link",
+    ordersOffBody:
+      "You can browse the menu. To order, call the restaurant or visit in person.",
   },
 
   location: {
@@ -422,6 +428,9 @@ export const en: Dictionary = {
     total: "Total",
     payCash: "Cash on delivery",
     needLocation: "Set your location on the map, or write the nearest landmark.",
+    belowMinOrder: "Your order is under the delivery minimum.",
+    minOrderShortfall:
+      "The delivery minimum is {minimum}. Add {missing} more to place your order.",
     needName: "A name is required.",
     needPhone: "A phone number is required.",
   },
@@ -436,9 +445,20 @@ export const en: Dictionary = {
     slugWarning:
       "Changing the link breaks any old link you've shared with customers. Table QR codes are unaffected.",
     slugTaken: "That link is taken by another restaurant. Try a different one.",
+    deliverySection: "Delivery and pickup",
+    deliverySectionHint: "What a customer can order from your public link.",
+    deliveryEnabled: "Take delivery orders",
+    deliveryEnabledHint: "The customer drops a pin and the food comes to them.",
+    pickupEnabledHint: "The customer orders, then collects — no fee, no location.",
+    pickupEnabled: "Take pickup orders",
+    bothChannelsOff:
+      "Both are off. Your link will show the menu, but nobody will be able to place an order from it.",
     deliveryFee: "Delivery fee (IQD)",
     deliveryFeeHint: "Added to delivery orders only — table orders are unaffected.",
     invalidDeliveryFee: "That delivery fee is not valid.",
+    minOrder: "Minimum delivery order (IQD)",
+    noMinOrder: "No minimum",
+    invalidMinOrder: "That minimum is not valid.",
     saved: "Settings saved",
 
     hours: "Opening hours",
