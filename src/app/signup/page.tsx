@@ -9,32 +9,23 @@ import {
 } from "@/components/ui/card";
 
 export const metadata = {
-  title: "تسجيل الدخول | دجلة",
+  title: "إنشاء حساب | دجلة",
 };
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ next?: string }>;
-}) {
-  const { next } = await searchParams;
-
+export default function SignupPage() {
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-6 p-4">
       <Brand />
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>تسجيل الدخول</CardTitle>
+          <CardTitle>أنشئ حساب مطعمك</CardTitle>
           <CardDescription>
-            أدخل بريدك الإلكتروني وسنرسل لك رمز دخول.
+            بدون عمولة على الطلبات — اشتراك شهري ثابت.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Only allow relative paths — an absolute `next` would be an open redirect. */}
-          <AuthForm
-            mode="login"
-            next={next?.startsWith("/") ? next : undefined}
-          />
+          {/* After sign-up the user has no profile yet, so /dashboard sends them to onboarding. */}
+          <AuthForm mode="signup" next="/onboarding" />
         </CardContent>
       </Card>
     </main>

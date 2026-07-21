@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { Brand } from "@/components/layout/brand";
 import { SignOutButton } from "@/components/layout/sign-out-button";
+import { getProfile, requireUser } from "@/lib/auth/user";
 import { cn } from "@/lib/utils";
 
 /**
@@ -17,11 +19,17 @@ const NAV = [
   { href: "/dashboard/settings", label: "الإعدادات", enabled: false },
 ];
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  await requireUser();
+
+  // First sign-in: the account exists but no restaurant is attached to it yet.
+  const profile = await getProfile();
+  if (!profile) redirect("/onboarding");
+
   return (
     <div className="flex flex-1 flex-col">
       <header className="bg-background sticky top-0 z-40 border-b">

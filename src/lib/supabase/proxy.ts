@@ -5,7 +5,7 @@ import { supabaseAnonKey, supabaseUrl } from "./env";
 import type { Database } from "./types";
 
 /** Route prefixes that require a signed-in user. */
-const PROTECTED_PREFIXES = ["/dashboard", "/driver", "/admin"];
+const PROTECTED_PREFIXES = ["/dashboard", "/driver", "/admin", "/onboarding"];
 
 /** Auth pages a signed-in user has no reason to sit on. */
 const AUTH_ROUTES = ["/login", "/signup"];
