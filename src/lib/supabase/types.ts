@@ -515,6 +515,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_restaurant_with_owner: {
+        Args: {
+          p_area?: string
+          p_full_name?: string
+          p_name: string
+          p_phone?: string
+          p_slug: string
+        }
+        Returns: string
+      }
       current_restaurant_id: { Args: never; Returns: string }
     }
     Enums: {
