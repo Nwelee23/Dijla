@@ -3,7 +3,7 @@ import {
   ORDERS_SELECT,
   shapeOrder,
   type LiveOrder,
-} from "@/lib/hooks/use-realtime-orders";
+} from "@/lib/orders-select";
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
