@@ -600,6 +600,15 @@ export type Database = {
         Returns: string
       }
       current_restaurant_id: { Args: never; Returns: string }
+      driver_cash_today: {
+        Args: never
+        Returns: {
+          driver_id: string
+          driver_name: string
+          delivered_count: number
+          cash_total: number
+        }[]
+      }
       get_menu_by_qr_token: { Args: { p_token: string }; Returns: Json }
       get_menu_by_slug: { Args: { p_slug: string }; Returns: Json }
       get_order_status: { Args: { p_order_id: string }; Returns: Json }
