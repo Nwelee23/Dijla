@@ -188,6 +188,41 @@ export const kmr: Dictionary = {
     uncategorisedHint: "ji mişteriyan veşartî ne heta ku tu wan bibî kategoriyekê",
   },
 
+  tables: {
+    title: "Mase",
+    subtitle: "Her maseyek koda QR ya xwe heye — mişterî wê dixwîne û menûya te vedibe.",
+    addTable: "Mase",
+    newTable: "Maseya nû",
+    editTable: "Maseyê biguherîne",
+    number: "Jimara maseyê",
+    numberPlaceholder: "5",
+    label: "Danasîn (bijarte)",
+    labelPlaceholder: "Li ber pencereyê",
+    noTables: "Hîn tu mase tune",
+    noTablesHint: "Maseyên xwe zêde bike, paşê ji bo her yekê koda QR çap bike û lê bide.",
+    addFirstTable: "Maseya yekem zêde bike",
+    added: "Mase hate zêdekirin",
+    saved: "Mase hate tomarkirin",
+    deleted: "Mase hate jêbirin",
+    activated: "Mase çalak e",
+    deactivated: "Mase neçalak e",
+    activeSwitch: "Maseyê çalak bike",
+    deleteTitle: "Maseya {number} jê bibe?",
+    deleteBody:
+      "Koda QR ya çapkirî ya vê maseyê piştî jêbirinê nexebite. Ku mase tenê demkî ji xizmetê derketiye, bişkoka neçalakkirinê bi kar bîne.",
+    cannotDeleteWithOrders:
+      "Maseyeke ku siparîşên wê hene nayê jêbirin. Li şûna wê neçalak bike da ku tomar bimînin.",
+    numberRequired: "Jimara maseyê pêwîst e.",
+    numberTaken: "Maseyeke bi vê jimarê jixwe heye.",
+    tokenFailed: "Çêkirina kodeke bêhempa bi ser neket. Dîsa biceribîne.",
+    regenerate: "Koda QR biguherîne",
+    regenerated: "Kodeke nû hate çêkirin",
+    regenerateTitle: "Koda QR ya maseya {number} biguherîne?",
+    regenerateBody:
+      "Koda çapkirî ya heyî tavilê disekine û divê tu kodeke nû çap bikî. Vê bi kar bîne ku koda kevn belav bûye.",
+    qrToken: "Koda maseyê",
+  },
+
   settings: {
     title: "Mîheng",
     subtitle: "Agahiyên xwaringehê, demjimêrên kar û heqê gihandinê.",

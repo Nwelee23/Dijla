@@ -40,7 +40,7 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/dashboard/tables",
     label: "tables",
     icon: QrCode,
-    enabled: false,
+    enabled: true,
     phase: "phase2",
   },
   {

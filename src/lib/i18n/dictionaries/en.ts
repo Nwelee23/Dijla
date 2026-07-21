@@ -187,6 +187,41 @@ export const en: Dictionary = {
     uncategorisedHint: "hidden from customers until you move them into a category",
   },
 
+  tables: {
+    title: "Tables",
+    subtitle: "Each table has its own QR code — a diner scans it and your menu opens.",
+    addTable: "Table",
+    newTable: "New table",
+    editTable: "Edit table",
+    number: "Table number",
+    numberPlaceholder: "5",
+    label: "Description (optional)",
+    labelPlaceholder: "By the window",
+    noTables: "No tables yet",
+    noTablesHint: "Add your tables, then print each one's QR code and put it on the table.",
+    addFirstTable: "Add your first table",
+    added: "Table added",
+    saved: "Table saved",
+    deleted: "Table deleted",
+    activated: "Table is active",
+    deactivated: "Table is inactive",
+    activeSwitch: "Activate table",
+    deleteTitle: "Delete table {number}?",
+    deleteBody:
+      "The printed QR code for this table stops working once it is deleted. If the table is only temporarily out of service, use the deactivate switch instead.",
+    cannotDeleteWithOrders:
+      "A table with past orders cannot be deleted. Deactivate it instead so the order history stays intact.",
+    numberRequired: "A table number is required.",
+    numberTaken: "A table with that number already exists.",
+    tokenFailed: "Could not generate a unique code. Try again.",
+    regenerate: "Change QR code",
+    regenerated: "A new code was generated",
+    regenerateTitle: "Change the QR code for table {number}?",
+    regenerateBody:
+      "The current printed code stops working immediately and you will need to print and stick a new one. Use this if the old code leaked.",
+    qrToken: "Table code",
+  },
+
   settings: {
     title: "Settings",
     subtitle: "Your restaurant details, opening hours and delivery fee.",
