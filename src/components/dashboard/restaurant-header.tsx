@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Store } from "lucide-react";
 
+import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { SignOutButton } from "@/components/layout/sign-out-button";
 import type { Restaurant } from "@/lib/restaurant";
 
@@ -43,7 +44,10 @@ export function RestaurantHeader({
           </span>
         </Link>
 
-        <SignOutButton />
+        <div className="flex items-center gap-1">
+          <LanguageSwitcher />
+          <SignOutButton />
+        </div>
       </div>
     </header>
   );

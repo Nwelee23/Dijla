@@ -11,15 +11,19 @@ export type DayHours = {
   close: string;
 };
 
-/** Saturday first — the Iraqi working week. */
+/**
+ * Saturday first — the Iraqi working week.
+ * Labels live in the dictionaries (`t.days`), keyed by these same strings, so
+ * there is only ever one place a day name is written per language.
+ */
 export const DAYS = [
-  { key: "sat", label: "السبت" },
-  { key: "sun", label: "الأحد" },
-  { key: "mon", label: "الاثنين" },
-  { key: "tue", label: "الثلاثاء" },
-  { key: "wed", label: "الأربعاء" },
-  { key: "thu", label: "الخميس" },
-  { key: "fri", label: "الجمعة" },
+  { key: "sat" },
+  { key: "sun" },
+  { key: "mon" },
+  { key: "tue" },
+  { key: "wed" },
+  { key: "thu" },
+  { key: "fri" },
 ] as const;
 
 export type DayKey = (typeof DAYS)[number]["key"];
@@ -70,15 +74,22 @@ export function parseHours(settings: unknown): OpeningHours {
   return hours;
 }
 
-/** Rejects anything the UI shouldn't have been able to produce. */
-export function validateHours(hours: OpeningHours): string | null {
+/**
+ * Rejects anything the UI should not have been able to produce.
+ *
+ * Returns which day failed and why rather than a sentence: the caller knows the
+ * active language, this module does not.
+ */
+export type HoursProblem = { day: DayKey; reason: "incomplete" | "format" };
+
+export function validateHours(hours: OpeningHours): HoursProblem | null {
   for (const day of DAYS) {
     const value = hours[day.key];
-    if (!value) return `أوقات ${day.label} غير مكتملة.`;
+    if (!value) return { day: day.key, reason: "incomplete" };
     if (value.closed) continue;
 
     if (!TIME_PATTERN.test(value.open) || !TIME_PATTERN.test(value.close)) {
-      return `صيغة الوقت في ${day.label} غير صحيحة.`;
+      return { day: day.key, reason: "format" };
     }
   }
   return null;

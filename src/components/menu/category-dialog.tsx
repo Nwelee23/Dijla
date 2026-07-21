@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { createCategory, renameCategory } from "@/app/dashboard/menu/actions";
+import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -24,6 +25,7 @@ type CategoryDialogProps = {
 };
 
 export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(category?.name ?? "");
   const [isPending, startTransition] = useTransition();
@@ -41,7 +43,7 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
         return;
       }
 
-      toast.success(isRename ? "تم تعديل الاسم" : "تمت إضافة التصنيف");
+      toast.success(isRename ? t.menu.categoryRenamed : t.menu.categoryAdded);
       setOpen(false);
       if (!isRename) setName("");
     });
@@ -60,7 +62,7 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>
-            {isRename ? "تعديل اسم التصنيف" : "تصنيف جديد"}
+            {isRename ? t.menu.editCategoryName : t.menu.newCategory}
           </DialogTitle>
         </DialogHeader>
 
@@ -72,12 +74,12 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
           }}
         >
           <div className="grid gap-2">
-            <Label htmlFor="category-name">اسم التصنيف</Label>
+            <Label htmlFor="category-name">{t.menu.categoryName}</Label>
             <Input
               id="category-name"
               autoFocus
               required
-              placeholder="مثال: المشاوي"
+              placeholder={t.menu.categoryPlaceholder}
               value={name}
               onChange={(event) => setName(event.target.value)}
               disabled={isPending}
@@ -90,11 +92,11 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
               variant="outline"
               onClick={() => setOpen(false)}
             >
-              إلغاء
+              {t.common.cancel}
             </Button>
             <Button type="submit" disabled={isPending || !name.trim()}>
               {isPending && <Loader2 className="animate-spin" />}
-              {isRename ? "حفظ" : "إضافة"}
+              {isRename ? t.common.save : t.common.add}
             </Button>
           </DialogFooter>
         </form>

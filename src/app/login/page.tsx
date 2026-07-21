@@ -1,5 +1,6 @@
 import { AuthForm } from "@/components/auth/auth-form";
 import { Brand } from "@/components/layout/brand";
+import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import {
   Card,
   CardContent,
@@ -7,26 +8,29 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata = {
-  title: "تسجيل الدخول | دجلة",
-};
+export async function generateMetadata() {
+  const t = await getT();
+  return { title: t.meta.login };
+}
 
 export default async function LoginPage({
   searchParams,
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
-  const { next } = await searchParams;
+  const [{ next }, t] = await Promise.all([searchParams, getT()]);
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-6 p-4">
       <Brand />
+      <LanguageSwitcher variant="outline" />
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>تسجيل الدخول</CardTitle>
+          <CardTitle>{t.auth.loginTitle}</CardTitle>
           <CardDescription>
-            أدخل بريدك الإلكتروني وسنرسل لك رمز دخول.
+            {t.auth.loginSubtitle}
           </CardDescription>
         </CardHeader>
         <CardContent>

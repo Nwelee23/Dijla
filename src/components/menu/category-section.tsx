@@ -5,8 +5,10 @@ import { ChevronDown, ChevronUp, Pencil, Plus, Trash2 } from "lucide-react";
 import { CategoryDialog } from "@/components/menu/category-dialog";
 import { ItemDialog } from "@/components/menu/item-dialog";
 import { ItemList, type MenuItem } from "@/components/menu/item-list";
+import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { interpolate } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export type Category = {
@@ -37,6 +39,8 @@ export function CategorySection({
   onToggleActive: (isActive: boolean) => void;
   onRequestDelete: () => void;
 }) {
+  const t = useT();
+
   return (
     <section className="overflow-hidden rounded-lg border">
       <header
@@ -50,7 +54,7 @@ export function CategorySection({
             variant="ghost"
             size="icon"
             className="size-6"
-            aria-label="تحريك التصنيف لأعلى"
+            aria-label={t.menu.moveCategoryUp}
             disabled={isFirst || disabled}
             onClick={() => onMove(-1)}
           >
@@ -60,7 +64,7 @@ export function CategorySection({
             variant="ghost"
             size="icon"
             className="size-6"
-            aria-label="تحريك التصنيف لأسفل"
+            aria-label={t.menu.moveCategoryDown}
             disabled={isLast || disabled}
             onClick={() => onMove(1)}
           >
@@ -78,7 +82,7 @@ export function CategorySection({
           <span className="text-muted-foreground me-1 text-xs font-normal">
             {" "}
             ({category.items.length})
-            {!category.is_active && " — مخفي"}
+            {!category.is_active && ` — ${t.common.hidden}`}
           </span>
         </h2>
 
@@ -86,13 +90,13 @@ export function CategorySection({
           checked={category.is_active ?? true}
           onCheckedChange={onToggleActive}
           disabled={disabled}
-          aria-label="إظهار التصنيف"
+          aria-label={t.menu.showCategory}
         />
 
         <CategoryDialog
           category={category}
           trigger={
-            <Button variant="ghost" size="icon" aria-label="تعديل اسم التصنيف">
+            <Button variant="ghost" size="icon" aria-label={t.menu.editCategoryName}>
               <Pencil className="size-4" />
             </Button>
           }
@@ -101,7 +105,7 @@ export function CategorySection({
         <Button
           variant="ghost"
           size="icon"
-          aria-label="حذف التصنيف"
+          aria-label={t.menu.deleteCategory}
           className="text-destructive"
           disabled={disabled}
           onClick={onRequestDelete}
@@ -123,7 +127,7 @@ export function CategorySection({
           trigger={
             <Button variant="ghost" size="sm" className="w-full">
               <Plus />
-              أضف صنفاً إلى «{category.name}»
+              {interpolate(t.menu.addItemTo, { name: category.name })}
             </Button>
           }
         />

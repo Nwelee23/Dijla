@@ -8,46 +8,48 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { parseHours } from "@/lib/hours";
+import { getT } from "@/lib/i18n/server";
 import { getRestaurant } from "@/lib/restaurant";
 
-export const metadata = {
-  title: "الإعدادات | دجلة",
-};
+export async function generateMetadata() {
+  const t = await getT();
+  return { title: t.meta.settings };
+}
 
 export default async function SettingsPage() {
   // The dashboard layout already guarantees this exists.
-  const restaurant = (await getRestaurant())!;
+  const [restaurant, t] = await Promise.all([getRestaurant(), getT()]);
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-6 p-4 sm:p-6">
       <div>
-        <h1 className="text-2xl font-bold">الإعدادات</h1>
+        <h1 className="text-2xl font-bold">{t.settings.title}</h1>
         <p className="text-muted-foreground text-sm">
-          بيانات مطعمك وأوقات عمله ورسوم التوصيل.
+          {t.settings.subtitle}
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>معلومات المطعم</CardTitle>
+          <CardTitle>{t.settings.restaurantInfo}</CardTitle>
           <CardDescription>
-            الاسم والشعار يظهران للزبون أعلى القائمة.
+            {t.settings.restaurantInfoHint}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ProfileForm restaurant={restaurant} />
+          <ProfileForm restaurant={restaurant!} />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>أوقات العمل</CardTitle>
+          <CardTitle>{t.settings.hours}</CardTitle>
           <CardDescription>
-            تُعرض للزبون، وتُستخدم لاحقاً لإيقاف استقبال الطلبات خارج الدوام.
+            {t.settings.hoursHint}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <HoursForm initial={parseHours(restaurant.settings)} />
+          <HoursForm initial={parseHours(restaurant!.settings)} />
         </CardContent>
       </Card>
     </div>

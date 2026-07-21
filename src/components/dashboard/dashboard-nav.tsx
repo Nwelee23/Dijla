@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { useT } from "@/components/i18n/i18n-provider";
+import { interpolate } from "@/lib/i18n";
 import { NAV_ITEMS, type NavItem } from "./nav-items";
 import { cn } from "@/lib/utils";
 
@@ -13,8 +15,10 @@ function useIsActive(href: string) {
 }
 
 function NavLink({ item, className }: { item: NavItem; className?: string }) {
+  const t = useT();
   const isActive = useIsActive(item.href);
   const Icon = item.icon;
+  const label = t.nav[item.label];
 
   const shared = cn(
     "flex items-center gap-2 rounded-md px-3 py-2 text-sm whitespace-nowrap transition-colors",
@@ -25,11 +29,11 @@ function NavLink({ item, className }: { item: NavItem; className?: string }) {
     return (
       <span
         aria-disabled
-        title={`يُبنى في ${item.phase}`}
+        title={interpolate(t.nav.buildingIn, { phase: t.phases[item.phase] })}
         className={cn(shared, "text-muted-foreground/50 cursor-not-allowed")}
       >
         <Icon className="size-4 shrink-0" />
-        {item.label}
+        {label}
       </span>
     );
   }
@@ -46,7 +50,7 @@ function NavLink({ item, className }: { item: NavItem; className?: string }) {
       )}
     >
       <Icon className="size-4 shrink-0" />
-      {item.label}
+      {label}
     </Link>
   );
 }

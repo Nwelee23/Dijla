@@ -8,57 +8,60 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 
+import type { Dictionary } from "@/lib/i18n";
+
 export type NavItem = {
   href: string;
-  label: string;
+  /** Key into `t.nav` — the label itself lives in the dictionaries. */
+  label: keyof Dictionary["nav"];
   icon: LucideIcon;
   /** Flip to true when the phase that builds the screen lands. */
   enabled: boolean;
-  /** Shown in the tooltip while disabled. */
-  phase: string;
+  /** Key into `t.phases`, shown in the tooltip while disabled. */
+  phase: keyof Dictionary["phases"];
 };
 
 export const NAV_ITEMS: NavItem[] = [
   {
     href: "/dashboard",
-    label: "الطلبات",
+    label: "orders",
     icon: ClipboardList,
     enabled: true,
-    phase: "المرحلة 2",
+    phase: "phase2",
   },
   {
     href: "/dashboard/menu",
-    label: "القائمة",
+    label: "menu",
     icon: UtensilsCrossed,
     enabled: true,
-    phase: "المهمة 1.5",
+    phase: "task15",
   },
   {
     href: "/dashboard/tables",
-    label: "الطاولات",
+    label: "tables",
     icon: QrCode,
     enabled: false,
-    phase: "المرحلة 2",
+    phase: "phase2",
   },
   {
     href: "/dashboard/drivers",
-    label: "السائقون",
+    label: "drivers",
     icon: Bike,
     enabled: false,
-    phase: "المرحلة 4",
+    phase: "phase4",
   },
   {
     href: "/dashboard/reports",
-    label: "التقارير",
+    label: "reports",
     icon: BarChart3,
     enabled: false,
-    phase: "المرحلة 5",
+    phase: "phase5",
   },
   {
     href: "/dashboard/settings",
-    label: "الإعدادات",
+    label: "settings",
     icon: Settings,
     enabled: true,
-    phase: "المهمة 1.7",
+    phase: "task17",
   },
 ];

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { normalizeIraqiPhone } from "@/lib/auth/phone";
+import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/slug";
 
@@ -25,9 +26,10 @@ export type OnboardingInput = {
 export async function createRestaurant(
   input: OnboardingInput
 ): Promise<OnboardingResult> {
+  const t = await getT();
   const name = input.name.trim();
   if (name.length < 2) {
-    return { ok: false, error: "اسم المطعم قصير جداً." };
+    return { ok: false, error: t.onboarding.nameTooShort };
   }
 
   // Trust the server's own slugify over whatever arrived from the browser.
@@ -37,7 +39,7 @@ export async function createRestaurant(
   if (input.phone.trim()) {
     phone = normalizeIraqiPhone(input.phone);
     if (!phone) {
-      return { ok: false, error: "رقم الهاتف غير صحيح. مثال: 07701234567" };
+      return { ok: false, error: t.auth.invalidPhone };
     }
   }
 
@@ -54,7 +56,7 @@ export async function createRestaurant(
 
   if (error) {
     if (error.code === "23505") {
-      return { ok: false, error: "هذا الحساب مرتبط بمطعم بالفعل." };
+      return { ok: false, error: t.onboarding.alreadyOnboarded };
     }
     return { ok: false, error: error.message };
   }

@@ -13,7 +13,9 @@ import {
   CategorySection,
   type CategoryWithItems,
 } from "@/components/menu/category-section";
+import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
+import { interpolate } from "@/lib/i18n";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +34,7 @@ export function CategoryList({
   categories: CategoryWithItems[];
   restaurantId: string;
 }) {
+  const t = useT();
   const [isPending, startTransition] = useTransition();
   const [pendingDelete, setPendingDelete] = useState<CategoryWithItems | null>(
     null
@@ -58,7 +61,10 @@ export function CategoryList({
     startTransition(async () => {
       const result = await setCategoryActive(id, isActive);
       if (!result.ok) toast.error(result.error);
-      else toast.success(isActive ? "تم إظهار التصنيف" : "تم إخفاء التصنيف");
+      else
+        toast.success(
+          isActive ? t.menu.categoryShown : t.menu.categoryHiddenToast
+        );
     });
   }
 
@@ -69,7 +75,7 @@ export function CategoryList({
     startTransition(async () => {
       const result = await deleteCategory(category.id);
       if (!result.ok) toast.error(result.error);
-      else toast.success("تم حذف التصنيف");
+      else toast.success(t.menu.categoryDeleted);
       setPendingDelete(null);
     });
   }
@@ -98,16 +104,22 @@ export function CategoryList({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>حذف «{pendingDelete?.name}»؟</DialogTitle>
+            <DialogTitle>
+              {interpolate(t.menu.deleteCategoryTitle, {
+                name: pendingDelete?.name ?? "",
+              })}
+            </DialogTitle>
             <DialogDescription>
               {pendingDelete && pendingDelete.items.length > 0
-                ? `الأصناف الـ ${pendingDelete.items.length} داخل هذا التصنيف لن تُحذف، لكنها ستنتقل إلى «بدون تصنيف». إذا كنت تريد إخفاءه مؤقتاً فقط، استخدم مفتاح الإظهار بدلاً من الحذف.`
-                : "إذا كنت تريد إخفاءه مؤقتاً فقط، استخدم مفتاح الإظهار بدلاً من الحذف."}
+                ? interpolate(t.menu.deleteCategoryWithItems, {
+                    count: pendingDelete.items.length,
+                  })
+                : t.menu.deleteCategoryEmpty}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPendingDelete(null)}>
-              إلغاء
+              {t.common.cancel}
             </Button>
             <Button
               variant="destructive"
@@ -115,7 +127,7 @@ export function CategoryList({
               disabled={isPending}
             >
               {isPending && <Loader2 className="animate-spin" />}
-              حذف
+              {t.common.delete}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { getRestaurant } from "@/lib/restaurant";
 
@@ -17,11 +18,12 @@ const MENU_PATH = "/dashboard/menu";
  */
 
 export async function createCategory(name: string): Promise<ActionResult> {
+  const t = await getT();
   const trimmed = name.trim();
-  if (!trimmed) return { ok: false, error: "اسم التصنيف مطلوب." };
+  if (!trimmed) return { ok: false, error: t.menu.categoryRequired };
 
   const restaurant = await getRestaurant();
-  if (!restaurant) return { ok: false, error: "لم يتم العثور على المطعم." };
+  if (!restaurant) return { ok: false, error: t.onboarding.restaurantNotFound };
 
   const supabase = await createClient();
 
@@ -49,8 +51,9 @@ export async function renameCategory(
   id: string,
   name: string
 ): Promise<ActionResult> {
+  const t = await getT();
   const trimmed = name.trim();
-  if (!trimmed) return { ok: false, error: "اسم التصنيف مطلوب." };
+  if (!trimmed) return { ok: false, error: t.menu.categoryRequired };
 
   const supabase = await createClient();
   const { error } = await supabase

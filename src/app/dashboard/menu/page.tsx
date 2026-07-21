@@ -7,15 +7,17 @@ import { ItemDialog } from "@/components/menu/item-dialog";
 import { ItemList, type MenuItem } from "@/components/menu/item-list";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { getT } from "@/lib/i18n/server";
 import { getRestaurant } from "@/lib/restaurant";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = {
-  title: "القائمة | دجلة",
-};
+export async function generateMetadata() {
+  const t = await getT();
+  return { title: t.meta.menu };
+}
 
 export default async function MenuPage() {
-  const restaurant = (await getRestaurant())!;
+  const [restaurant, t] = await Promise.all([getRestaurant(), getT()]);
   const supabase = await createClient();
 
   // RLS scopes both queries to the signed-in restaurant; no filter needed.
@@ -51,9 +53,9 @@ export default async function MenuPage() {
     <div className="mx-auto w-full max-w-3xl space-y-6 p-4 sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">القائمة</h1>
+          <h1 className="text-2xl font-bold">{t.menu.title}</h1>
           <p className="text-muted-foreground text-sm">
-            الترتيب هنا هو ما يراه الزبون على هاتفه.
+            {t.menu.subtitle}
           </p>
         </div>
 
@@ -61,7 +63,7 @@ export default async function MenuPage() {
           trigger={
             <Button>
               <Plus />
-              تصنيف
+              {t.menu.addCategory}
             </Button>
           }
         />
@@ -72,16 +74,14 @@ export default async function MenuPage() {
           <CardContent className="text-muted-foreground flex flex-col items-center gap-3 py-12 text-center">
             <UtensilsCrossed className="size-10 opacity-40" />
             <div className="space-y-1">
-              <p className="text-foreground font-medium">لا توجد تصنيفات بعد</p>
-              <p className="text-sm">
-                ابدأ بتصنيف مثل «المشاوي» أو «المشروبات»، ثم أضف الأصناف داخله.
-              </p>
+              <p className="text-foreground font-medium">{t.menu.noCategories}</p>
+              <p className="text-sm">{t.menu.noCategoriesHint}</p>
             </div>
             <CategoryDialog
               trigger={
                 <Button variant="outline">
                   <Plus />
-                  أضف أول تصنيف
+                  {t.menu.addFirstCategory}
                 </Button>
               }
             />
@@ -91,33 +91,33 @@ export default async function MenuPage() {
         <>
           <CategoryList
             categories={withItems}
-            restaurantId={restaurant.id}
+            restaurantId={restaurant!.id}
           />
 
           {uncategorised.length > 0 && (
             <section className="overflow-hidden rounded-lg border border-dashed">
               <header className="bg-muted/30 border-b p-3">
                 <h2 className="font-semibold">
-                  بدون تصنيف
+                  {t.menu.uncategorised}
                   <span className="text-muted-foreground text-xs font-normal">
                     {" "}
-                    ({uncategorised.length}) — لا تظهر للزبون حتى تنقلها إلى تصنيف
+                    ({uncategorised.length}) — {t.menu.uncategorisedHint}
                   </span>
                 </h2>
               </header>
               <ItemList
                 items={uncategorised}
-                restaurantId={restaurant.id}
+                restaurantId={restaurant!.id}
                 categoryId={null}
               />
               <div className="border-t p-2">
                 <ItemDialog
-                  restaurantId={restaurant.id}
+                  restaurantId={restaurant!.id}
                   categoryId={null}
                   trigger={
                     <Button variant="ghost" size="sm" className="w-full">
                       <Plus />
-                      أضف صنفاً بدون تصنيف
+                      {t.menu.addItemUncategorised}
                     </Button>
                   }
                 />

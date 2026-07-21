@@ -20,8 +20,9 @@ export async function compressImage(
   file: File,
   { maxDimension = 1200, quality = 0.82 }: CompressOptions = {}
 ): Promise<File> {
+  // Thrown as a code, not a sentence: this module has no locale.
   if (!ACCEPTED_TYPES.includes(file.type)) {
-    throw new Error("صيغة الصورة غير مدعومة. استخدم JPG أو PNG أو WebP.");
+    throw new Error("UNSUPPORTED_TYPE");
   }
 
   const bitmap = await createImageBitmap(file);

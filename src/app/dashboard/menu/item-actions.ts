@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
+import { getT } from "@/lib/i18n/server";
+import type { Dictionary } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { getRestaurant } from "@/lib/restaurant";
 
@@ -18,10 +20,10 @@ export type ItemInput = {
   categoryId: string | null;
 };
 
-function validate(input: ItemInput): string | null {
-  if (!input.name.trim()) return "اسم الصنف مطلوب.";
+function validate(input: ItemInput, t: Dictionary): string | null {
+  if (!input.name.trim()) return t.menu.itemNameRequired;
   if (!Number.isFinite(input.price) || input.price < 0) {
-    return "السعر غير صحيح.";
+    return t.menu.invalidPrice;
   }
   return null;
 }
@@ -37,11 +39,12 @@ function storagePathFromUrl(url: string): string | null {
 }
 
 export async function createItem(input: ItemInput): Promise<ActionResult> {
-  const invalid = validate(input);
+  const t = await getT();
+  const invalid = validate(input, t);
   if (invalid) return { ok: false, error: invalid };
 
   const restaurant = await getRestaurant();
-  if (!restaurant) return { ok: false, error: "لم يتم العثور على المطعم." };
+  if (!restaurant) return { ok: false, error: t.onboarding.restaurantNotFound };
 
   const supabase = await createClient();
 
@@ -75,7 +78,8 @@ export async function updateItem(
   id: string,
   input: ItemInput
 ): Promise<ActionResult> {
-  const invalid = validate(input);
+  const t = await getT();
+  const invalid = validate(input, t);
   if (invalid) return { ok: false, error: invalid };
 
   const supabase = await createClient();

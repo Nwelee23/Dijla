@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
+import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
 import { normalizeIraqiPhone } from "./phone";
@@ -20,9 +21,10 @@ export async function sendEmailOtp(
   email: string,
   { allowSignUp = false }: { allowSignUp?: boolean } = {}
 ): Promise<AuthResult> {
+  const t = await getT();
   const normalized = email.trim().toLowerCase();
   if (!normalized.includes("@")) {
-    return { ok: false, error: "البريد الإلكتروني غير صحيح." };
+    return { ok: false, error: t.auth.invalidEmail };
   }
 
   const supabase = await createClient();
@@ -60,9 +62,10 @@ export async function verifyEmailOtp(
  * Providers -> Phone). Email OTP above is the primary flow today.
  */
 export async function sendPhoneOtp(phone: string): Promise<AuthResult> {
+  const t = await getT();
   const normalized = normalizeIraqiPhone(phone);
   if (!normalized) {
-    return { ok: false, error: "رقم الهاتف غير صحيح. مثال: 07701234567" };
+    return { ok: false, error: t.auth.invalidPhone };
   }
 
   const supabase = await createClient();
@@ -77,9 +80,10 @@ export async function verifyPhoneOtp(
   phone: string,
   token: string
 ): Promise<AuthResult> {
+  const t = await getT();
   const normalized = normalizeIraqiPhone(phone);
   if (!normalized) {
-    return { ok: false, error: "رقم الهاتف غير صحيح." };
+    return { ok: false, error: t.auth.invalidPhone };
   }
 
   const supabase = await createClient();

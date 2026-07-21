@@ -5,6 +5,8 @@ import { Loader2, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 
 import { updateRestaurantProfile } from "@/app/dashboard/settings/actions";
+import { useT } from "@/components/i18n/i18n-provider";
+import { areaOptions } from "@/lib/areas";
 import { ImageUpload } from "@/components/shared/image-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,18 +21,8 @@ import {
 import { formatIraqiPhone } from "@/lib/auth/phone";
 import type { Restaurant } from "@/lib/restaurant";
 
-const AREAS = [
-  "النجف",
-  "الكوفة",
-  "المشخاب",
-  "المناذرة",
-  "الحيرة",
-  "كربلاء",
-  "الديوانية",
-  "بابل",
-];
-
 export function ProfileForm({ restaurant }: { restaurant: Restaurant }) {
+  const t = useT();
   const [isPending, startTransition] = useTransition();
 
   const [name, setName] = useState(restaurant.name);
@@ -61,7 +53,7 @@ export function ProfileForm({ restaurant }: { restaurant: Restaurant }) {
         toast.error(result.error);
         return;
       }
-      toast.success("تم حفظ الإعدادات");
+      toast.success(t.settings.saved);
     });
   }
 
@@ -74,18 +66,18 @@ export function ProfileForm({ restaurant }: { restaurant: Restaurant }) {
       }}
     >
       <div className="grid gap-2">
-        <Label>شعار المطعم</Label>
+        <Label>{t.settings.logo}</Label>
         <ImageUpload
           value={logoUrl}
           onChange={setLogoUrl}
           restaurantId={restaurant.id}
-          label="شعار"
+          label={t.settings.logoLabel}
           aspect="square"
         />
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="name">اسم المطعم</Label>
+        <Label htmlFor="name">{t.onboarding.restaurantName}</Label>
         <Input
           id="name"
           required
@@ -97,7 +89,7 @@ export function ProfileForm({ restaurant }: { restaurant: Restaurant }) {
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="slug">رابط المطعم</Label>
+        <Label htmlFor="slug">{t.onboarding.slug}</Label>
         <Input
           id="slug"
           dir="ltr"
@@ -111,21 +103,20 @@ export function ProfileForm({ restaurant }: { restaurant: Restaurant }) {
         {slugChanged && (
           <p className="text-destructive flex items-start gap-1.5 text-xs">
             <TriangleAlert className="mt-0.5 size-3.5 shrink-0" />
-            تغيير الرابط يُعطّل أي رابط قديم شاركته مع زبائنك. رموز QR للطاولات
-            لا تتأثر.
+            {t.settings.slugWarning}
           </p>
         )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-2">
-          <Label htmlFor="phone">رقم الهاتف</Label>
+          <Label htmlFor="phone">{t.common.phone}</Label>
           <Input
             id="phone"
             type="tel"
             inputMode="tel"
             dir="ltr"
-            placeholder="07701234567"
+            placeholder={t.common.phonePlaceholder}
             value={phone}
             onChange={(event) => setPhone(event.target.value)}
             disabled={isPending}
@@ -133,15 +124,15 @@ export function ProfileForm({ restaurant }: { restaurant: Restaurant }) {
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="area">المنطقة</Label>
+          <Label htmlFor="area">{t.common.area}</Label>
           <Select value={area} onValueChange={setArea} disabled={isPending}>
             <SelectTrigger id="area" className="w-full">
-              <SelectValue placeholder="اختر المنطقة" />
+              <SelectValue placeholder={t.common.selectArea} />
             </SelectTrigger>
             <SelectContent>
-              {AREAS.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
+              {areaOptions(t).map((option) => (
+                <SelectItem key={option.key} value={option.key}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -150,7 +141,7 @@ export function ProfileForm({ restaurant }: { restaurant: Restaurant }) {
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="delivery-fee">رسوم التوصيل (دينار)</Label>
+        <Label htmlFor="delivery-fee">{t.settings.deliveryFee}</Label>
         <Input
           id="delivery-fee"
           type="number"
@@ -163,13 +154,13 @@ export function ProfileForm({ restaurant }: { restaurant: Restaurant }) {
           disabled={isPending}
         />
         <p className="text-muted-foreground text-xs">
-          تُضاف إلى طلبات التوصيل فقط — طلبات الطاولات لا تتأثر.
+          {t.settings.deliveryFeeHint}
         </p>
       </div>
 
       <Button type="submit" disabled={isPending}>
         {isPending && <Loader2 className="animate-spin" />}
-        حفظ
+        {t.common.save}
       </Button>
     </form>
   );

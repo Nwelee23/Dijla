@@ -5,9 +5,11 @@ import { Loader2, Moon } from "lucide-react";
 import { toast } from "sonner";
 
 import { updateOpeningHours } from "@/app/dashboard/settings/actions";
+import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { interpolate } from "@/lib/i18n";
 import {
   DAYS,
   crossesMidnight,
@@ -17,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export function HoursForm({ initial }: { initial: OpeningHours }) {
+  const t = useT();
   const [hours, setHours] = useState<OpeningHours>(initial);
   const [isPending, startTransition] = useTransition();
 
@@ -40,7 +43,7 @@ export function HoursForm({ initial }: { initial: OpeningHours }) {
         toast.error(result.error);
         return;
       }
-      toast.success("تم حفظ أوقات العمل");
+      toast.success(t.settings.hoursSaved);
     });
   }
 
@@ -55,6 +58,8 @@ export function HoursForm({ initial }: { initial: OpeningHours }) {
       <ul className="divide-y rounded-lg border">
         {DAYS.map((day) => {
           const value = hours[day.key];
+          const label = t.days[day.key];
+
           return (
             <li
               key={day.key}
@@ -63,20 +68,21 @@ export function HoursForm({ initial }: { initial: OpeningHours }) {
                 value.closed && "bg-muted/40"
               )}
             >
-              <span className="w-16 shrink-0 text-sm font-medium">
-                {day.label}
-              </span>
+              <span className="w-20 shrink-0 text-sm font-medium">{label}</span>
 
               <Switch
                 checked={!value.closed}
                 onCheckedChange={(open) => update(day.key, { closed: !open })}
                 disabled={isPending}
-                aria-label={`فتح ${day.label}`}
+                aria-label={interpolate(t.settings.openDay, { day: label })}
               />
 
               {value.closed ? (
-                <span className="text-muted-foreground text-sm">مغلق</span>
+                <span className="text-muted-foreground text-sm">
+                  {t.settings.closed}
+                </span>
               ) : (
+                // Times read left-to-right in every language.
                 <div className="flex items-center gap-2" dir="ltr">
                   <Input
                     type="time"
@@ -86,7 +92,7 @@ export function HoursForm({ initial }: { initial: OpeningHours }) {
                       update(day.key, { open: event.target.value })
                     }
                     disabled={isPending}
-                    aria-label={`وقت الفتح ${day.label}`}
+                    aria-label={interpolate(t.settings.openAt, { day: label })}
                   />
                   <span className="text-muted-foreground">—</span>
                   <Input
@@ -97,7 +103,7 @@ export function HoursForm({ initial }: { initial: OpeningHours }) {
                       update(day.key, { close: event.target.value })
                     }
                     disabled={isPending}
-                    aria-label={`وقت الإغلاق ${day.label}`}
+                    aria-label={interpolate(t.settings.closeAt, { day: label })}
                   />
                 </div>
               )}
@@ -105,7 +111,7 @@ export function HoursForm({ initial }: { initial: OpeningHours }) {
               {crossesMidnight(value) && (
                 <span className="text-muted-foreground flex items-center gap-1 text-xs">
                   <Moon className="size-3" />
-                  يمتد بعد منتصف الليل
+                  {t.settings.crossesMidnight}
                 </span>
               )}
             </li>
@@ -116,7 +122,7 @@ export function HoursForm({ initial }: { initial: OpeningHours }) {
       <div className="flex flex-wrap gap-2">
         <Button type="submit" disabled={isPending}>
           {isPending && <Loader2 className="animate-spin" />}
-          حفظ أوقات العمل
+          {t.settings.saveHours}
         </Button>
         <Button
           type="button"
@@ -124,7 +130,7 @@ export function HoursForm({ initial }: { initial: OpeningHours }) {
           onClick={copyToAll}
           disabled={isPending}
         >
-          تطبيق توقيت السبت على كل الأيام
+          {t.settings.copyToAllDays}
         </Button>
       </div>
     </form>

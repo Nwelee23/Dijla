@@ -1,5 +1,7 @@
 "use client";
 
+// Design QA sandbox from task 0.2. Hardcoded Arabic on purpose: it exercises
+// RTL rendering, and it is never served in production (see app/ui-demo/layout).
 import { useState } from "react";
 import { toast } from "sonner";
 

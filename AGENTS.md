@@ -35,6 +35,7 @@ One system, three surfaces:
 
 ## Conventions
 
+- **No emoji in the product. Ever.** Every glyph in the UI is a `lucide-react` icon — no emoji in labels, buttons, empty states, toasts, or seed data. Emoji render differently on every device, break alignment in RTL, and read as unprofessional to a restaurant owner. This applies to shipped UI; commit messages and chat are unaffected.
 - **Multi-tenant:** almost every table has `restaurant_id`. Enforce isolation with Supabase **Row-Level Security (RLS)** — a user only accesses rows for their own restaurant. Drivers only see orders assigned to them.
 - **Never hardcode secrets.** Use `.env.local`; keep the Supabase **service_role** key server-side only.
 - **Types:** generate DB types from Supabase; keep shared types in `lib/supabase/`.

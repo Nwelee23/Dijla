@@ -6,6 +6,8 @@ import { Loader2, Store } from "lucide-react";
 import { toast } from "sonner";
 
 import { createRestaurant } from "@/app/onboarding/actions";
+import { useT } from "@/components/i18n/i18n-provider";
+import { areaOptions } from "@/lib/areas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,19 +20,8 @@ import {
 } from "@/components/ui/select";
 import { slugify } from "@/lib/slug";
 
-/** Najaf first, then the nearby governorates the pilot is likely to reach. */
-const AREAS = [
-  "النجف",
-  "الكوفة",
-  "المشخاب",
-  "المناذرة",
-  "الحيرة",
-  "كربلاء",
-  "الديوانية",
-  "بابل",
-];
-
 export function OnboardingForm() {
+  const t = useT();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -56,7 +47,7 @@ export function OnboardingForm() {
         setError(result.error);
         return;
       }
-      toast.success("تم إنشاء مطعمك");
+      toast.success(t.onboarding.created);
       router.replace("/dashboard");
       router.refresh();
     });
@@ -71,12 +62,12 @@ export function OnboardingForm() {
       }}
     >
       <div className="grid gap-2">
-        <Label htmlFor="name">اسم المطعم *</Label>
+        <Label htmlFor="name">{t.onboarding.restaurantName} *</Label>
         <Input
           id="name"
           required
           minLength={2}
-          placeholder="مطعم دجلة"
+          placeholder={t.onboarding.restaurantNamePlaceholder}
           value={name}
           onChange={(event) => onNameChange(event.target.value)}
           disabled={isPending}
@@ -84,7 +75,7 @@ export function OnboardingForm() {
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="slug">رابط المطعم</Label>
+        <Label htmlFor="slug">{t.onboarding.slug}</Label>
         <Input
           id="slug"
           dir="ltr"
@@ -103,13 +94,13 @@ export function OnboardingForm() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-2">
-          <Label htmlFor="phone">رقم الهاتف</Label>
+          <Label htmlFor="phone">{t.common.phone}</Label>
           <Input
             id="phone"
             type="tel"
             inputMode="tel"
             dir="ltr"
-            placeholder="07701234567"
+            placeholder={t.common.phonePlaceholder}
             value={phone}
             onChange={(event) => setPhone(event.target.value)}
             disabled={isPending}
@@ -117,15 +108,15 @@ export function OnboardingForm() {
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="area">المنطقة</Label>
+          <Label htmlFor="area">{t.common.area}</Label>
           <Select value={area} onValueChange={setArea} disabled={isPending}>
             <SelectTrigger id="area" className="w-full">
-              <SelectValue placeholder="اختر المنطقة" />
+              <SelectValue placeholder={t.common.selectArea} />
             </SelectTrigger>
             <SelectContent>
-              {AREAS.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
+              {areaOptions(t).map((option) => (
+                <SelectItem key={option.key} value={option.key}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -134,10 +125,10 @@ export function OnboardingForm() {
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="fullName">اسمك</Label>
+        <Label htmlFor="fullName">{t.onboarding.yourName}</Label>
         <Input
           id="fullName"
-          placeholder="اسم صاحب المطعم"
+          placeholder={t.onboarding.yourNamePlaceholder}
           value={fullName}
           onChange={(event) => setFullName(event.target.value)}
           disabled={isPending}
@@ -148,11 +139,11 @@ export function OnboardingForm() {
 
       <Button type="submit" className="w-full" disabled={isPending || !name}>
         {isPending ? <Loader2 className="animate-spin" /> : <Store />}
-        إنشاء المطعم
+        {t.onboarding.submit}
       </Button>
 
       <p className="text-muted-foreground text-center text-xs">
-        شعار المطعم يُضاف من الإعدادات بعد تفعيل رفع الصور.
+        {t.onboarding.logoLater}
       </p>
     </form>
   );

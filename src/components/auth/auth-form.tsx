@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowRight, Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 
+import { useT } from "@/components/i18n/i18n-provider";
 import {
   sendEmailOtp,
   signInWithEmail,
@@ -13,6 +14,7 @@ import {
   verifyEmailOtp,
 } from "@/lib/auth/actions";
 import { EMAIL_OTP_LENGTH } from "@/lib/auth/constants";
+import { interpolate } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import {
   InputOTP,
@@ -29,6 +31,7 @@ type Mode = "login" | "signup";
 type Step = "email" | "code" | "password";
 
 export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
+  const t = useT();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -61,7 +64,7 @@ export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
       }
       setStep("code");
       setCooldown(RESEND_COOLDOWN_SECONDS);
-      toast.success("أرسلنا رمزاً إلى بريدك");
+      toast.success(t.auth.codeSent);
     });
   }
 
@@ -70,7 +73,7 @@ export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
     startTransition(async () => {
       const result = await verifyEmailOtp(email, value);
       if (!result.ok) {
-        setError("الرمز غير صحيح أو منتهي الصلاحية.");
+        setError(t.auth.invalidCode);
         setCode("");
         return;
       }
@@ -92,7 +95,7 @@ export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
       }
 
       if (mode === "signup") {
-        toast.success("تم إنشاء الحساب. تحقّق من بريدك للتأكيد.");
+        toast.success(t.auth.accountCreated);
         return;
       }
       done();
@@ -104,7 +107,7 @@ export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
     return (
       <div className="space-y-5">
         <div className="space-y-1 text-center">
-          <p className="text-sm">أدخل الرمز المُرسل إلى</p>
+          <p className="text-sm">{t.auth.enterCodeFor}</p>
           <p className="font-medium" dir="ltr">
             {email}
           </p>
@@ -136,7 +139,7 @@ export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
         {isPending && (
           <p className="text-muted-foreground flex items-center justify-center gap-2 text-sm">
             <Loader2 className="size-4 animate-spin" />
-            جارٍ التحقق…
+            {t.auth.verifying}
           </p>
         )}
 
@@ -148,8 +151,8 @@ export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
             onClick={requestCode}
           >
             {cooldown > 0
-              ? `إعادة الإرسال بعد ${cooldown} ثانية`
-              : "إعادة إرسال الرمز"}
+              ? interpolate(t.auth.resendIn, { seconds: cooldown })
+              : t.auth.resend}
           </Button>
           <Button
             variant="ghost"
@@ -161,7 +164,7 @@ export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
               setError(null);
             }}
           >
-            تغيير البريد الإلكتروني
+            {t.auth.changeEmail}
           </Button>
         </div>
       </div>
@@ -181,7 +184,7 @@ export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
       }}
     >
       <div className="grid gap-2">
-        <Label htmlFor="email">البريد الإلكتروني</Label>
+        <Label htmlFor="email">{t.auth.email}</Label>
         <Input
           id="email"
           type="email"
@@ -198,7 +201,7 @@ export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
 
       {usePassword && (
         <div className="grid gap-2">
-          <Label htmlFor="password">كلمة المرور</Label>
+          <Label htmlFor="password">{t.auth.password}</Label>
           <Input
             id="password"
             type="password"
@@ -223,9 +226,9 @@ export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
         )}
         {usePassword
           ? mode === "signup"
-            ? "إنشاء الحساب"
-            : "دخول"
-          : "إرسال رمز الدخول"}
+            ? t.auth.createAccount
+            : t.auth.signIn
+          : t.auth.sendCode}
       </Button>
 
       <div className="space-y-3 text-center text-sm">
@@ -237,18 +240,16 @@ export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
             setError(null);
           }}
         >
-          {usePassword
-            ? "الدخول برمز عبر البريد بدلاً من كلمة المرور"
-            : "الدخول بكلمة المرور بدلاً من الرمز"}
+          {usePassword ? t.auth.useCode : t.auth.usePassword}
         </button>
 
         <p className="text-muted-foreground">
-          {mode === "login" ? "ليس لديك حساب؟ " : "لديك حساب بالفعل؟ "}
+          {mode === "login" ? t.auth.noAccount : t.auth.haveAccount}
           <Link
             href={mode === "login" ? "/signup" : "/login"}
             className="text-foreground inline-flex items-center gap-1 underline underline-offset-4"
           >
-            {mode === "login" ? "أنشئ مطعمك" : "تسجيل الدخول"}
+            {mode === "login" ? t.auth.goSignup : t.auth.goLogin}
             <ArrowRight className="size-3 rtl:rotate-180" />
           </Link>
         </p>

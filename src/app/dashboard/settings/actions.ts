@@ -5,8 +5,10 @@ import { revalidatePath } from "next/cache";
 import { normalizeIraqiPhone } from "@/lib/auth/phone";
 import { getRestaurant } from "@/lib/restaurant";
 import { slugify } from "@/lib/slug";
+import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { validateHours, type OpeningHours } from "@/lib/hours";
+import { interpolate } from "@/lib/i18n";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -27,8 +29,9 @@ function revalidate() {
 export async function updateRestaurantProfile(
   input: ProfileInput
 ): Promise<ActionResult> {
+  const t = await getT();
   const name = input.name.trim();
-  if (name.length < 2) return { ok: false, error: "اسم المطعم قصير جداً." };
+  if (name.length < 2) return { ok: false, error: t.onboarding.nameTooShort };
 
   const slug = slugify(input.slug.trim() || name);
 
@@ -36,16 +39,16 @@ export async function updateRestaurantProfile(
   if (input.phone.trim()) {
     phone = normalizeIraqiPhone(input.phone);
     if (!phone) {
-      return { ok: false, error: "رقم الهاتف غير صحيح. مثال: 07701234567" };
+      return { ok: false, error: t.auth.invalidPhone };
     }
   }
 
   if (!Number.isFinite(input.deliveryFee) || input.deliveryFee < 0) {
-    return { ok: false, error: "رسوم التوصيل غير صحيحة." };
+    return { ok: false, error: t.settings.invalidDeliveryFee };
   }
 
   const restaurant = await getRestaurant();
-  if (!restaurant) return { ok: false, error: "لم يتم العثور على المطعم." };
+  if (!restaurant) return { ok: false, error: t.onboarding.restaurantNotFound };
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -65,7 +68,7 @@ export async function updateRestaurantProfile(
     if (error.code === "23505") {
       return {
         ok: false,
-        error: "هذا الرابط مستخدم من مطعم آخر. جرّب رابطاً مختلفاً.",
+        error: t.settings.slugTaken,
       };
     }
     return { ok: false, error: error.message };
@@ -89,11 +92,19 @@ export async function updateRestaurantProfile(
 export async function updateOpeningHours(
   hours: OpeningHours
 ): Promise<ActionResult> {
+  const t = await getT();
   const invalid = validateHours(hours);
-  if (invalid) return { ok: false, error: invalid };
+  if (invalid) {
+    const day = t.days[invalid.day];
+    const template =
+      invalid.reason === "incomplete"
+        ? t.settings.incompleteHours
+        : t.settings.invalidTime;
+    return { ok: false, error: interpolate(template, { day }) };
+  }
 
   const restaurant = await getRestaurant();
-  if (!restaurant) return { ok: false, error: "لم يتم العثور على المطعم." };
+  if (!restaurant) return { ok: false, error: t.onboarding.restaurantNotFound };
 
   const supabase = await createClient();
 

@@ -11,6 +11,7 @@ import {
   setItemAvailable,
 } from "@/app/dashboard/menu/item-actions";
 import { ItemDialog } from "@/components/menu/item-dialog";
+import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import type { Tables } from "@/lib/supabase/types";
+import { interpolate } from "@/lib/i18n";
 import { formatMoney } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
@@ -39,6 +41,7 @@ export function ItemList({
   restaurantId: string;
   categoryId: string | null;
 }) {
+  const t = useT();
   const [isPending, startTransition] = useTransition();
   const [pendingDelete, setPendingDelete] = useState<MenuItem | null>(null);
   const [order, setOrder] = useOptimistic(items);
@@ -61,7 +64,7 @@ export function ItemList({
     startTransition(async () => {
       const result = await setItemAvailable(item.id, isAvailable);
       if (!result.ok) toast.error(result.error);
-      else toast.success(isAvailable ? "الصنف متاح" : "الصنف نافد");
+      else toast.success(isAvailable ? t.menu.itemAvailable : t.menu.itemSoldOut);
     });
   }
 
@@ -72,7 +75,7 @@ export function ItemList({
     startTransition(async () => {
       const result = await deleteItem(item.id);
       if (!result.ok) toast.error(result.error);
-      else toast.success("تم حذف الصنف");
+      else toast.success(t.menu.itemDeleted);
       setPendingDelete(null);
     });
   }
@@ -80,7 +83,7 @@ export function ItemList({
   if (order.length === 0) {
     return (
       <p className="text-muted-foreground px-3 py-4 text-sm">
-        لا توجد أصناف في هذا التصنيف بعد.
+        {t.menu.noItems}
       </p>
     );
   }
@@ -101,7 +104,7 @@ export function ItemList({
                 variant="ghost"
                 size="icon"
                 className="size-6"
-                aria-label="تحريك لأعلى"
+                aria-label={t.menu.moveItemUp}
                 disabled={index === 0 || isPending}
                 onClick={() => move(index, -1)}
               >
@@ -111,7 +114,7 @@ export function ItemList({
                 variant="ghost"
                 size="icon"
                 className="size-6"
-                aria-label="تحريك لأسفل"
+                aria-label={t.menu.moveItemDown}
                 disabled={index === order.length - 1 || isPending}
                 onClick={() => move(index, 1)}
               >
@@ -146,7 +149,7 @@ export function ItemList({
                 {!item.is_available && (
                   <span className="text-destructive text-xs font-normal">
                     {" "}
-                    — نافد
+                    — {t.menu.soldOut}
                   </span>
                 )}
               </p>
@@ -160,7 +163,7 @@ export function ItemList({
               checked={item.is_available ?? true}
               onCheckedChange={(checked) => toggleAvailable(item, checked)}
               disabled={isPending}
-              aria-label="متاح للطلب"
+              aria-label={t.menu.availableForOrder}
             />
 
             <ItemDialog
@@ -168,7 +171,7 @@ export function ItemList({
               categoryId={categoryId}
               item={item}
               trigger={
-                <Button variant="ghost" size="icon" aria-label="تعديل الصنف">
+                <Button variant="ghost" size="icon" aria-label={t.menu.editItem}>
                   <Pencil className="size-4" />
                 </Button>
               }
@@ -177,7 +180,7 @@ export function ItemList({
             <Button
               variant="ghost"
               size="icon"
-              aria-label="حذف الصنف"
+              aria-label={t.common.delete}
               className="text-destructive"
               disabled={isPending}
               onClick={() => setPendingDelete(item)}
@@ -194,15 +197,18 @@ export function ItemList({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>حذف «{pendingDelete?.name}»؟</DialogTitle>
+            <DialogTitle>
+              {interpolate(t.menu.deleteItemTitle, {
+                name: pendingDelete?.name ?? "",
+              })}
+            </DialogTitle>
             <DialogDescription>
-              الطلبات السابقة تحتفظ بنسخة من الاسم والسعر ولن تتأثر. إذا كان
-              الصنف غير متوفر مؤقتاً فقط، استخدم مفتاح «نافد» بدلاً من الحذف.
+              {t.menu.deleteItemBody}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPendingDelete(null)}>
-              إلغاء
+              {t.common.cancel}
             </Button>
             <Button
               variant="destructive"
@@ -210,7 +216,7 @@ export function ItemList({
               disabled={isPending}
             >
               {isPending && <Loader2 className="animate-spin" />}
-              حذف
+              {t.common.delete}
             </Button>
           </DialogFooter>
         </DialogContent>

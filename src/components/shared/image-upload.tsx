@@ -5,8 +5,10 @@ import Image from "next/image";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 
+import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { interpolate } from "@/lib/i18n";
 import {
   ACCEPTED_TYPES,
   MAX_UPLOAD_BYTES,
@@ -23,6 +25,7 @@ type ImageUploadProps = {
   onChange: (url: string | null) => void;
   /** Scopes the storage path; the RLS policy rejects any other folder. */
   restaurantId: string;
+  /** Falls back to the translated word for "image". */
   label?: string;
   className?: string;
   /** Square for logos, wide for dish photos. */
@@ -33,10 +36,12 @@ export function ImageUpload({
   value,
   onChange,
   restaurantId,
-  label = "صورة",
+  label,
   className,
   aspect = "wide",
 }: ImageUploadProps) {
+  const t = useT();
+  const resolvedLabel = label ?? t.common.image;
   const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -46,7 +51,7 @@ export function ImageUpload({
       const compressed = await compressImage(file);
 
       if (compressed.size > MAX_UPLOAD_BYTES) {
-        toast.error("حجم الصورة كبير جداً حتى بعد الضغط.");
+        toast.error(t.upload.tooLarge);
         return;
       }
 
@@ -61,7 +66,7 @@ export function ImageUpload({
         });
 
       if (error) {
-        toast.error(`تعذّر رفع الصورة: ${error.message}`);
+        toast.error(interpolate(t.upload.failedWith, { error: error.message }));
         return;
       }
 
@@ -70,9 +75,14 @@ export function ImageUpload({
       } = supabase.storage.from(MENU_IMAGES_BUCKET).getPublicUrl(path);
 
       onChange(publicUrl);
-      toast.success("تم رفع الصورة");
+      toast.success(t.upload.uploaded);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "تعذّر رفع الصورة");
+      // compressImage throws codes, not sentences.
+      toast.error(
+        error instanceof Error && error.message === "UNSUPPORTED_TYPE"
+          ? t.upload.unsupported
+          : t.upload.failed
+      );
     } finally {
       setIsUploading(false);
       // Reset so picking the same file again still fires onChange.
@@ -102,7 +112,7 @@ export function ImageUpload({
         >
           <Image
             src={value}
-            alt={label}
+            alt={resolvedLabel}
             fill
             sizes="(max-width: 640px) 100vw, 320px"
             className="object-cover"
@@ -111,7 +121,7 @@ export function ImageUpload({
             type="button"
             variant="secondary"
             size="icon"
-            aria-label="حذف الصورة"
+            aria-label={t.upload.remove}
             className="absolute end-1.5 top-1.5 size-7 shadow"
             onClick={() => onChange(null)}
             disabled={isUploading}
@@ -132,12 +142,14 @@ export function ImageUpload({
           {isUploading ? (
             <>
               <Loader2 className="size-5 animate-spin" />
-              <span className="text-xs">جارٍ الرفع…</span>
+              <span className="text-xs">{t.upload.uploading}</span>
             </>
           ) : (
             <>
               <ImagePlus className="size-5" />
-              <span className="text-xs">إضافة {label}</span>
+              <span className="text-xs">
+                {interpolate(t.upload.add, { label: resolvedLabel })}
+              </span>
             </>
           )}
         </button>
@@ -152,7 +164,7 @@ export function ImageUpload({
           disabled={isUploading}
         >
           {isUploading ? <Loader2 className="animate-spin" /> : null}
-          تغيير الصورة
+          {t.upload.change}
         </Button>
       )}
     </div>

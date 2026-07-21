@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { createItem, updateItem } from "@/app/dashboard/menu/item-actions";
+import { useT } from "@/components/i18n/i18n-provider";
 import { ImageUpload } from "@/components/shared/image-upload";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +34,7 @@ export function ItemDialog({
   item,
   trigger,
 }: ItemDialogProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -69,7 +71,7 @@ export function ItemDialog({
         return;
       }
 
-      toast.success(isEdit ? "تم حفظ الصنف" : "تمت إضافة الصنف");
+      toast.success(isEdit ? t.menu.itemSaved : t.menu.itemAdded);
       setOpen(false);
       if (!isEdit) {
         setName("");
@@ -91,7 +93,7 @@ export function ItemDialog({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "تعديل الصنف" : "صنف جديد"}</DialogTitle>
+          <DialogTitle>{isEdit ? t.menu.editItem : t.menu.newItem}</DialogTitle>
         </DialogHeader>
 
         <form
@@ -102,12 +104,12 @@ export function ItemDialog({
           }}
         >
           <div className="grid gap-2">
-            <Label htmlFor="item-name">اسم الصنف</Label>
+            <Label htmlFor="item-name">{t.menu.itemName}</Label>
             <Input
               id="item-name"
               autoFocus
               required
-              placeholder="مثال: كباب عراقي"
+              placeholder={t.menu.itemNamePlaceholder}
               value={name}
               onChange={(event) => setName(event.target.value)}
               disabled={isPending}
@@ -115,7 +117,7 @@ export function ItemDialog({
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="item-price">السعر (دينار)</Label>
+            <Label htmlFor="item-price">{t.menu.itemPrice}</Label>
             <Input
               id="item-price"
               type="number"
@@ -133,10 +135,12 @@ export function ItemDialog({
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="item-description">الوصف (اختياري)</Label>
+            <Label htmlFor="item-description">
+              {t.common.description} ({t.common.optional})
+            </Label>
             <Input
               id="item-description"
-              placeholder="لحم غنم مشوي مع الخبز والسلطة"
+              placeholder={t.menu.itemDescriptionPlaceholder}
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               disabled={isPending}
@@ -144,22 +148,21 @@ export function ItemDialog({
           </div>
 
           <div className="grid gap-2">
-            <Label>صورة الصنف</Label>
+            <Label>{t.menu.itemImage}</Label>
             <ImageUpload
               value={imageUrl}
               onChange={setImageUrl}
               restaurantId={restaurantId}
-              label="صورة"
             />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              إلغاء
+              {t.common.cancel}
             </Button>
             <Button type="submit" disabled={isPending || !name.trim() || !price}>
               {isPending && <Loader2 className="animate-spin" />}
-              {isEdit ? "حفظ" : "إضافة"}
+              {isEdit ? t.common.save : t.common.add}
             </Button>
           </DialogFooter>
         </form>

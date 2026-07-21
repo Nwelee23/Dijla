@@ -3,6 +3,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Download, Share, SquarePlus, X } from "lucide-react";
 
+import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 
 /** Chrome/Android fires this; it is not in the standard DOM lib types. */
@@ -46,6 +47,7 @@ function getIosEligibility() {
 }
 
 export function InstallPrompt() {
+  const t = useT();
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(
     null
   );
@@ -107,25 +109,25 @@ export function InstallPrompt() {
 
         <div className="flex-1 space-y-2">
           <div className="space-y-0.5">
-            <p className="text-sm font-medium">ثبّت تطبيق دجلة</p>
+            <p className="text-sm font-medium">{t.pwa.install}</p>
             {showIosHint ? (
               <p className="text-muted-foreground flex flex-wrap items-center gap-1 text-sm">
-                اضغط
+                {t.pwa.iosTap}
                 <Share className="inline size-4" />
-                ثم
+                {t.pwa.iosThen}
                 <SquarePlus className="inline size-4" />
-                <span>«إضافة إلى الشاشة الرئيسية»</span>
+                <span>{t.pwa.iosHint}</span>
               </p>
             ) : (
               <p className="text-muted-foreground text-sm">
-                افتحه من شاشتك الرئيسية مثل أي تطبيق.
+                {t.pwa.installHint}
               </p>
             )}
           </div>
 
           {deferred && (
             <Button size="sm" onClick={install}>
-              تثبيت
+              {t.pwa.installButton}
             </Button>
           )}
         </div>
@@ -134,7 +136,7 @@ export function InstallPrompt() {
           variant="ghost"
           size="icon"
           onClick={dismiss}
-          aria-label="إغلاق"
+          aria-label={t.common.close}
           className="-me-1 -mt-1 shrink-0"
         >
           <X className="size-4" />
