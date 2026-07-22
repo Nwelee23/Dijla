@@ -111,6 +111,9 @@ export const en: Dictionary = {
     showPassword: "Show password",
     hidePassword: "Hide password",
     loginFailed: "That username or password is not correct.",
+    codeLoginTitle: "Sign in with a code",
+    codeLoginSubtitle: "We'll send a sign-in code to your email.",
+    backToPassword: "Sign in with a password",
   },
 
   onboarding: {

@@ -124,6 +124,36 @@ export async function verifyEmailOtp(
 }
 
 /**
+ * Emailed-code sign-in (AUTH_UI_SPEC §3.2, email-adapted): verify the code and
+ * route by role in one step, so the glass screen redirects like the password
+ * login. Shares homeForRole with signInWithUsername. The email is the anchor
+ * while there is no SMS provider, so this doubles as the interim recovery path —
+ * getting in by code lets the owner reset the password from settings.
+ */
+export async function verifyLoginCode(
+  email: string,
+  token: string
+): Promise<{ ok: true; redirectTo: string } | { ok: false; error: string }> {
+  const t = await getT();
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.verifyOtp({
+    email: email.trim().toLowerCase(),
+    token: token.trim(),
+    type: "email",
+  });
+  if (error || !data.user) return { ok: false, error: t.auth.invalidCode };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", data.user.id)
+    .maybeSingle();
+
+  revalidatePath("/", "layout");
+  return { ok: true, redirectTo: homeForRole(profile?.role) };
+}
+
+/**
  * Step 1 of phone sign-in: send the SMS code.
  *
  * Kept for later — phone OTP needs a paid SMS provider (Authentication ->

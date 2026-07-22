@@ -113,6 +113,9 @@ export const ar = {
     showPassword: "إظهار كلمة المرور",
     hidePassword: "إخفاء كلمة المرور",
     loginFailed: "اسم المستخدم أو كلمة المرور غير صحيحة.",
+    codeLoginTitle: "الدخول برمز",
+    codeLoginSubtitle: "سنرسل رمز دخول إلى بريدك الإلكتروني.",
+    backToPassword: "الدخول بكلمة المرور",
   },
 
   onboarding: {

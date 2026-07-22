@@ -283,6 +283,25 @@
     inline-size: 16px;
     block-size: 16px;
   }
+
+  /* One box of the 6-digit code input (AUTH_UI_SPEC §3.2). Always LTR. */
+  .dj-otp-box {
+    inline-size: 44px;
+    block-size: 52px;
+    border-radius: 12px;
+    background: var(--dj-glass);
+    border: 1px solid var(--dj-line);
+    color: var(--dj-fg);
+    text-align: center;
+    font-size: 20px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .dj-otp-box:focus-visible {
+    outline: 2px solid var(--dj-cta);
+    outline-offset: 1px;
+    border-color: transparent;
+  }
 }
 
 /* Performance / support fallback: cheap Androids and anyone asking for reduced
