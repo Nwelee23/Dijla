@@ -1,13 +1,11 @@
 "use client";
 
-import { useTransition } from "react";
 import { Bike, ChevronLeft, Loader2, MapPin, Navigation, Phone, Store, User, X } from "lucide-react";
-import { toast } from "sonner";
 
-import { setOrderStatus } from "@/app/dashboard/orders/actions";
 import { AssignDriver } from "@/components/orders/assign-driver";
 import { ElapsedTimer } from "@/components/orders/elapsed-timer";
 import { MapThumb } from "@/components/orders/map-thumb";
+import { useOrderMove } from "@/components/orders/use-order-move";
 import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { interpolate } from "@/lib/i18n";
@@ -37,7 +35,7 @@ export function OrderCard({
   onAcknowledge: () => void;
 }) {
   const t = useT();
-  const [isPending, startTransition] = useTransition();
+  const { move, isPending } = useOrderMove();
 
   const status = order.status as OrderStatus;
   const next = nextStatus(status, order.type);
@@ -51,17 +49,6 @@ export function OrderCard({
   // cancelled one has no run left to give.
   const canAssign =
     isDelivery && status !== "new" && status !== "delivered" && status !== "cancelled";
-
-  function move(to: OrderStatus) {
-    startTransition(async () => {
-      const result = await setOrderStatus(order.id, to);
-      if (!result.ok) toast.error(result.error);
-      else {
-        toast.success(t.orders.updated);
-        onAcknowledge();
-      }
-    });
-  }
 
   return (
     <article
@@ -224,7 +211,7 @@ export function OrderCard({
               size="sm"
               className="text-destructive"
               disabled={isPending}
-              onClick={() => move("cancelled")}
+              onClick={() => move(order.id, status, "cancelled", onAcknowledge)}
             >
               <X />
               {t.orders.cancel}
@@ -232,7 +219,7 @@ export function OrderCard({
           )}
 
           {next && (
-            <Button disabled={isPending} onClick={() => move(next)}>
+            <Button disabled={isPending} onClick={() => move(order.id, status, next, onAcknowledge)}>
               {isPending ? <Loader2 className="animate-spin" /> : <ChevronLeft className="rtl:rotate-180" />}
               {interpolate(t.orders.advanceTo, { status: statusLabel(t, next) })}
             </Button>
