@@ -589,9 +589,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_platform_stats: {
+        Args: never
+        Returns: {
+          total_restaurants: number
+          active_count: number
+          trial_count: number
+          past_due_count: number
+          cancelled_count: number
+          suspended_count: number
+          total_orders: number
+          mrr: number
+        }[]
+      }
       admin_restaurants: {
         Args: never
         Returns: {
+          amount: number
           created_at: string
           end_date: string
           id: string

@@ -22,6 +22,7 @@ export type AdminRestaurant = {
   created_at: string;
   tier: string | null;
   status: string | null;
+  amount: number | null;
   start_date: string | null;
   end_date: string | null;
   order_count: number;

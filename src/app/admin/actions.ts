@@ -41,7 +41,13 @@ export async function setRestaurantActive(
  */
 export async function setSubscription(
   restaurantId: string,
-  input: { tier: string; status: string; startDate: string | null; endDate: string | null }
+  input: {
+    tier: string;
+    status: string;
+    amount: number | null;
+    startDate: string | null;
+    endDate: string | null;
+  }
 ): Promise<AdminResult> {
   const t = await getT();
   if (!(await requireAdmin())) return { ok: false, error: t.admin.notAllowed };
@@ -52,6 +58,10 @@ export async function setSubscription(
   if (!STATUSES.includes(input.status as (typeof STATUSES)[number])) {
     return { ok: false, error: t.admin.updateFailed };
   }
+  // The monthly price feeds MRR; a negative is a typo, not a credit.
+  if (input.amount !== null && (!Number.isFinite(input.amount) || input.amount < 0)) {
+    return { ok: false, error: t.admin.updateFailed };
+  }
 
   const admin = createAdminClient();
   const { error } = await admin.from("subscriptions").upsert(
@@ -59,6 +69,7 @@ export async function setSubscription(
       restaurant_id: restaurantId,
       tier: input.tier,
       status: input.status,
+      amount: input.amount,
       start_date: input.startDate || null,
       end_date: input.endDate || null,
     },

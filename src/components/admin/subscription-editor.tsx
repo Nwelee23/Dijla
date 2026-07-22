@@ -60,6 +60,9 @@ function EditorForm({
 
   const [tier, setTier] = useState(restaurant.tier ?? "basic");
   const [status, setStatus] = useState(restaurant.status ?? "trial");
+  const [amount, setAmount] = useState(
+    restaurant.amount != null ? String(restaurant.amount) : ""
+  );
   const [startDate, setStartDate] = useState(restaurant.start_date ?? "");
   const [endDate, setEndDate] = useState(restaurant.end_date ?? "");
 
@@ -68,6 +71,7 @@ function EditorForm({
       const result = await setSubscription(restaurant.id, {
         tier,
         status,
+        amount: amount.trim() === "" ? null : Number(amount),
         startDate: startDate || null,
         endDate: endDate || null,
       });
@@ -135,6 +139,22 @@ function EditorForm({
               </button>
             ))}
           </div>
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="sub-amount">{t.admin.monthlyAmount}</Label>
+          <Input
+            id="sub-amount"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            step={1000}
+            dir="ltr"
+            placeholder="0"
+            value={amount}
+            onChange={(event) => setAmount(event.target.value)}
+          />
+          <p className="text-muted-foreground text-xs">{t.admin.monthlyAmountHint}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
