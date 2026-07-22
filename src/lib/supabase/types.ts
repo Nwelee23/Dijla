@@ -631,6 +631,16 @@ export type Database = {
           type: string
         }[]
       }
+      driver_cash_reconciliation: {
+        Args: { rid: string; day_start: string; day_end: string }
+        Returns: {
+          driver_id: string
+          driver_name: string
+          delivered_count: number
+          expected: number
+          collected: number
+        }[]
+      }
       restaurant_sales_summary: {
         Args: { from_ts: string; rid: string; to_ts: string }
         Returns: {

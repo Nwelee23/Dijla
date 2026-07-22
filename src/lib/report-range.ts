@@ -24,7 +24,7 @@ export type ResolvedRange = {
 };
 
 /** Today's date (YYYY-MM-DD) as it reads on a clock in Baghdad. */
-function baghdadToday(now: Date): string {
+export function baghdadToday(now: Date = new Date()): string {
   // en-CA formats as YYYY-MM-DD, which is exactly the shape we round-trip.
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Baghdad",
@@ -35,11 +35,21 @@ function baghdadToday(now: Date): string {
 }
 
 /** Shift a YYYY-MM-DD by whole days, staying on calendar dates (no zone drift). */
-function addDays(dateStr: string, n: number): string {
+export function addDays(dateStr: string, n: number): string {
   const [y, m, d] = dateStr.split("-").map(Number);
   const dt = new Date(Date.UTC(y, m - 1, d));
   dt.setUTCDate(dt.getUTCDate() + n);
   return dt.toISOString().slice(0, 10);
+}
+
+/** The UTC instants bounding a single Baghdad calendar day: [start, end). */
+export function baghdadDayBounds(date: string): { start: string; end: string } {
+  return { start: startOf(date), end: startOf(addDays(date, 1)) };
+}
+
+/** A valid YYYY-MM-DD, or today in Baghdad. */
+export function safeDate(value: string | undefined): string {
+  return isDate(value) ? value : baghdadToday();
 }
 
 const isDate = (value: string | undefined): value is string =>

@@ -50,12 +50,18 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex flex-1 flex-col">
-      <RestaurantHeader restaurant={restaurant} ownerName={profile.full_name} />
-      <TrialBanner state={subscription} />
-      <DashboardMobileNav />
+      {/* Chrome is screen-only: a printed report (cash sheet, QR sheet) must be
+          the content alone, not the nav and header around it. */}
+      <div className="print:hidden">
+        <RestaurantHeader restaurant={restaurant} ownerName={profile.full_name} />
+        <TrialBanner state={subscription} />
+        <DashboardMobileNav />
+      </div>
 
       <div className="flex flex-1">
-        <DashboardSidebar />
+        <div className="print:hidden">
+          <DashboardSidebar />
+        </div>
         <main className="min-w-0 flex-1">{children}</main>
       </div>
     </div>

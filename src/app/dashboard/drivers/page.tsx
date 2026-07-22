@@ -1,8 +1,13 @@
 import { Bike } from "lucide-react";
 
-import { CashToday, type DriverCash } from "@/components/drivers/cash-today";
+import {
+  CashReconciliation,
+  type ReconciliationRow,
+} from "@/components/drivers/cash-reconciliation";
 import { DriverList } from "@/components/drivers/driver-list";
+import { getRestaurant } from "@/lib/restaurant";
 import { getT } from "@/lib/i18n/server";
+import { baghdadDayBounds, safeDate } from "@/lib/report-range";
 import { createClient } from "@/lib/supabase/server";
 
 export async function generateMetadata() {
@@ -10,30 +15,45 @@ export async function generateMetadata() {
   return { title: `${t.drivers.title} | ${t.brand.name}` };
 }
 
-export default async function DriversPage() {
-  const [t, supabase] = await Promise.all([getT(), createClient()]);
+export default async function DriversPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ date?: string }>;
+}) {
+  const [{ date }, t, restaurant, supabase] = await Promise.all([
+    searchParams,
+    getT(),
+    getRestaurant(),
+    createClient(),
+  ]);
+
+  const day = safeDate(date);
+  const { start, end } = baghdadDayBounds(day);
 
   // RLS (post-0011) scopes profiles to this restaurant's staff view; the filter
-  // narrows it to drivers. Ordered oldest-first so the roster stays stable as
-  // new drivers are added. The cash reconciliation comes from the 0013 RPC,
-  // which scopes itself to this restaurant and staff.
+  // narrows it to drivers. The reconciliation RPC (0016) scopes itself to this
+  // restaurant and staff, and covers the chosen Baghdad day.
   const [{ data }, { data: cash }] = await Promise.all([
     supabase
       .from("profiles")
       .select("id, full_name, phone, driver_status, is_active, created_at")
       .eq("role", "driver")
       .order("created_at", { ascending: true }),
-    supabase.rpc("driver_cash_today"),
+    supabase.rpc("driver_cash_reconciliation", {
+      rid: restaurant!.id,
+      day_start: start,
+      day_end: end,
+    }),
   ]);
 
   const drivers = data ?? [];
-  // Null when 0013 has not been applied yet — the card simply does not render,
+  // Null when 0016 has not been applied yet — the card simply does not render,
   // and the roster below is unaffected.
-  const cashToday: DriverCash[] | null = cash ?? null;
+  const rows: ReconciliationRow[] | null = cash ?? null;
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-6 p-4 sm:p-6">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-3 print:hidden">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold">
             <Bike className="size-6" />
@@ -43,9 +63,18 @@ export default async function DriversPage() {
         </div>
       </div>
 
-      {cashToday && cashToday.length > 0 && <CashToday rows={cashToday} />}
+      {rows && (
+        <CashReconciliation
+          rows={rows}
+          date={day}
+          restaurantName={restaurant!.name}
+          currency={restaurant!.currency ?? "IQD"}
+        />
+      )}
 
-      <DriverList drivers={drivers} />
+      <div className="print:hidden">
+        <DriverList drivers={drivers} />
+      </div>
     </div>
   );
 }

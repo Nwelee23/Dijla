@@ -387,6 +387,21 @@ export const ar = {
     acknowledged: "تم",
   },
 
+  cash: {
+    title: "تسوية النقد",
+    subtitle: "المتوقّع مقابل المُحصَّل لكل سائق — لتسليم نهاية اليوم.",
+    driver: "السائق",
+    delivered: "مُسلَّم",
+    expected: "المتوقّع",
+    collected: "المُحصَّل",
+    shortfall: "العجز",
+    total: "الإجمالي",
+    noDrivers: "لا يوجد سائقون مسجَّلون.",
+    deliveredNote: "الإجمالي محسوب على {count} طلب توصيل مُسلَّم في هذا اليوم.",
+    prevDay: "اليوم السابق",
+    nextDay: "اليوم التالي",
+  },
+
   reports: {
     title: "التقارير",
     subtitle: "مبيعات مطعمك وأصنافه الأكثر طلباً وأوقات الذروة.",

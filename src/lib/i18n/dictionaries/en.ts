@@ -376,6 +376,21 @@ export const en: Dictionary = {
     waiterFailed: "Could not send the call",
     waiterRateLimited: "Too many calls. Wait a moment.",
   },
+  cash: {
+    title: "Cash reconciliation",
+    subtitle: "Expected versus collected, per driver — for the end-of-day handover.",
+    driver: "Driver",
+    delivered: "Delivered",
+    expected: "Expected",
+    collected: "Collected",
+    shortfall: "Shortfall",
+    total: "Total",
+    noDrivers: "No drivers registered.",
+    deliveredNote: "Totals are over {count} delivered delivery orders on this day.",
+    prevDay: "Previous day",
+    nextDay: "Next day",
+  },
+
   reports: {
     title: "Reports",
     subtitle: "Your restaurant's sales, top items, and busiest hours.",
