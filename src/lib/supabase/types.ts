@@ -589,6 +589,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_restaurants: {
+        Args: never
+        Returns: {
+          created_at: string
+          end_date: string
+          id: string
+          is_active: boolean
+          last_order_at: string
+          name: string
+          order_count: number
+          slug: string
+          start_date: string
+          status: string
+          tier: string
+        }[]
+      }
       create_restaurant_with_owner: {
         Args: {
           p_area?: string
@@ -600,23 +616,6 @@ export type Database = {
         Returns: string
       }
       current_restaurant_id: { Args: never; Returns: string }
-      is_platform_admin: { Args: never; Returns: boolean }
-      admin_restaurants: {
-        Args: never
-        Returns: {
-          id: string
-          name: string
-          slug: string
-          is_active: boolean
-          created_at: string
-          tier: string | null
-          status: string | null
-          start_date: string | null
-          end_date: string | null
-          order_count: number
-          last_order_at: string | null
-        }[]
-      }
       driver_cash_reconciliation: {
         Args: { day_end: string; day_start: string; rid: string }
         Returns: {
@@ -639,6 +638,7 @@ export type Database = {
       get_menu_by_qr_token: { Args: { p_token: string }; Returns: Json }
       get_menu_by_slug: { Args: { p_slug: string }; Returns: Json }
       get_order_status: { Args: { p_order_id: string }; Returns: Json }
+      is_platform_admin: { Args: never; Returns: boolean }
       is_restaurant_staff: { Args: never; Returns: boolean }
       menu_payload: { Args: { p_restaurant: string }; Returns: Json }
       next_order_number: { Args: { rid: string }; Returns: number }
