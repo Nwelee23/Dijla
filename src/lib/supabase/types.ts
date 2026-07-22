@@ -374,8 +374,10 @@ export type Database = {
           driver_status: string | null
           full_name: string | null
           id: string
+          id_document_url: string | null
           is_active: boolean | null
           phone: string | null
+          phone_verified: boolean
           restaurant_id: string | null
           role: string
           username: string | null
@@ -385,8 +387,10 @@ export type Database = {
           driver_status?: string | null
           full_name?: string | null
           id: string
+          id_document_url?: string | null
           is_active?: boolean | null
           phone?: string | null
+          phone_verified?: boolean
           restaurant_id?: string | null
           role: string
           username?: string | null
@@ -396,8 +400,10 @@ export type Database = {
           driver_status?: string | null
           full_name?: string | null
           id?: string
+          id_document_url?: string | null
           is_active?: boolean | null
           phone?: string | null
+          phone_verified?: boolean
           restaurant_id?: string | null
           role?: string
           username?: string | null
@@ -419,17 +425,24 @@ export type Database = {
           currency: string | null
           delivery_enabled: boolean
           delivery_fee: number | null
+          district: string | null
           id: string
           is_active: boolean | null
+          landmark: string | null
           lat: number | null
+          license_document_url: string | null
           lng: number | null
           logo_url: string | null
           min_order: number
           name: string
           phone: string | null
           pickup_enabled: boolean
+          restaurant_type: string | null
           settings: Json | null
           slug: string
+          verification_note: string | null
+          verification_status: string
+          verified_at: string | null
         }
         Insert: {
           area?: string | null
@@ -437,17 +450,24 @@ export type Database = {
           currency?: string | null
           delivery_enabled?: boolean
           delivery_fee?: number | null
+          district?: string | null
           id?: string
           is_active?: boolean | null
+          landmark?: string | null
           lat?: number | null
+          license_document_url?: string | null
           lng?: number | null
           logo_url?: string | null
           min_order?: number
           name: string
           phone?: string | null
           pickup_enabled?: boolean
+          restaurant_type?: string | null
           settings?: Json | null
           slug: string
+          verification_note?: string | null
+          verification_status?: string
+          verified_at?: string | null
         }
         Update: {
           area?: string | null
@@ -455,17 +475,24 @@ export type Database = {
           currency?: string | null
           delivery_enabled?: boolean
           delivery_fee?: number | null
+          district?: string | null
           id?: string
           is_active?: boolean | null
+          landmark?: string | null
           lat?: number | null
+          license_document_url?: string | null
           lng?: number | null
           logo_url?: string | null
           min_order?: number
           name?: string
           phone?: string | null
           pickup_enabled?: boolean
+          restaurant_type?: string | null
           settings?: Json | null
           slug?: string
+          verification_note?: string | null
+          verification_status?: string
+          verified_at?: string | null
         }
         Relationships: []
       }
