@@ -469,6 +469,7 @@ export type Database = {
       subscriptions: {
         Row: {
           amount: number | null
+          cancellation_reason: string | null
           created_at: string | null
           end_date: string | null
           id: string
@@ -479,6 +480,7 @@ export type Database = {
         }
         Insert: {
           amount?: number | null
+          cancellation_reason?: string | null
           created_at?: string | null
           end_date?: string | null
           id?: string
@@ -489,6 +491,7 @@ export type Database = {
         }
         Update: {
           amount?: number | null
+          cancellation_reason?: string | null
           created_at?: string | null
           end_date?: string | null
           id?: string
@@ -589,6 +592,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_growth_metrics: {
+        Args: never
+        Returns: {
+          total_restaurants: number
+          active_7d: number
+          active_30d: number
+          signups_30d: number
+          activated: number
+          orders_7d: number
+          paying: number
+          trialing: number
+          cancelled: number
+          mrr: number
+          arpu: number
+        }[]
+      }
+      admin_churn_log: {
+        Args: never
+        Returns: {
+          restaurant_id: string
+          name: string
+          end_date: string | null
+          reason: string | null
+        }[]
+      }
       admin_platform_stats: {
         Args: never
         Returns: {

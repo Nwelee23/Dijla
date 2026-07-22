@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, LineChart, ShieldCheck, Store } from "lucide-react";
 
 import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { requireAdmin } from "@/lib/admin";
@@ -37,6 +37,21 @@ export default async function AdminLayout({
             <ShieldCheck className="size-5" />
             {t.admin.title}
           </span>
+
+          <nav className="flex items-center gap-1">
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/admin">
+                <Store />
+                {t.admin.restaurants}
+              </Link>
+            </Button>
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/admin/growth">
+                <LineChart />
+                {t.growth.title}
+              </Link>
+            </Button>
+          </nav>
 
           <div className="ms-auto flex items-center gap-2">
             <Button asChild variant="ghost" size="sm">

@@ -47,6 +47,7 @@ export async function setSubscription(
     amount: number | null;
     startDate: string | null;
     endDate: string | null;
+    cancellationReason: string | null;
   }
 ): Promise<AdminResult> {
   const t = await getT();
@@ -72,6 +73,10 @@ export async function setSubscription(
       amount: input.amount,
       start_date: input.startDate || null,
       end_date: input.endDate || null,
+      // Only meaningful on a cancellation; cleared otherwise so a reason from a
+      // past churn does not linger on a resubscribed restaurant.
+      cancellation_reason:
+        input.status === "cancelled" ? input.cancellationReason || null : null,
     },
     { onConflict: "restaurant_id" }
   );

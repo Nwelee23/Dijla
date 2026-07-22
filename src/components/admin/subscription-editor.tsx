@@ -65,6 +65,7 @@ function EditorForm({
   );
   const [startDate, setStartDate] = useState(restaurant.start_date ?? "");
   const [endDate, setEndDate] = useState(restaurant.end_date ?? "");
+  const [reason, setReason] = useState("");
 
   function submit() {
     startTransition(async () => {
@@ -74,6 +75,7 @@ function EditorForm({
         amount: amount.trim() === "" ? null : Number(amount),
         startDate: startDate || null,
         endDate: endDate || null,
+        cancellationReason: reason.trim() || null,
       });
       if (!result.ok) {
         toast.error(result.error);
@@ -156,6 +158,18 @@ function EditorForm({
           />
           <p className="text-muted-foreground text-xs">{t.admin.monthlyAmountHint}</p>
         </div>
+
+        {status === "cancelled" && (
+          <div className="grid gap-2">
+            <Label htmlFor="churn-reason">{t.admin.churnReason}</Label>
+            <Input
+              id="churn-reason"
+              placeholder={t.admin.churnReasonHint}
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+            />
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-2">
           <div className="grid gap-1">
