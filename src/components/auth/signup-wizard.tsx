@@ -56,7 +56,7 @@ type Persisted = {
   pin: Pin | null;
 };
 
-type UsernameStatus = "idle" | "checking" | "ok" | "taken" | "invalid";
+type UsernameStatus = "idle" | "checking" | "ok" | "taken" | "invalid" | "throttled";
 
 /** Uploads one document to the private bucket, compressing images first. */
 async function uploadDoc(restaurantId: string, file: File, kind: string) {
@@ -99,7 +99,7 @@ export function SignupWizard() {
   const [code, setCode] = useState("");
   const [emailVerified, setEmailVerified] = useState(false);
   const [username, setUsername] = useState("");
-  const [checked, setChecked] = useState<{ name: string; available: boolean } | null>(null);
+  const [checked, setChecked] = useState<{ name: string; status: UsernameStatus } | null>(null);
   const [password, setPassword] = useState("");
   // restaurant
   const [restaurantName, setRestaurantName] = useState("");
@@ -177,7 +177,13 @@ export function SignupWizard() {
     if (!u || !isValidUsername(u)) return;
     const timer = setTimeout(async () => {
       const result = await checkUsernameAvailable(u);
-      setChecked({ name: u, available: result.valid && result.available });
+      const status: UsernameStatus =
+        result.status === "available"
+          ? "ok"
+          : result.status === "rate_limited"
+            ? "throttled"
+            : result.status; // "taken" | "invalid"
+      setChecked({ name: u, status });
     }, 400);
     return () => clearTimeout(timer);
   }, [username]);
@@ -188,9 +194,7 @@ export function SignupWizard() {
     : !isValidUsername(normUsername)
       ? "invalid"
       : checked?.name === normUsername
-        ? checked.available
-          ? "ok"
-          : "taken"
+        ? checked.status
         : "checking";
 
   function sendCode() {
@@ -565,6 +569,7 @@ function UsernameHint({ status }: { status: UsernameStatus }) {
     ok: { text: t.signup.usernameAvailable, color: "var(--dj-success)" },
     taken: { text: t.signup.usernameTaken, color: "var(--dj-danger)" },
     invalid: { text: t.signup.usernameInvalid, color: "var(--dj-danger)" },
+    throttled: { text: t.signup.usernameThrottled, color: "var(--dj-warning)" },
   }[status];
   return (
     <p className="flex items-center gap-1 text-xs" style={{ color: map.color }} aria-live="polite">

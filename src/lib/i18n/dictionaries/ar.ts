@@ -150,6 +150,7 @@ export const ar = {
     usernameAvailable: "الاسم متاح",
     usernameTaken: "الاسم مستخدم، جرّب غيره",
     usernameInvalid: "أحرف لاتينية وأرقام و_ فقط، ٤ إلى ٢٠ حرفاً",
+    usernameThrottled: "محاولات كثيرة، انتظر لحظات ثم أعد المحاولة",
     restaurantName: "اسم المطعم",
     restaurantType: "نوع المطعم",
     typeRequired: "اختر نوع المطعم.",

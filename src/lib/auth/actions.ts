@@ -2,8 +2,10 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 
 import { getT } from "@/lib/i18n/server";
+import { allowRequest } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -13,19 +15,35 @@ import { isValidUsername, normalizeUsername } from "./username";
 
 export type AuthResult = { ok: true } | { ok: false; error: string };
 
+export type UsernameCheck = {
+  status: "available" | "taken" | "invalid" | "rate_limited";
+};
+
 /**
  * Live username availability for the signup field (AUTH_UI_SPEC §5).
  *
  * Uses the service-role client: during signup the caller has no profile yet, so
- * RLS would hide every other row and every name would look "available". Returns
- * `valid:false` for a badly-formed handle so the field can show why, separate
- * from "taken". Case-insensitive, matching the DB's unique index on lower().
+ * RLS would hide every other row and every name would look "available". A
+ * malformed handle returns "invalid" (so the field can say why, distinct from
+ * "taken"), and a malformed one never reaches the DB. Case-insensitive, matching
+ * the DB's unique index on lower().
+ *
+ * Runs unauthenticated and reads via service_role, so it is throttled per IP —
+ * usernames are not secret, but bulk probing should not be free. The limiter is
+ * best-effort (see rate-limit.ts); it caps abuse without blocking a real
+ * signer-up, who makes only a handful of debounced checks.
  */
 export async function checkUsernameAvailable(
   username: string
-): Promise<{ valid: boolean; available: boolean }> {
+): Promise<UsernameCheck> {
   const u = normalizeUsername(username);
-  if (!isValidUsername(u)) return { valid: false, available: false };
+  if (!isValidUsername(u)) return { status: "invalid" };
+
+  const ip =
+    (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (!allowRequest(`username-check:${ip}`, 30, 60_000)) {
+    return { status: "rate_limited" };
+  }
 
   const admin = createAdminClient();
   const { data } = await admin
@@ -34,7 +52,7 @@ export async function checkUsernameAvailable(
     .eq("username", u)
     .maybeSingle();
 
-  return { valid: true, available: !data };
+  return { status: data ? "taken" : "available" };
 }
 
 /** After login the role decides home (AUTH_UI_SPEC §2). */

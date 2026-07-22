@@ -148,6 +148,7 @@ export const en: Dictionary = {
     usernameAvailable: "Username available",
     usernameTaken: "Username taken, try another",
     usernameInvalid: "Latin letters, digits and _ only, 4–20 chars",
+    usernameThrottled: "Too many checks, wait a moment and try again",
     restaurantName: "Restaurant name",
     restaurantType: "Restaurant type",
     typeRequired: "Choose a restaurant type.",
