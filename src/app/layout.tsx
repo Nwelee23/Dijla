@@ -4,6 +4,7 @@ import { Direction } from "radix-ui";
 
 import { I18nProvider } from "@/components/i18n/i18n-provider";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
+import { OfflineBanner } from "@/components/pwa/offline-banner";
 import { ServiceWorkerRegistrar } from "@/components/pwa/service-worker-registrar";
 import { Toaster } from "@/components/ui/sonner";
 import { LOCALE_META } from "@/lib/i18n/config";
@@ -61,6 +62,7 @@ export default async function RootLayout({
         <I18nProvider locale={locale} dictionary={dictionary}>
           {/* Radix reads direction from here for menus, sliders and tabs. */}
           <Direction.DirectionProvider dir={dir}>
+            <OfflineBanner />
             {children}
             <InstallPrompt />
             <Toaster position="top-center" richColors />

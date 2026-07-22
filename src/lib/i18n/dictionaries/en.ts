@@ -694,5 +694,15 @@ export const en: Dictionary = {
   offline: {
     title: "No internet connection",
     body: "Check your connection and try again. Orders you already sent are saved.",
+    banner: "You are offline",
+  },
+
+  errors: {
+    notFoundTitle: "Page not found",
+    notFoundBody: "The link you opened is wrong or no longer available.",
+    errorTitle: "Something went wrong",
+    errorBody: "This page could not load. Try again.",
+    retry: "Try again",
+    home: "Back to home",
   },
 };
