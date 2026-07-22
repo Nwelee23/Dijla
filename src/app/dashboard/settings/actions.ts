@@ -176,3 +176,45 @@ export async function updateOpeningHours(
   revalidate();
   return { ok: true };
 }
+
+/**
+ * The kitchen accountability thresholds (ORDERS_DASHBOARD_SPEC §3): after how
+ * many minutes an active order's timer turns warning, then danger. Stored in the
+ * shared `settings` jsonb under `prep`.
+ */
+export async function updatePrepThresholds(
+  warnMinutes: number,
+  dangerMinutes: number
+): Promise<ActionResult> {
+  const t = await getT();
+
+  const warn = Math.floor(warnMinutes);
+  const danger = Math.floor(dangerMinutes);
+  if (
+    !Number.isFinite(warn) || !Number.isFinite(danger) ||
+    warn < 1 || danger < 1 || danger <= warn
+  ) {
+    return { ok: false, error: t.settings.prepInvalid };
+  }
+
+  const restaurant = await getRestaurant();
+  if (!restaurant) return { ok: false, error: t.onboarding.restaurantNotFound };
+
+  const supabase = await createClient();
+  const existing =
+    restaurant.settings && typeof restaurant.settings === "object"
+      ? (restaurant.settings as Record<string, unknown>)
+      : {};
+
+  const { error } = await supabase
+    .from("restaurants")
+    .update({
+      settings: { ...existing, prep: { warnMinutes: warn, dangerMinutes: danger } },
+    })
+    .eq("id", restaurant.id);
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidate();
+  return { ok: true };
+}

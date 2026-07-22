@@ -18,6 +18,7 @@ import {
 } from "@/lib/hooks/use-realtime-orders";
 import { interpolate } from "@/lib/i18n";
 import { isActive } from "@/lib/order-status";
+import type { PrepThresholds } from "@/lib/order-timing";
 import { armAudio, playOrderAlert } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 
@@ -27,10 +28,12 @@ export function OrderBoard({
   initialOrders,
   initialCalls,
   drivers: initialDrivers,
+  thresholds,
 }: {
   initialOrders: LiveOrder[];
   initialCalls: Call[];
   drivers: OrderDriver[];
+  thresholds: PrepThresholds;
 }) {
   const t = useT();
   const drivers = useLiveDrivers(initialDrivers);
@@ -145,6 +148,7 @@ export function OrderBoard({
                   key={order.id}
                   order={order}
                   drivers={drivers}
+                  thresholds={thresholds}
                   isUnseen={unseen.has(order.id)}
                   onAcknowledge={() => acknowledge(order.id)}
                 />

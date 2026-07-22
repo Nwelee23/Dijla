@@ -1,11 +1,12 @@
 "use client";
 
 import { useTransition } from "react";
-import { Bike, ChevronLeft, Clock, Loader2, MapPin, Navigation, Phone, Store, User, X } from "lucide-react";
+import { Bike, ChevronLeft, Loader2, MapPin, Navigation, Phone, Store, User, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { setOrderStatus } from "@/app/dashboard/orders/actions";
 import { AssignDriver } from "@/components/orders/assign-driver";
+import { ElapsedTimer } from "@/components/orders/elapsed-timer";
 import { MapThumb } from "@/components/orders/map-thumb";
 import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import { interpolate } from "@/lib/i18n";
 import type { LiveOrder, OrderDriver } from "@/lib/hooks/use-realtime-orders";
 import { formatIraqiPhone } from "@/lib/auth/phone";
 import { navigationUrl } from "@/lib/map-tiles";
+import type { PrepThresholds } from "@/lib/order-timing";
 import {
   STATUS_STYLES,
   nextStatus,
@@ -21,23 +23,16 @@ import {
 } from "@/lib/order-status";
 import { formatMoney, cn } from "@/lib/utils";
 
-function elapsed(t: ReturnType<typeof useT>, createdAt: string | null) {
-  if (!createdAt) return "";
-  const minutes = Math.floor((Date.now() - new Date(createdAt).getTime()) / 60000);
-
-  if (minutes < 1) return t.orders.justNow;
-  if (minutes < 60) return interpolate(t.orders.minutesAgo, { count: minutes });
-  return interpolate(t.orders.hoursAgo, { count: Math.floor(minutes / 60) });
-}
-
 export function OrderCard({
   order,
   drivers,
+  thresholds,
   isUnseen,
   onAcknowledge,
 }: {
   order: LiveOrder;
   drivers: OrderDriver[];
+  thresholds: PrepThresholds;
   isUnseen: boolean;
   onAcknowledge: () => void;
 }) {
@@ -107,10 +102,11 @@ export function OrderCard({
           </span>
         )}
 
-        <span className="text-muted-foreground ms-auto flex items-center gap-1 text-sm">
-          <Clock className="size-3.5" />
-          {elapsed(t, order.created_at)}
-        </span>
+        <ElapsedTimer
+          createdAt={order.created_at}
+          thresholds={thresholds}
+          className="ms-auto text-sm"
+        />
       </header>
 
       {isDelivery || isPickup ? (

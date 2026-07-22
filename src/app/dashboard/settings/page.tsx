@@ -1,5 +1,6 @@
 import { DeliveryForm } from "@/components/settings/delivery-form";
 import { HoursForm } from "@/components/settings/hours-form";
+import { PrepThresholdsForm } from "@/components/settings/prep-thresholds-form";
 import { ProfileForm } from "@/components/settings/profile-form";
 import {
   Card,
@@ -70,6 +71,16 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent>
           <HoursForm initial={parseHours(restaurant!.settings)} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t.settings.prepSection}</CardTitle>
+          <CardDescription>{t.settings.prepSectionHint}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PrepThresholdsForm settings={restaurant!.settings} />
         </CardContent>
       </Card>
     </div>

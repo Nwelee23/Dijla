@@ -7,6 +7,7 @@ import {
 } from "@/lib/orders-select";
 import { getRestaurant } from "@/lib/restaurant";
 import { getT } from "@/lib/i18n/server";
+import { readPrepThresholds } from "@/lib/order-timing";
 import { createClient } from "@/lib/supabase/server";
 
 export async function generateMetadata() {
@@ -73,6 +74,7 @@ export default async function OrdersPage() {
           tableNumber: row.tables?.table_number ?? null,
         }))}
         drivers={drivers ?? []}
+        thresholds={readPrepThresholds(restaurant?.settings)}
       />
     </div>
   );
