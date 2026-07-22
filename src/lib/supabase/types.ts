@@ -592,29 +592,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      admin_growth_metrics: {
-        Args: never
-        Returns: {
-          total_restaurants: number
-          active_7d: number
-          active_30d: number
-          signups_30d: number
-          activated: number
-          orders_7d: number
-          paying: number
-          trialing: number
-          cancelled: number
-          mrr: number
-          arpu: number
-        }[]
-      }
       admin_churn_log: {
         Args: never
         Returns: {
-          restaurant_id: string
+          end_date: string
           name: string
-          end_date: string | null
-          reason: string | null
+          reason: string
+          restaurant_id: string
+        }[]
+      }
+      admin_growth_metrics: {
+        Args: never
+        Returns: {
+          activated: number
+          active_30d: number
+          active_7d: number
+          arpu: number
+          cancelled: number
+          mrr: number
+          orders_7d: number
+          paying: number
+          signups_30d: number
+          total_restaurants: number
+          trialing: number
         }[]
       }
       admin_platform_stats: {
