@@ -55,8 +55,8 @@ export default async function SettingsPage() {
         <CardContent>
           <DeliveryForm
             restaurant={restaurant!}
-            canDeliver={plan.canTakeDelivery}
-            lock={plan.deliveryLock}
+            canDeliver={plan.canUsePro}
+            lock={plan.proLock}
           />
         </CardContent>
       </Card>

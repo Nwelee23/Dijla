@@ -391,6 +391,12 @@ export const en: Dictionary = {
     nextDay: "Next day",
   },
 
+  pro: {
+    title: "A pro feature",
+    body: "Delivery and driver management are part of the paid plan — never a commission on any order. Get in touch to upgrade.",
+    trialEnded: "Your trial has ended. Table orders keep running; delivery and drivers return when you upgrade.",
+  },
+
   reports: {
     title: "Reports",
     subtitle: "Your restaurant's sales, top items, and busiest hours.",
@@ -448,6 +454,7 @@ export const en: Dictionary = {
     cashTodayHint: "What each driver collected on delivery orders completed today.",
     deliveriesCount: "{count} delivered",
     notAllowed: "You are not allowed to manage drivers.",
+    needsPro: "Driver management is part of the paid plan.",
     nameTooShort: "That driver name is too short.",
     phoneTaken: "This number could not be registered. It may already belong to a driver.",
     createFailed: "Could not register the driver. Try again.",
@@ -504,6 +511,7 @@ export const en: Dictionary = {
     daysLeft: "{count} days left in your trial",
     lastDay: "Today is the last day of your trial",
     endingSoon: "Your trial ends soon",
+    pastDue: "Your subscription payment is overdue. Features continue for now — please settle it.",
     expiredTitle: "Your trial has ended",
     expiredBody:
       "Thanks for trying Dijla. Get in touch to activate your monthly subscription and keep taking orders.",

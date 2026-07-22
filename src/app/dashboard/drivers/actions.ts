@@ -6,6 +6,7 @@ import { normalizeIraqiPhone } from "@/lib/auth/phone";
 import { driverEmailForPhone, generateDriverCode } from "@/lib/auth/driver-code";
 import { getProfile } from "@/lib/auth/user";
 import { getT } from "@/lib/i18n/server";
+import { getSubscription } from "@/lib/subscription";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const DRIVERS_PATH = "/dashboard/drivers";
@@ -47,6 +48,12 @@ export async function registerDriver(
 
   const restaurantId = await staffRestaurantId();
   if (!restaurantId) return { ok: false, error: t.drivers.notAllowed };
+
+  // Driver dispatch is a pro feature. The page hides the form off the pro tier,
+  // but this action is a POST endpoint like any other — a basic tenant must not
+  // be able to add drivers by calling it directly.
+  const plan = await getSubscription();
+  if (!plan.canUsePro) return { ok: false, error: t.drivers.needsPro };
 
   const name = fullName.trim();
   if (name.length < 2) return { ok: false, error: t.drivers.nameTooShort };

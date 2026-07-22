@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { getT } from "@/lib/i18n/server";
 import { ORDER_STATUSES, type OrderStatus } from "@/lib/order-status";
+import { getSubscription } from "@/lib/subscription";
 import { createClient } from "@/lib/supabase/server";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
@@ -57,6 +58,14 @@ export async function assignDriver(
 ): Promise<ActionResult> {
   const t = await getT();
   const supabase = await createClient();
+
+  // Dispatch is a pro feature. Unassigning (driverId null) is always allowed —
+  // a tenant who downgrades must be able to take a run back — but handing an
+  // order to a driver is gated, server-side, not only in the card.
+  if (driverId) {
+    const plan = await getSubscription();
+    if (!plan.canUsePro) return { ok: false, error: t.orders.assignFailed };
+  }
 
   if (driverId) {
     const { data: driver } = await supabase

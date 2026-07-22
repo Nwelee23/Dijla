@@ -2,7 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 
-import { canTakeDelivery, daysUntilEnd, deliveryLockReason } from "@/lib/plan";
+import { canUsePro, daysUntilEnd, proLockReason } from "@/lib/plan";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/lib/supabase/types";
 
@@ -19,9 +19,12 @@ export type SubscriptionState = {
   isExpired: boolean;
   /** Worth warning the owner about, but still working. */
   isEndingSoon: boolean;
-  /** Delivery is the pro feature — see `lib/plan.ts`. */
-  canTakeDelivery: boolean;
-  deliveryLock: ReturnType<typeof deliveryLockReason>;
+  /** Payment lapsed but not yet cancelled — a grace state, features stay on. */
+  isPastDue: boolean;
+  /** The pro tier is available: delivery and driver dispatch. See `lib/plan.ts`. */
+  canUsePro: boolean;
+  /** Null when unlocked, else why it is locked. */
+  proLock: ReturnType<typeof proLockReason>;
 };
 
 /** When the countdown starts being shown as a warning rather than a note. */
@@ -49,9 +52,10 @@ export const getSubscription = cache(async (): Promise<SubscriptionState> => {
     daysLeft,
     isTrial,
     isActive,
-    isExpired: !isActive && data !== null && daysLeft < 0,
+    isExpired: !isActive && status !== "past_due" && data !== null && daysLeft < 0,
     isEndingSoon: isTrial && daysLeft >= 0 && daysLeft <= WARN_WITHIN_DAYS,
-    canTakeDelivery: canTakeDelivery(plan),
-    deliveryLock: deliveryLockReason(plan),
+    isPastDue: status === "past_due",
+    canUsePro: canUsePro(plan),
+    proLock: proLockReason(plan),
   };
 });

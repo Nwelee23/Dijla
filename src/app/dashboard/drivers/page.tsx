@@ -5,7 +5,9 @@ import {
   type ReconciliationRow,
 } from "@/components/drivers/cash-reconciliation";
 import { DriverList } from "@/components/drivers/driver-list";
+import { ProUpgradePrompt } from "@/components/dashboard/pro-upgrade";
 import { getRestaurant } from "@/lib/restaurant";
+import { getSubscription } from "@/lib/subscription";
 import { getT } from "@/lib/i18n/server";
 import { baghdadDayBounds, safeDate } from "@/lib/report-range";
 import { createClient } from "@/lib/supabase/server";
@@ -20,10 +22,11 @@ export default async function DriversPage({
 }: {
   searchParams: Promise<{ date?: string }>;
 }) {
-  const [{ date }, t, restaurant, supabase] = await Promise.all([
+  const [{ date }, t, restaurant, plan, supabase] = await Promise.all([
     searchParams,
     getT(),
     getRestaurant(),
+    getSubscription(),
     createClient(),
   ]);
 
@@ -63,18 +66,27 @@ export default async function DriversPage({
         </div>
       </div>
 
-      {rows && (
-        <CashReconciliation
-          rows={rows}
-          date={day}
-          restaurantName={restaurant!.name}
-          currency={restaurant!.currency ?? "IQD"}
-        />
-      )}
+      {plan.canUsePro ? (
+        <>
+          {rows && (
+            <CashReconciliation
+              rows={rows}
+              date={day}
+              restaurantName={restaurant!.name}
+              currency={restaurant!.currency ?? "IQD"}
+            />
+          )}
 
-      <div className="print:hidden">
-        <DriverList drivers={drivers} />
-      </div>
+          <div className="print:hidden">
+            <DriverList drivers={drivers} />
+          </div>
+        </>
+      ) : (
+        // Driver dispatch is a pro feature. Off the pro tier the page becomes the
+        // upsell rather than the tool — and registerDriver/assignDriver refuse
+        // server-side too, so this is the pitch, not the fence.
+        <ProUpgradePrompt lock={plan.proLock ?? "needs_pro"} />
+      )}
     </div>
   );
 }

@@ -117,7 +117,7 @@ export async function updateDeliverySettings(
   // Refused rather than silently coerced to false: an owner who somehow got here
   // should be told delivery needs the pro tier, not quietly ignored.
   const plan = await getSubscription();
-  if (input.deliveryEnabled && !plan.canTakeDelivery) {
+  if (input.deliveryEnabled && !plan.canUsePro) {
     return { ok: false, error: t.settings.deliveryNeedsPro };
   }
 

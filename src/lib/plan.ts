@@ -22,19 +22,32 @@ export type PlanInput = {
 };
 
 /**
+ * The single pro-tier gate. Delivery and driver dispatch are the pro features;
+ * this decides both, so the rule lives in exactly one place.
+ *
  * A trial counts. The whole point of thirty free days is that the owner gets to
  * judge the thing they are being asked to pay for, and delivery is that thing.
- *
  * A missing subscription row reads as a live trial, matching `getSubscription`:
  * 0009 backfills every restaurant, so an absent row means our bookkeeping broke,
- * and switching off a pilot restaurant's delivery over our own error is the
- * worse way to be wrong.
+ * and switching off a pilot restaurant over our own error is the worse way to be
+ * wrong.
+ *
+ * cancelled is the one status that overrides the tier. A pro subscription that
+ * has been cancelled is not pro any more — checking the tier first, as an
+ * earlier version did, left a cancelled restaurant with delivery still on.
+ * past_due is deliberately NOT cut off: it is the grace state between a missed
+ * payment and cancellation, and the app keeps working while it is sorted out.
  */
-export function canTakeDelivery(plan: PlanInput): boolean {
-  if (plan.tier === "pro") return true;
+export function canUsePro(plan: PlanInput): boolean {
   const status = plan.status ?? "trial";
+  if (status === "cancelled") return false;
+  if (plan.tier === "pro") return true;
+  // basic tier: only a live trial unlocks the pro features.
   return status === "trial" && plan.daysLeft >= 0;
 }
+
+/** Delivery is a pro feature — the order route reads this by its own name. */
+export const canTakeDelivery = canUsePro;
 
 /**
  * Whole days until a subscription ends, counted to the end of that day.
@@ -61,10 +74,17 @@ export function planFromRow(
   };
 }
 
-/** Why delivery is unavailable, for a dashboard that has to explain itself. */
-export function deliveryLockReason(
+/**
+ * Why a pro feature is unavailable, for a dashboard that has to explain itself.
+ * `trial_ended` when a trial ran out; `needs_pro` for a basic or cancelled
+ * tenant who never had it or let it go.
+ */
+export function proLockReason(
   plan: PlanInput
 ): "trial_ended" | "needs_pro" | null {
-  if (canTakeDelivery(plan)) return null;
+  if (canUsePro(plan)) return null;
   return (plan.status ?? "trial") === "trial" ? "trial_ended" : "needs_pro";
 }
+
+/** Named for the delivery call sites; the same reason applies to all pro gates. */
+export const deliveryLockReason = proLockReason;
