@@ -53,7 +53,11 @@ export default async function DashboardLayout({
       {/* Chrome is screen-only: a printed report (cash sheet, QR sheet) must be
           the content alone, not the nav and header around it. */}
       <div className="print:hidden">
-        <RestaurantHeader restaurant={restaurant} ownerName={profile.full_name} />
+        <RestaurantHeader
+          restaurant={restaurant}
+          ownerName={profile.full_name}
+          isAdmin={profile.role === "admin"}
+        />
         <TrialBanner state={subscription} />
         <DashboardMobileNav />
       </div>

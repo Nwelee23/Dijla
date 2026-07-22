@@ -600,6 +600,23 @@ export type Database = {
         Returns: string
       }
       current_restaurant_id: { Args: never; Returns: string }
+      is_platform_admin: { Args: never; Returns: boolean }
+      admin_restaurants: {
+        Args: never
+        Returns: {
+          id: string
+          name: string
+          slug: string
+          is_active: boolean
+          created_at: string
+          tier: string | null
+          status: string | null
+          start_date: string | null
+          end_date: string | null
+          order_count: number
+          last_order_at: string | null
+        }[]
+      }
       driver_cash_reconciliation: {
         Args: { day_end: string; day_start: string; rid: string }
         Returns: {

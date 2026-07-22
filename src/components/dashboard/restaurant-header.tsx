@@ -1,19 +1,25 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Store } from "lucide-react";
+import { ShieldCheck, Store } from "lucide-react";
 
 import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { SignOutButton } from "@/components/layout/sign-out-button";
+import { getT } from "@/lib/i18n/server";
 import type { Restaurant } from "@/lib/restaurant";
+import { Button } from "@/components/ui/button";
 
 /** Header for the dashboard: which restaurant you are looking at, and a way out. */
-export function RestaurantHeader({
+export async function RestaurantHeader({
   restaurant,
   ownerName,
+  isAdmin = false,
 }: {
   restaurant: Restaurant;
   ownerName: string | null;
+  /** The platform admin gets a way across to /admin from their own dashboard. */
+  isAdmin?: boolean;
 }) {
+  const t = await getT();
   return (
     <header className="bg-background sticky top-0 z-40 border-b">
       <div className="flex h-14 items-center justify-between gap-3 px-4">
@@ -45,6 +51,14 @@ export function RestaurantHeader({
         </Link>
 
         <div className="flex items-center gap-1">
+          {isAdmin && (
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/admin">
+                <ShieldCheck />
+                {t.admin.title}
+              </Link>
+            </Button>
+          )}
           <LanguageSwitcher />
           <SignOutButton />
         </div>
