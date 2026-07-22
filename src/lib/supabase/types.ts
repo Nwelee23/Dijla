@@ -600,6 +600,16 @@ export type Database = {
         Returns: string
       }
       current_restaurant_id: { Args: never; Returns: string }
+      driver_cash_reconciliation: {
+        Args: { day_end: string; day_start: string; rid: string }
+        Returns: {
+          collected: number
+          delivered_count: number
+          driver_id: string
+          driver_name: string
+          expected: number
+        }[]
+      }
       driver_cash_today: {
         Args: never
         Returns: {
@@ -629,16 +639,6 @@ export type Database = {
           order_count: number
           revenue: number
           type: string
-        }[]
-      }
-      driver_cash_reconciliation: {
-        Args: { rid: string; day_start: string; day_end: string }
-        Returns: {
-          driver_id: string
-          driver_name: string
-          delivered_count: number
-          expected: number
-          collected: number
         }[]
       }
       restaurant_sales_summary: {
