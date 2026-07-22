@@ -7,6 +7,7 @@ import { getT } from "@/lib/i18n/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
+import { MIN_PASSWORD_LENGTH } from "./password";
 import { normalizeIraqiPhone } from "./phone";
 
 export type AuthResult = { ok: true } | { ok: false; error: string };
@@ -142,6 +143,75 @@ export async function verifyLoginCode(
     type: "email",
   });
   if (error || !data.user) return { ok: false, error: t.auth.invalidCode };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", data.user.id)
+    .maybeSingle();
+
+  revalidatePath("/", "layout");
+  return { ok: true, redirectTo: homeForRole(profile?.role) };
+}
+
+/**
+ * Forgot-password step 1: send the recovery code (AUTH_UI_SPEC §3.3).
+ *
+ * ALWAYS reports success (for a well-formed email) so the screen reveals nothing
+ * about whether an account exists — §7's neutrality rule. A real account gets a
+ * code; a stranger's guess silently gets nothing. Only a malformed address —
+ * which says nothing about account existence — returns an error.
+ */
+export async function requestPasswordReset(email: string): Promise<AuthResult> {
+  const t = await getT();
+  const normalized = email.trim().toLowerCase();
+  if (!normalized.includes("@")) {
+    return { ok: false, error: t.auth.invalidEmail };
+  }
+
+  const supabase = await createClient();
+  // shouldCreateUser:false — a reset must never conjure a new account, and the
+  // "user not found" error is swallowed below to stay neutral.
+  await supabase.auth.signInWithOtp({
+    email: normalized,
+    options: { shouldCreateUser: false },
+  });
+
+  return { ok: true };
+}
+
+/**
+ * Forgot-password step 2: verify the code and set a new password
+ * (AUTH_UI_SPEC §3.3, §7). Verifying the emailed code establishes a session;
+ * we set the password, then sign out every OTHER session so a leaked old
+ * password (or an attacker's live session) is cut off. The current session
+ * stays, so the owner lands signed in and is routed by role.
+ */
+export async function resetPassword(
+  email: string,
+  token: string,
+  newPassword: string
+): Promise<{ ok: true; redirectTo: string } | { ok: false; error: string }> {
+  const t = await getT();
+  if (newPassword.length < MIN_PASSWORD_LENGTH) {
+    return { ok: false, error: t.auth.passwordTooShort };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.verifyOtp({
+    email: email.trim().toLowerCase(),
+    token: token.trim(),
+    type: "email",
+  });
+  if (error || !data.user) return { ok: false, error: t.auth.invalidCode };
+
+  const { error: updateError } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+  if (updateError) return { ok: false, error: updateError.message };
+
+  // Invalidate every other session; keep this one so the reset flows straight in.
+  await supabase.auth.signOut({ scope: "others" });
 
   const { data: profile } = await supabase
     .from("profiles")

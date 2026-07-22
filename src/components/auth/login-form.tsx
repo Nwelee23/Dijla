@@ -111,9 +111,7 @@ export function LoginForm({ next }: { next?: string }) {
           />
           {t.auth.rememberMe}
         </label>
-        {/* Interim recovery: an emailed code signs you in without a password;
-            the dedicated reset flow (set a new password) lands in a later task. */}
-        <Link href="/login/code" className="dj-link">
+        <Link href="/forgot-password" className="dj-link">
           {t.auth.forgotPassword}
         </Link>
       </div>
