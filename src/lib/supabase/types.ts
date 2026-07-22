@@ -592,14 +592,14 @@ export type Database = {
       admin_platform_stats: {
         Args: never
         Returns: {
-          total_restaurants: number
           active_count: number
-          trial_count: number
-          past_due_count: number
           cancelled_count: number
+          mrr: number
+          past_due_count: number
           suspended_count: number
           total_orders: number
-          mrr: number
+          total_restaurants: number
+          trial_count: number
         }[]
       }
       admin_restaurants: {
