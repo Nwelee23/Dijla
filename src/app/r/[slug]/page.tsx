@@ -1,3 +1,4 @@
+import { cache } from "react";
 import Image from "next/image";
 import { Store, UtensilsCrossed } from "lucide-react";
 
@@ -15,12 +16,15 @@ import { createClient } from "@/lib/supabase/server";
  *
  * Same shape as the dine-in page: one SECURITY DEFINER function returns exactly
  * the menu, so an anonymous browser never gets read access to any table.
+ *
+ * cache() so the metadata pass and the page render share one RPC call rather
+ * than reading the same menu from the database twice per visit.
  */
-async function loadMenu(slug: string) {
+const loadMenu = cache(async (slug: string) => {
   const supabase = await createClient();
   const { data } = await supabase.rpc("get_menu_by_slug", { p_slug: slug });
   return parseRestaurantMenu(data);
-}
+});
 
 /**
  * Hours live in `settings`, and the tier in `subscriptions` — neither is

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import Image from "next/image";
 import { QrCode, Store, UtensilsCrossed } from "lucide-react";
 
@@ -30,14 +31,16 @@ export async function generateMetadata({
   };
 }
 
-async function loadMenu(token: string) {
+// cache() so the metadata pass and the page render share one RPC call instead
+// of hitting the database twice for the same token on every scan.
+const loadMenu = cache(async (token: string) => {
   const supabase = await createClient();
   const { data } = await supabase.rpc("get_menu_by_qr_token", {
     p_token: token,
   });
 
   return parseDineInMenu(data);
-}
+});
 
 /**
  * Opening hours live in `restaurants.settings`, which the public menu function
