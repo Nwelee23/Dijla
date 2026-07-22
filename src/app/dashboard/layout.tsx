@@ -18,8 +18,19 @@ export default async function DashboardLayout({
 }) {
   await requireUser();
 
+  // These three each hit the database, and every navigation re-runs the whole
+  // layout. Run in parallel rather than one after another: the DB is in
+  // Frankfurt and the round trips add up, so three sequential waits are the
+  // difference a person feels as "heavy" moving between screens. All three are
+  // needed for the common case (an owner), and they share the cached getUser,
+  // so firing them together costs nothing extra and saves two round trips.
+  const [profile, restaurant, subscription] = await Promise.all([
+    getProfile(),
+    getRestaurant(),
+    getSubscription(),
+  ]);
+
   // First sign-in: the account exists but no restaurant is attached to it yet.
-  const profile = await getProfile();
   if (!profile) redirect("/onboarding");
 
   // A driver has a restaurant and would otherwise render the dashboard shell —
@@ -29,12 +40,10 @@ export default async function DashboardLayout({
 
   // A profile without a readable restaurant means the row was deleted underneath
   // the user. Send them back through onboarding rather than rendering an empty shell.
-  const restaurant = await getRestaurant();
   if (!restaurant) redirect("/onboarding");
 
   // Blocks the dashboard only. The customer menu at /t/[qr_token] is a separate
   // route and keeps serving — see TrialExpired for why.
-  const subscription = await getSubscription();
   if (subscription.isExpired) {
     return <TrialExpired phone={process.env.NEXT_PUBLIC_SUPPORT_PHONE} />;
   }
