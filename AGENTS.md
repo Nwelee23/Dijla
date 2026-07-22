@@ -46,9 +46,13 @@ One system, three surfaces:
 
 ## Current status
 
-- Building **Phase 0 (foundations)** and **Phase 1 (menu engine + restaurant onboarding)**.
-- Full plan: see `DIJLA_PROJECT_PLAN.md`. Detailed build steps for the current phases: see `PHASE_0_1_BUILD.md`.
-- Do NOT build delivery (Phase 3) or the driver app (Phase 4) before dine-in (Phase 2) works in real restaurants.
+- **Phases 0–5 complete + deployed**, plus Phase 7's growth-metrics layer. Built: foundations, menu engine, dine-in QR ordering, delivery + driver dispatch, driver app, reports, subscriptions, a super-admin panel, and the founder growth dashboard (`/admin/growth`).
+- **AUTH_UI_SPEC.md fully built (5/5)** — replaces the old tasks 1.1–1.2. River-night glass design system; username+password login; emailed-code sign-in; forgot/reset (invalidates other sessions); 3-step signup wizard (restaurant fields + Leaflet GPS pin + **private** `verification-docs` bucket + live username availability); and pending→verified gating (a pending restaurant builds its menu but `/api/orders` refuses `not_verified`; a guard trigger blocks owner self-verify).
+- **Auth model deviation from the spec:** there is no SMS provider, so **email is the verify/recovery anchor** (not phone OTP), chosen by the owner. Phone-OTP code stays wired behind a switch. Daily login is username+password (username→account email resolved server-side). Working hours are left 24h-open for now; logo is added later in settings.
+- **Migrations applied through `0022`.** Migrations are pasted into the Supabase SQL editor by the owner (the agent has no DDL access); each is idempotent/re-runnable. Test scripts live in the gitignored `coverage/` dir (node `.mjs`, run against real Supabase, self-cleaning).
+- **Payments:** COD (cash) only — electronic payment (Phase 6) deliberately deferred by the owner.
+- **The real remaining step is a pilot**, not more building: put Dijla in a real Najaf restaurant. Personal setup still pending: set `NEXT_PUBLIC_SUPPORT_PHONE` in Vercel; real-device test of driver GPS/PWA/order sound; optional custom domain.
+- Full plan: see `DIJLA_PROJECT_PLAN.md`.
 
 ## Docs
 
