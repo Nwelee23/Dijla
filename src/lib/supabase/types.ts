@@ -675,6 +675,8 @@ export type Database = {
           start_date: string
           status: string
           tier: string
+          verification_note: string
+          verification_status: string
         }[]
       }
       create_restaurant_with_owner: {

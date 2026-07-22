@@ -6,6 +6,7 @@ import {
 } from "@/components/dashboard/dashboard-nav";
 import { RestaurantHeader } from "@/components/dashboard/restaurant-header";
 import { TrialBanner } from "@/components/dashboard/trial-banner";
+import { VerificationBanner } from "@/components/dashboard/verification-banner";
 import { TrialExpired } from "@/components/dashboard/trial-expired";
 import { getProfile, requireUser } from "@/lib/auth/user";
 import { getRestaurant } from "@/lib/restaurant";
@@ -57,6 +58,10 @@ export default async function DashboardLayout({
           restaurant={restaurant}
           ownerName={profile.full_name}
           isAdmin={profile.role === "admin"}
+        />
+        <VerificationBanner
+          status={restaurant.verification_status}
+          note={restaurant.verification_note}
         />
         <TrialBanner state={subscription} />
         <DashboardMobileNav />

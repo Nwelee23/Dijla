@@ -347,6 +347,7 @@ export const ar = {
       unavailable_items:
         "أحد الأصناف لم يعد متوفراً. حدّث الصفحة لترى القائمة الحالية.",
       closed: "المطعم مغلق حالياً ولا يستقبل طلبات.",
+      not_verified: "هذا المطعم قيد المراجعة ولا يستقبل الطلبات بعد.",
       invalid_restaurant: "هذا المطعم غير متاح حالياً.",
       needs_name: "الاسم مطلوب.",
       needs_phone: "رقم الهاتف مطلوب.",
@@ -517,6 +518,25 @@ export const ar = {
     endDate: "النهاية",
     notAllowed: "غير مصرّح.",
     updateFailed: "تعذّر التحديث. حاول مرة أخرى.",
+    verify: "توثيق",
+    reject: "رفض",
+    confirmReject: "تأكيد الرفض",
+    rejectReason: "سبب الرفض",
+    verifyDone: "تم توثيق المطعم",
+    rejectDone: "تم رفض الطلب",
+    verificationStatuses: {
+      pending: "قيد المراجعة",
+      verified: "موثّق",
+      rejected: "مرفوض",
+    },
+  },
+
+  verification: {
+    pendingTitle: "حسابك قيد المراجعة",
+    pendingHint: "يمكنك بناء قائمتك الآن؛ يبدأ استقبال الطلبات بعد الموافقة.",
+    rejectedTitle: "تم رفض طلب التوثيق",
+    resubmit: "إعادة الإرسال للمراجعة",
+    resubmitted: "أُعيد إرسال الطلب للمراجعة.",
   },
 
   start: {

@@ -31,6 +31,41 @@ export async function setRestaurantActive(
   return { ok: true };
 }
 
+const VERIFICATION_STATUSES = ["pending", "verified", "rejected"] as const;
+
+/**
+ * Verify or reject a restaurant (AUTH_UI_SPEC §6). The service-role client is
+ * the trusted path the guard trigger (0022) allows to set these fields — an
+ * owner cannot self-verify. A rejection carries a reason the owner then sees;
+ * verifying stamps verified_at and clears any stale note.
+ */
+export async function setVerification(
+  restaurantId: string,
+  status: "verified" | "rejected" | "pending",
+  note: string | null
+): Promise<AdminResult> {
+  const t = await getT();
+  if (!(await requireAdmin())) return { ok: false, error: t.admin.notAllowed };
+  if (!VERIFICATION_STATUSES.includes(status)) {
+    return { ok: false, error: t.admin.updateFailed };
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("restaurants")
+    .update({
+      verification_status: status,
+      verified_at: status === "verified" ? new Date().toISOString() : null,
+      verification_note: status === "rejected" ? note?.trim() || null : null,
+    })
+    .eq("id", restaurantId);
+
+  if (error) return { ok: false, error: t.admin.updateFailed };
+
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
 /**
  * Set a restaurant's subscription: tier, status and the trial/period dates.
  *

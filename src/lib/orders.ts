@@ -95,6 +95,7 @@ export type OrderError =
   | "pickup_disabled"
   | "below_min_order"
   | "closed"
+  | "not_verified"
   | "rate_limited"
   | "server_error";
 

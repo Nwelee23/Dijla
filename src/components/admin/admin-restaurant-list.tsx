@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { setRestaurantActive } from "@/app/admin/actions";
 import { SubscriptionEditor } from "@/components/admin/subscription-editor";
+import { VerificationControls } from "@/components/admin/verification-controls";
 import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,8 @@ export type AdminRestaurant = {
   slug: string;
   is_active: boolean;
   created_at: string;
+  verification_status: string | null;
+  verification_note: string | null;
   tier: string | null;
   status: string | null;
   amount: number | null;
@@ -143,6 +146,12 @@ export function AdminRestaurantList({
                     </span>
                   )}
                 </div>
+
+                <VerificationControls
+                  restaurantId={restaurant.id}
+                  status={restaurant.verification_status ?? "pending"}
+                  note={restaurant.verification_note}
+                />
 
                 <Button
                   variant="outline"

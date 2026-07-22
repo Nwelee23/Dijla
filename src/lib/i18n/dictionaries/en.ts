@@ -345,6 +345,7 @@ export const en: Dictionary = {
       unavailable_items:
         "One of the dishes is no longer available. Refresh to see the current menu.",
       closed: "The restaurant is closed and isn't taking orders.",
+      not_verified: "This restaurant is under review and isn't taking orders yet.",
       invalid_restaurant: "This restaurant isn't available right now.",
       needs_name: "A name is required.",
       needs_phone: "A phone number is required.",
@@ -506,6 +507,25 @@ export const en: Dictionary = {
     endDate: "End",
     notAllowed: "Not allowed.",
     updateFailed: "Could not update. Try again.",
+    verify: "Verify",
+    reject: "Reject",
+    confirmReject: "Confirm reject",
+    rejectReason: "Reason for rejection",
+    verifyDone: "Restaurant verified",
+    rejectDone: "Restaurant rejected",
+    verificationStatuses: {
+      pending: "Under review",
+      verified: "Verified",
+      rejected: "Rejected",
+    },
+  },
+
+  verification: {
+    pendingTitle: "Your account is under review",
+    pendingHint: "You can build your menu now; orders open once approved.",
+    rejectedTitle: "Verification was rejected",
+    resubmit: "Resubmit for review",
+    resubmitted: "Resubmitted for review.",
   },
 
   start: {

@@ -29,6 +29,8 @@ type Target = {
   deliveryEnabled: boolean;
   pickupEnabled: boolean;
   minOrder: number;
+  /** A restaurant only takes live orders once an admin has verified it (§6). */
+  verified: boolean;
 };
 
 /**
@@ -86,6 +88,7 @@ async function resolveTarget(
         restaurantId: table.restaurant_id,
         tableId: table.id,
         settings: restaurant.settings,
+        verified: restaurant.verification_status === "verified",
         ...channels(restaurant),
       },
     };
@@ -105,6 +108,7 @@ async function resolveTarget(
       restaurantId: restaurant.id,
       tableId: null,
       settings: restaurant.settings,
+      verified: restaurant.verification_status === "verified",
       ...channels(restaurant),
     },
   };
@@ -152,7 +156,13 @@ export async function POST(request: Request) {
     deliveryEnabled,
     pickupEnabled,
     minOrder,
+    verified,
   } = target.value;
+
+  // The whole gate (§6): a restaurant awaiting review (or rejected) can build
+  // its menu and show it, but cannot accept a live order on any channel until an
+  // admin verifies it. Enforced on the server, not just hidden in the UI.
+  if (!verified) return fail("not_verified", 403);
 
   // A channel the owner has switched off. The page hides it, but the page is
   // not the guard — anyone can post this body directly, and an owner who turned
