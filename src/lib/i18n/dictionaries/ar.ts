@@ -446,6 +446,19 @@ export const ar = {
     updateFailed: "تعذّر التحديث. حاول مرة أخرى.",
   },
 
+  start: {
+    title: "لنبدأ",
+    progress: "{done} من {total} خطوات مكتملة",
+    menuTitle: "ابنِ قائمتك",
+    menuBody: "أضف تصنيفاً وأصنافاً بأسعارها — هذا ما يراه الزبون.",
+    menuCta: "إضافة أصناف",
+    tablesTitle: "جهّز طاولاتك",
+    tablesBody: "أضف طاولة واطبع رمز QR الخاص بها لتضعه عليها.",
+    tablesCta: "إضافة طاولة",
+    readyTitle: "مطعمك جاهز لاستقبال الطلبات",
+    printCta: "اطبع رموز QR",
+  },
+
   reports: {
     title: "التقارير",
     subtitle: "مبيعات مطعمك وأصنافه الأكثر طلباً وأوقات الذروة.",

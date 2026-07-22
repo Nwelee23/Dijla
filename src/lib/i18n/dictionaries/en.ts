@@ -435,6 +435,19 @@ export const en: Dictionary = {
     updateFailed: "Could not update. Try again.",
   },
 
+  start: {
+    title: "Let's get started",
+    progress: "{done} of {total} steps done",
+    menuTitle: "Build your menu",
+    menuBody: "Add a category and items with prices — this is what the customer sees.",
+    menuCta: "Add items",
+    tablesTitle: "Set up your tables",
+    tablesBody: "Add a table and print its QR code to place on it.",
+    tablesCta: "Add a table",
+    readyTitle: "Your restaurant is ready to take orders",
+    printCta: "Print QR codes",
+  },
+
   reports: {
     title: "Reports",
     subtitle: "Your restaurant's sales, top items, and busiest hours.",
