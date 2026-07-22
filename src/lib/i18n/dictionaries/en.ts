@@ -102,6 +102,15 @@ export const en: Dictionary = {
     invalidCode: "That code is wrong or has expired.",
     invalidEmail: "That email address is not valid.",
     invalidPhone: "That phone number is not valid. Example: 07701234567",
+    loginPasswordSubtitle: "Sign in to manage your restaurant.",
+    username: "Username",
+    usernamePlaceholder: "username",
+    rememberMe: "Remember me",
+    forgotPassword: "Forgot password?",
+    loginWithCode: "Or sign in with an emailed code",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
+    loginFailed: "That username or password is not correct.",
   },
 
   onboarding: {

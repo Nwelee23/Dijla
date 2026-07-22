@@ -4,11 +4,79 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { getT } from "@/lib/i18n/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 import { normalizeIraqiPhone } from "./phone";
 
 export type AuthResult = { ok: true } | { ok: false; error: string };
+
+/** After login the role decides home (AUTH_UI_SPEC §2). */
+function homeForRole(role: string | null | undefined): string {
+  if (role === "driver") return "/driver";
+  if (role === "admin") return "/admin";
+  return "/dashboard";
+}
+
+/**
+ * Daily sign-in: username + password (AUTH_UI_SPEC §3.1).
+ *
+ * Supabase password auth is keyed by email, not username, so the username is
+ * resolved to its account email **server-side only** — the email is never
+ * returned to the browser, which keeps it out of the product per the spec's
+ * "no email anywhere" rule while still using it as the identifier underneath.
+ * An identifier containing "@" is taken as the email directly, so the existing
+ * email-based accounts (and staff who only know their email) are never locked
+ * out while usernames roll in.
+ *
+ * Errors are deliberately one neutral message: a wrong username and a wrong
+ * password must be indistinguishable so the form cannot be used to test which
+ * usernames exist.
+ */
+export async function signInWithUsername(
+  identifier: string,
+  password: string
+): Promise<{ ok: true; redirectTo: string } | { ok: false; error: string }> {
+  const t = await getT();
+  const id = identifier.trim().toLowerCase();
+  if (!id || !password) return { ok: false, error: t.auth.loginFailed };
+
+  let email: string | null = null;
+  if (id.includes("@")) {
+    email = id;
+  } else {
+    // Look the username up with the service-role client: profiles is readable
+    // under RLS only for your own row, and here there is no session yet.
+    const admin = createAdminClient();
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("username", id)
+      .maybeSingle();
+    if (profile) {
+      const { data } = await admin.auth.admin.getUserById(profile.id);
+      email = data.user?.email ?? null;
+    }
+  }
+
+  if (!email) return { ok: false, error: t.auth.loginFailed };
+
+  const supabase = await createClient();
+  const { data: signIn, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  if (error || !signIn.user) return { ok: false, error: t.auth.loginFailed };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", signIn.user.id)
+    .maybeSingle();
+
+  revalidatePath("/", "layout");
+  return { ok: true, redirectTo: homeForRole(profile?.role) };
+}
 
 /**
  * Step 1 of email sign-in: send the code. This is the primary flow — delivery

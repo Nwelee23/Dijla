@@ -104,6 +104,15 @@ export const ar = {
     invalidCode: "الرمز غير صحيح أو منتهي الصلاحية.",
     invalidEmail: "البريد الإلكتروني غير صحيح.",
     invalidPhone: "رقم الهاتف غير صحيح. مثال: 07701234567",
+    loginPasswordSubtitle: "سجّل دخولك لإدارة مطعمك.",
+    username: "اسم المستخدم",
+    usernamePlaceholder: "اسم المستخدم",
+    rememberMe: "تذكّرني",
+    forgotPassword: "نسيت كلمة المرور؟",
+    loginWithCode: "أو الدخول برمز عبر البريد",
+    showPassword: "إظهار كلمة المرور",
+    hidePassword: "إخفاء كلمة المرور",
+    loginFailed: "اسم المستخدم أو كلمة المرور غير صحيحة.",
   },
 
   onboarding: {

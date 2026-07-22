@@ -141,3 +141,170 @@
     @apply font-sans;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Auth surfaces — "ليل النهر" / river-night glassmorphism (AUTH_UI_SPEC §1).
+
+   Everything is scoped under .dj-auth so the deep gradient and glass never
+   bleed into the dashboard, which keeps its light shadcn theme untouched. The
+   light border — not the blur — is what reads as glass, so it is never dropped.
+   --------------------------------------------------------------------------- */
+.dj-auth {
+  --dj-cta: #2ed3b7;
+  --dj-cta-fg: #03282b;
+  --dj-fg: #f1f8f8;
+  --dj-muted: rgba(241, 248, 248, 0.6);
+  --dj-placeholder: rgba(241, 248, 248, 0.42);
+  --dj-glass: rgba(255, 255, 255, 0.09);
+  --dj-line: rgba(255, 255, 255, 0.18);
+  --dj-success: #9fe1cb;
+  --dj-warning: #fac775;
+  --dj-danger: #f09595;
+
+  color: var(--dj-fg);
+  background: linear-gradient(165deg, #062b33 0%, #0b4a54 55%, #0e6b70 100%);
+  background-attachment: fixed;
+}
+
+@layer components {
+  /* One glass layer only — never nest glass inside glass. */
+  .dj-glass {
+    background: var(--dj-glass);
+    border: 1px solid var(--dj-line);
+    border-radius: 16px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  /* 52px logo tile holding the river-ripple mark in the CTA colour. */
+  .dj-logo-tile {
+    display: grid;
+    place-items: center;
+    inline-size: 52px;
+    block-size: 52px;
+    border-radius: 16px;
+    background: var(--dj-glass);
+    border: 1px solid var(--dj-line);
+    color: var(--dj-cta);
+  }
+
+  /* Fields: 46px tall, glass, leading icon slot, LTR handled per-input. */
+  .dj-field {
+    position: relative;
+  }
+  .dj-field-icon {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 14px;
+    display: flex;
+    align-items: center;
+    color: var(--dj-muted);
+    pointer-events: none;
+  }
+  .dj-input {
+    inline-size: 100%;
+    block-size: 46px;
+    border-radius: 12px;
+    background: var(--dj-glass);
+    border: 1px solid var(--dj-line);
+    color: var(--dj-fg);
+    padding-inline: 42px 14px;
+    font-size: 14px;
+  }
+  .dj-input::placeholder {
+    color: var(--dj-placeholder);
+  }
+  .dj-input:focus-visible {
+    outline: 2px solid var(--dj-cta);
+    outline-offset: 1px;
+    border-color: transparent;
+  }
+  /* Trailing control (show/hide password) sits at the end edge. */
+  .dj-field-trailing {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 8px;
+    display: flex;
+    align-items: center;
+    color: var(--dj-muted);
+    background: transparent;
+    border: 0;
+    padding: 6px;
+    cursor: pointer;
+  }
+  .dj-field-trailing:hover {
+    color: var(--dj-fg);
+  }
+
+  .dj-btn {
+    inline-size: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 12px;
+    padding-block: 13px;
+    font-weight: 500;
+    font-size: 15px;
+    background: var(--dj-cta);
+    color: var(--dj-cta-fg);
+    border: 0;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+  }
+  .dj-btn:hover:not(:disabled) {
+    filter: brightness(1.05);
+  }
+  .dj-btn:focus-visible {
+    outline: 2px solid var(--dj-fg);
+    outline-offset: 2px;
+  }
+  .dj-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .dj-link {
+    color: var(--dj-cta);
+    text-underline-offset: 3px;
+  }
+  .dj-link:hover {
+    text-decoration: underline;
+  }
+
+  /* Inline field/form error text (AUTH_UI_SPEC §8). */
+  .dj-error {
+    color: var(--dj-danger);
+    font-size: 13px;
+  }
+
+  .dj-check {
+    accent-color: var(--dj-cta);
+    inline-size: 16px;
+    block-size: 16px;
+  }
+}
+
+/* Performance / support fallback: cheap Androids and anyone asking for reduced
+   transparency get a solid translucent panel with no blur — blur is expensive
+   on low-end GPUs, a large share of the Iraqi market (AUTH_UI_SPEC §1.3). */
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  .dj-glass,
+  .dj-logo-tile,
+  .dj-input {
+    background: rgba(255, 255, 255, 0.14);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .dj-glass,
+  .dj-logo-tile,
+  .dj-input {
+    background: rgba(255, 255, 255, 0.14);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
