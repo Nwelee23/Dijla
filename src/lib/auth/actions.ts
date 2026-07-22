@@ -9,8 +9,33 @@ import { createClient } from "@/lib/supabase/server";
 
 import { MIN_PASSWORD_LENGTH } from "./password";
 import { normalizeIraqiPhone } from "./phone";
+import { isValidUsername, normalizeUsername } from "./username";
 
 export type AuthResult = { ok: true } | { ok: false; error: string };
+
+/**
+ * Live username availability for the signup field (AUTH_UI_SPEC §5).
+ *
+ * Uses the service-role client: during signup the caller has no profile yet, so
+ * RLS would hide every other row and every name would look "available". Returns
+ * `valid:false` for a badly-formed handle so the field can show why, separate
+ * from "taken". Case-insensitive, matching the DB's unique index on lower().
+ */
+export async function checkUsernameAvailable(
+  username: string
+): Promise<{ valid: boolean; available: boolean }> {
+  const u = normalizeUsername(username);
+  if (!isValidUsername(u)) return { valid: false, available: false };
+
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("username", u)
+    .maybeSingle();
+
+  return { valid: true, available: !data };
+}
 
 /** After login the role decides home (AUTH_UI_SPEC §2). */
 function homeForRole(role: string | null | undefined): string {
