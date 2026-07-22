@@ -26,6 +26,18 @@ export const MAX_NAME_LENGTH = 80;
 export const RATE_LIMIT_MAX_ORDERS = 10;
 export const RATE_LIMIT_WINDOW_MINUTES = 10;
 
+/**
+ * A second, restaurant-wide cap on the public delivery/pickup channel.
+ *
+ * The per-phone limit is the front line, but a phone number is trivially
+ * rotated, so a flood of fake delivery orders can slip past it. This bounds the
+ * whole restaurant's anonymous intake in the window instead. It is set far above
+ * any real restaurant's rate — thirty delivery orders in ten minutes is a rush
+ * few kitchens could keep up with — so it never throttles a busy evening; it
+ * exists only to blunt a script hammering /r.
+ */
+export const RATE_LIMIT_MAX_PER_RESTAURANT = 30;
+
 export type OrderLineInput = {
   itemId: string;
   quantity: number;

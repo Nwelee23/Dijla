@@ -3,6 +3,7 @@ import { getOpenState } from "@/lib/opening";
 import { canTakeDelivery, planFromRow } from "@/lib/plan";
 import {
   RATE_LIMIT_MAX_ORDERS,
+  RATE_LIMIT_MAX_PER_RESTAURANT,
   RATE_LIMIT_WINDOW_MINUTES,
   parseOrderRequest,
   type OrderError,
@@ -205,6 +206,23 @@ export async function POST(request: Request) {
 
   const { count: recentCount } = await recent;
   if ((recentCount ?? 0) >= RATE_LIMIT_MAX_ORDERS) return fail("rate_limited", 429);
+
+  // Second layer for the public delivery/pickup link: a phone is trivially
+  // rotated past the per-phone limit above, so also cap the whole restaurant's
+  // anonymous intake in the window. Dine-in is exempt — it is already bounded
+  // per table and needs a valid, non-enumerable token.
+  if (order.mode !== "dine_in") {
+    const { count: restaurantCount } = await admin
+      .from("orders")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", since)
+      .eq("restaurant_id", restaurantId)
+      .in("type", ["delivery", "pickup"]);
+
+    if ((restaurantCount ?? 0) >= RATE_LIMIT_MAX_PER_RESTAURANT) {
+      return fail("rate_limited", 429);
+    }
+  }
 
   // Re-read the menu. This is the authoritative price list.
   const itemIds = [...new Set(order.lines.map((line) => line.itemId))];
