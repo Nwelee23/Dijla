@@ -387,6 +387,35 @@ export const ar = {
     acknowledged: "تم",
   },
 
+  reports: {
+    title: "التقارير",
+    subtitle: "مبيعات مطعمك وأصنافه الأكثر طلباً وأوقات الذروة.",
+    ranges: {
+      today: "اليوم",
+      "7d": "٧ أيام",
+      "30d": "٣٠ يوم",
+      custom: "مخصّص",
+    },
+    from: "من",
+    to: "إلى",
+    apply: "تطبيق",
+    revenue: "الإيرادات",
+    orderCount: "عدد الطلبات",
+    avgOrder: "متوسط الطلب",
+    cashCollected: "النقد المُحصَّل",
+    byType: "حسب نوع الطلب",
+    types: {
+      dine_in: "طاولة",
+      delivery: "توصيل",
+      pickup: "استلام",
+    },
+    topItems: "الأصناف الأكثر طلباً",
+    busiestHours: "أوقات الذروة",
+    ordersN: "{count} طلب",
+    soldN: "بيع {count}",
+    noData: "لا توجد بيانات في هذه المدة.",
+  },
+
   drivers: {
     title: "السائقون",
     subtitle: "سجّل سائقي مطعمك ليستلموا طلبات التوصيل على هواتفهم.",

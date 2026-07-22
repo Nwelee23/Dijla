@@ -54,7 +54,7 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/dashboard/reports",
     label: "reports",
     icon: BarChart3,
-    enabled: false,
+    enabled: true,
     phase: "phase5",
   },
   {

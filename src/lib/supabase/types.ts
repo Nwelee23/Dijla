@@ -609,6 +609,27 @@ export type Database = {
           driver_name: string
         }[]
       }
+      restaurant_sales_summary: {
+        Args: { rid: string; from_ts: string; to_ts: string }
+        Returns: {
+          order_count: number
+          revenue: number
+          avg_order: number
+          cash_collected: number
+        }[]
+      }
+      restaurant_sales_by_type: {
+        Args: { rid: string; from_ts: string; to_ts: string }
+        Returns: { type: string; order_count: number; revenue: number }[]
+      }
+      restaurant_top_items: {
+        Args: { rid: string; from_ts: string; to_ts: string; lim?: number }
+        Returns: { name: string; quantity: number; revenue: number }[]
+      }
+      restaurant_hourly: {
+        Args: { rid: string; from_ts: string; to_ts: string }
+        Returns: { hour: number; order_count: number; revenue: number }[]
+      }
       get_menu_by_qr_token: { Args: { p_token: string }; Returns: Json }
       get_menu_by_slug: { Args: { p_slug: string }; Returns: Json }
       get_order_status: { Args: { p_order_id: string }; Returns: Json }
