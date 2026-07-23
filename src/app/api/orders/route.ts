@@ -253,18 +253,86 @@ export async function POST(request: Request) {
   // not order and a bill that does not match.
   if (byId.size !== itemIds.length) return fail("unavailable_items", 409);
 
-  const priced = order.lines.map((line) => {
+  // Re-read the option groups and the chosen options straight from the database,
+  // exactly as item prices are re-read: a price_delta or option in the request
+  // body is never trusted. Groups give us the required/max_select rules to
+  // enforce; options give us the real name and delta at order time.
+  const { data: groups } = await admin
+    .from("option_groups")
+    .select("id, item_id, is_required, max_select")
+    .in("item_id", itemIds);
+  const groupById = new Map((groups ?? []).map((g) => [g.id, g]));
+  const requiredGroupsByItem = new Map<string, string[]>();
+  for (const g of groups ?? []) {
+    if (g.is_required) {
+      const list = requiredGroupsByItem.get(g.item_id) ?? [];
+      list.push(g.id);
+      requiredGroupsByItem.set(g.item_id, list);
+    }
+  }
+
+  const allOptionIds = [...new Set(order.lines.flatMap((line) => line.optionIds))];
+  const optionById = new Map<string, { id: string; name: string; price_delta: number | null; group_id: string }>();
+  if (allOptionIds.length > 0) {
+    const { data: options } = await admin
+      .from("options")
+      .select("id, name, price_delta, group_id")
+      .in("id", allOptionIds);
+    for (const option of options ?? []) optionById.set(option.id, option);
+  }
+
+  const priced: {
+    itemId: string;
+    nameSnapshot: string;
+    priceSnapshot: number;
+    quantity: number;
+    note: string | null;
+    lineTotal: number;
+    optionsSnapshot: { name: string; price_delta: number }[];
+  }[] = [];
+
+  for (const line of order.lines) {
     const item = byId.get(line.itemId)!;
     const unitPrice = Number(item.price);
-    return {
+
+    const chosen: { name: string; price_delta: number }[] = [];
+    const perGroupCount = new Map<string, number>();
+    const coveredGroups = new Set<string>();
+
+    for (const optionId of line.optionIds) {
+      const option = optionById.get(optionId);
+      if (!option) return fail("invalid_options", 409);
+      const group = groupById.get(option.group_id);
+      // The option must belong to a group of THIS item (of this restaurant, since
+      // groups were fetched scoped to the ordered items). Anything else is forged.
+      if (!group || group.item_id !== line.itemId) return fail("invalid_options", 409);
+
+      chosen.push({ name: option.name, price_delta: Number(option.price_delta ?? 0) });
+      coveredGroups.add(group.id);
+      perGroupCount.set(group.id, (perGroupCount.get(group.id) ?? 0) + 1);
+    }
+
+    // max_select per group, enforced server-side, not just in the sheet.
+    for (const [groupId, count] of perGroupCount) {
+      const group = groupById.get(groupId)!;
+      if (count > (group.max_select ?? 1)) return fail("invalid_options", 409);
+    }
+    // Every required group of this item must have a choice.
+    for (const groupId of requiredGroupsByItem.get(line.itemId) ?? []) {
+      if (!coveredGroups.has(groupId)) return fail("invalid_options", 409);
+    }
+
+    const extra = chosen.reduce((sum, o) => sum + o.price_delta, 0);
+    priced.push({
       itemId: item.id,
       nameSnapshot: item.name,
       priceSnapshot: unitPrice,
       quantity: line.quantity,
       note: line.note || null,
-      lineTotal: unitPrice * line.quantity,
-    };
-  });
+      lineTotal: (unitPrice + extra) * line.quantity,
+      optionsSnapshot: chosen,
+    });
+  }
 
   const subtotal = priced.reduce((sum, line) => sum + line.lineTotal, 0);
 
@@ -354,7 +422,8 @@ export async function POST(request: Request) {
       price_snapshot: line.priceSnapshot,
       quantity: line.quantity,
       notes: line.note,
-      options_snapshot: [],
+      // Name + delta at order time, so a later menu edit never rewrites history.
+      options_snapshot: line.optionsSnapshot,
     }))
   );
 

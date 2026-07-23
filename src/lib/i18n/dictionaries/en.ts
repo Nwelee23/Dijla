@@ -404,6 +404,10 @@ export const en: Dictionary = {
     emptyMenuTitle: "The menu isn't available yet",
     emptyMenuBody: "This restaurant hasn't added any dishes yet. Ask a member of staff to order.",
     addToOrder: "Add to order",
+    required: "Required",
+    optional: "Optional",
+    chooseUpTo: "Choose up to {count}",
+    chooseRequired: "Choose the required options",
     quantity: "Quantity",
     increase: "Increase",
     decrease: "Decrease",
@@ -434,6 +438,7 @@ export const en: Dictionary = {
       invalid_quantity: "That quantity isn't valid.",
       unavailable_items:
         "One of the dishes is no longer available. Refresh to see the current menu.",
+      invalid_options: "One of the options is no longer available. Refresh and re-add the item.",
       closed: "The restaurant is closed and isn't taking orders.",
       not_verified: "This restaurant is under review and isn't taking orders yet.",
       invalid_restaurant: "This restaurant isn't available right now.",

@@ -8,12 +8,28 @@
  * and narrowed, and anything malformed is dropped rather than rendered.
  */
 
+export type MenuOption = {
+  id: string;
+  name: string;
+  priceDelta: number;
+};
+
+export type MenuOptionGroup = {
+  id: string;
+  name: string;
+  isRequired: boolean;
+  /** 1 = single choice (size); >1 = multi-select (extras). */
+  maxSelect: number;
+  options: MenuOption[];
+};
+
 export type MenuItem = {
   id: string;
   name: string;
   description: string | null;
   price: number;
   imageUrl: string | null;
+  optionGroups: MenuOptionGroup[];
 };
 
 export type MenuCategory = {
@@ -67,6 +83,36 @@ function asNumber(value: unknown): number | null {
   return null;
 }
 
+function parseOption(value: unknown): MenuOption | null {
+  if (!isRecord(value)) return null;
+  const id = asString(value.id);
+  const name = asString(value.name);
+  if (!id || !name) return null;
+  return { id, name, priceDelta: asNumber(value.price_delta) ?? 0 };
+}
+
+function parseOptionGroup(value: unknown): MenuOptionGroup | null {
+  if (!isRecord(value)) return null;
+  const id = asString(value.id);
+  const name = asString(value.name);
+  if (!id || !name) return null;
+
+  const options = Array.isArray(value.options)
+    ? value.options.map(parseOption).filter((o): o is MenuOption => o !== null)
+    : [];
+  // A group with no options is nothing to choose from — drop it.
+  if (options.length === 0) return null;
+
+  const maxSelect = asNumber(value.max_select) ?? 1;
+  return {
+    id,
+    name,
+    isRequired: value.is_required === true,
+    maxSelect: maxSelect >= 1 ? Math.floor(maxSelect) : 1,
+    options,
+  };
+}
+
 function parseItem(value: unknown): MenuItem | null {
   if (!isRecord(value)) return null;
 
@@ -75,12 +121,19 @@ function parseItem(value: unknown): MenuItem | null {
   const price = asNumber(value.price);
   if (!id || !name || price === null) return null;
 
+  const optionGroups = Array.isArray(value.option_groups)
+    ? value.option_groups
+        .map(parseOptionGroup)
+        .filter((g): g is MenuOptionGroup => g !== null)
+    : [];
+
   return {
     id,
     name,
     price,
     description: asString(value.description),
     imageUrl: asString(value.image_url),
+    optionGroups,
   };
 }
 

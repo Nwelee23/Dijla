@@ -14,6 +14,9 @@ export const MAX_ORDER_LINES = 40;
 /** Per line. Twelve of one dish is a large table; a thousand is an attack. */
 export const MAX_LINE_QUANTITY = 50;
 
+/** Selected options per line. A dish has a size and a few extras, not fifty. */
+export const MAX_OPTIONS_PER_LINE = 20;
+
 /** Matches the customer note input. */
 export const MAX_NOTE_LENGTH = 140;
 export const MAX_LANDMARK_LENGTH = 160;
@@ -42,6 +45,8 @@ export type OrderLineInput = {
   itemId: string;
   quantity: number;
   note: string;
+  /** Chosen option ids; the server re-reads and re-prices them from the DB. */
+  optionIds: string[];
 };
 
 export type CustomerInput = {
@@ -91,6 +96,7 @@ export type OrderError =
   | "too_many_lines"
   | "invalid_quantity"
   | "unavailable_items"
+  | "invalid_options"
   | "delivery_disabled"
   | "pickup_disabled"
   | "below_min_order"
@@ -220,10 +226,29 @@ function parseLines(
     }
 
     const note = typeof line.note === "string" ? line.note.trim() : "";
+
+    // Options are optional and default to none, but if present they must be a
+    // short list of well-formed uuids — the ids are validated against the DB in
+    // the route; this only rejects obvious junk before a query runs.
+    let optionIds: string[] = [];
+    if (line.optionIds !== undefined) {
+      if (!Array.isArray(line.optionIds) || line.optionIds.length > MAX_OPTIONS_PER_LINE) {
+        return { ok: false, error: "invalid_options" };
+      }
+      for (const id of line.optionIds) {
+        if (typeof id !== "string" || !UUID.test(id)) {
+          return { ok: false, error: "invalid_options" };
+        }
+      }
+      // De-dupe so a repeated id cannot be counted (and priced) twice.
+      optionIds = [...new Set(line.optionIds as string[])];
+    }
+
     lines.push({
       itemId: line.itemId,
       quantity: line.quantity,
       note: note.slice(0, MAX_NOTE_LENGTH),
+      optionIds,
     });
   }
 

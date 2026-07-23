@@ -406,6 +406,10 @@ export const ar = {
     emptyMenuTitle: "القائمة غير متاحة الآن",
     emptyMenuBody: "المطعم لم يضف أصنافاً بعد. اسأل الموظف عن الطلب.",
     addToOrder: "أضف إلى الطلب",
+    required: "مطلوب",
+    optional: "اختياري",
+    chooseUpTo: "اختر حتى {count}",
+    chooseRequired: "اختر الخيارات المطلوبة",
     quantity: "الكمية",
     increase: "زيادة",
     decrease: "إنقاص",
@@ -436,6 +440,7 @@ export const ar = {
       invalid_quantity: "الكمية غير صحيحة.",
       unavailable_items:
         "أحد الأصناف لم يعد متوفراً. حدّث الصفحة لترى القائمة الحالية.",
+      invalid_options: "أحد الخيارات لم يعد متاحاً. حدّث الصفحة وأعد اختيار الصنف.",
       closed: "المطعم مغلق حالياً ولا يستقبل طلبات.",
       not_verified: "هذا المطعم قيد المراجعة ولا يستقبل الطلبات بعد.",
       invalid_restaurant: "هذا المطعم غير متاح حالياً.",

@@ -34,8 +34,25 @@ export type OrderRow = Pick<
 
 export type OrderItemRow = Pick<
   Tables<"order_items">,
-  "id" | "order_id" | "name_snapshot" | "price_snapshot" | "quantity" | "notes"
+  "id" | "order_id" | "name_snapshot" | "price_snapshot" | "quantity" | "notes" | "options_snapshot"
 >;
+
+/** The shape stored in order_items.options_snapshot, for display. */
+export type OrderItemOption = { name: string; price_delta: number };
+
+/** Parse the jsonb options snapshot into a typed list, dropping anything malformed. */
+export function orderItemOptions(snapshot: unknown): OrderItemOption[] {
+  if (!Array.isArray(snapshot)) return [];
+  const options: OrderItemOption[] = [];
+  for (const entry of snapshot) {
+    if (entry && typeof entry === "object" && typeof (entry as { name?: unknown }).name === "string") {
+      const name = (entry as { name: string }).name;
+      const delta = Number((entry as { price_delta?: unknown }).price_delta ?? 0);
+      options.push({ name, price_delta: Number.isFinite(delta) ? delta : 0 });
+    }
+  }
+  return options;
+}
 
 export type OrderDriver = {
   id: string;
@@ -52,7 +69,7 @@ export type LiveOrder = OrderRow & {
 
 /** driver: embedded via the orders.driver_id -> profiles(id) foreign key. */
 export const ORDERS_SELECT =
-  "id, order_number, status, table_id, subtotal, delivery_fee, total, created_at, type, customer_name, customer_phone, customer_landmark, customer_lat, customer_lng, delivery_notes, driver_id, order_items(id, order_id, name_snapshot, price_snapshot, quantity, notes), tables(table_number), driver:profiles!orders_driver_id_fkey(id, full_name, driver_status)";
+  "id, order_number, status, table_id, subtotal, delivery_fee, total, created_at, type, customer_name, customer_phone, customer_landmark, customer_lat, customer_lng, delivery_notes, driver_id, order_items(id, order_id, name_snapshot, price_snapshot, quantity, notes, options_snapshot), tables(table_number), driver:profiles!orders_driver_id_fkey(id, full_name, driver_status)";
 
 export type FetchedOrder = OrderRow & {
   order_items: OrderItemRow[];

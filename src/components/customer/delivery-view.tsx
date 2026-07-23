@@ -85,6 +85,7 @@ export function DeliveryView({
               itemId: line.itemId,
               quantity: line.quantity,
               note: line.note,
+              optionIds: line.optionIds ?? [],
             })),
           }),
         });

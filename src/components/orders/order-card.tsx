@@ -14,6 +14,7 @@ import { interpolate } from "@/lib/i18n";
 import type { LiveOrder, OrderDriver } from "@/lib/hooks/use-realtime-orders";
 import { formatIraqiPhone } from "@/lib/auth/phone";
 import { navigationUrl } from "@/lib/map-tiles";
+import { orderItemOptions } from "@/lib/orders-select";
 import type { PrepThresholds } from "@/lib/order-timing";
 import {
   STATUS_STYLES,
@@ -181,6 +182,11 @@ export function OrderCard({
             </span>
             <span className="flex-1">
               {item.name_snapshot}
+              {orderItemOptions(item.options_snapshot).length > 0 && (
+                <span className="text-muted-foreground block text-xs">
+                  {orderItemOptions(item.options_snapshot).map((o) => o.name).join(" · ")}
+                </span>
+              )}
               {item.notes && (
                 // The note is why the dish comes back if it is missed.
                 <span className="text-destructive block text-sm font-medium">

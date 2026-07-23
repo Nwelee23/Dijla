@@ -8,6 +8,7 @@ import { useT } from "@/components/i18n/i18n-provider";
 import { interpolate } from "@/lib/i18n";
 import { nextStatus, statusLabel, type OrderStatus } from "@/lib/order-status";
 import type { LiveOrder } from "@/lib/hooks/use-realtime-orders";
+import { orderItemOptions } from "@/lib/orders-select";
 import type { PrepThresholds } from "@/lib/order-timing";
 
 /** Statuses the kitchen itself drives — past `ready`, it is dispatch's job. */
@@ -59,6 +60,11 @@ export function KitchenCard({
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-lg font-bold leading-tight">{item.name_snapshot}</p>
+              {orderItemOptions(item.options_snapshot).length > 0 && (
+                <p className="text-muted-foreground text-sm">
+                  {orderItemOptions(item.options_snapshot).map((o) => o.name).join(" · ")}
+                </p>
+              )}
               {item.notes && (
                 <p className="text-destructive text-base font-semibold">{item.notes}</p>
               )}

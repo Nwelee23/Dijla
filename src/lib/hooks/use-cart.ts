@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 
-import type { MenuItem } from "@/lib/menu";
+import type { MenuItem, MenuOption } from "@/lib/menu";
 
 export type CartLine = {
   itemId: string;
@@ -11,6 +11,12 @@ export type CartLine = {
   price: number;
   quantity: number;
   note: string;
+  /** Selected option ids, sent to the server (which re-reads and re-prices them). */
+  optionIds: string[];
+  /** Snapshot for rendering the cart line; the server owns the real deltas. */
+  options: { name: string; priceDelta: number }[];
+  /** Sum of the selected deltas, for the display subtotal only. */
+  extra: number;
 };
 
 const STORAGE_PREFIX = "dijla:cart:";
@@ -103,14 +109,20 @@ export function useCart(tableId: string) {
   );
 
   const add = useCallback(
-    (item: MenuItem, quantity: number, note: string) => {
+    (item: MenuItem, quantity: number, note: string, options: MenuOption[] = []) => {
       const trimmed = note.trim();
+      const optionIds = options.map((o) => o.id).sort();
+      const extra = options.reduce((sum, o) => sum + o.priceDelta, 0);
+      const key = optionIds.join(",");
       const current = read(storageKey);
 
-      // Same dish with a different note is a separate line: "no onions" and
-      // "extra spicy" must not silently merge into one.
+      // Same dish is a separate line if its note OR its chosen options differ:
+      // "large + extra cheese" and "small" must never merge into one.
       const index = current.findIndex(
-        (line) => line.itemId === item.id && line.note === trimmed
+        (line) =>
+          line.itemId === item.id &&
+          line.note === trimmed &&
+          [...(line.optionIds ?? [])].sort().join(",") === key
       );
 
       if (index !== -1) {
@@ -128,6 +140,9 @@ export function useCart(tableId: string) {
           price: item.price,
           quantity,
           note: trimmed,
+          optionIds,
+          options: options.map((o) => ({ name: o.name, priceDelta: o.priceDelta })),
+          extra,
         },
       ]);
     },
@@ -164,7 +179,10 @@ export function useCart(tableId: string) {
   const { count, subtotal } = useMemo(
     () => ({
       count: lines.reduce((sum, line) => sum + line.quantity, 0),
-      subtotal: lines.reduce((sum, line) => sum + line.price * line.quantity, 0),
+      subtotal: lines.reduce(
+        (sum, line) => sum + (line.price + (line.extra ?? 0)) * line.quantity,
+        0
+      ),
     }),
     [lines]
   );
