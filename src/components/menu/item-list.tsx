@@ -2,11 +2,12 @@
 
 import { useOptimistic, useState, useTransition } from "react";
 import Image from "next/image";
-import { ChevronDown, ChevronUp, ImageOff, Loader2, Pencil, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Copy, ImageOff, Loader2, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
   deleteItem,
+  duplicateItem,
   reorderItems,
   setItemAvailable,
 } from "@/app/dashboard/menu/item-actions";
@@ -65,6 +66,14 @@ export function ItemList({
       const result = await setItemAvailable(item.id, isAvailable);
       if (!result.ok) toast.error(result.error);
       else toast.success(isAvailable ? t.menu.itemAvailable : t.menu.itemSoldOut);
+    });
+  }
+
+  function duplicate(item: MenuItem) {
+    startTransition(async () => {
+      const result = await duplicateItem(item.id);
+      if (!result.ok) toast.error(result.error);
+      else toast.success(t.menu.itemDuplicated);
     });
   }
 
@@ -176,6 +185,16 @@ export function ItemList({
                 </Button>
               }
             />
+
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={t.menu.duplicateItem}
+              disabled={isPending}
+              onClick={() => duplicate(item)}
+            >
+              <Copy className="size-4" />
+            </Button>
 
             <Button
               variant="ghost"

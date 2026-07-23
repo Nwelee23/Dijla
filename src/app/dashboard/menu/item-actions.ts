@@ -130,6 +130,88 @@ export async function setItemAvailable(
   return { ok: true };
 }
 
+/**
+ * Duplicate an item with all its option groups and options (MENU_BUILDER_SPEC
+ * §2.2) — most dishes are variants of each other, so cloning then tweaking beats
+ * retyping. The copy is appended in the same category with a "نسخة" suffix.
+ *
+ * The image is deliberately NOT copied: two rows pointing at one storage file
+ * would break the survivor when the other is deleted (delete removes the file).
+ * The owner adds a photo to the copy if they want one.
+ */
+export async function duplicateItem(id: string): Promise<ActionResult> {
+  const t = await getT();
+  const supabase = await createClient();
+
+  const { data: item } = await supabase
+    .from("menu_items")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (!item) return { ok: false, error: t.menu.itemNotFound };
+
+  const { data: last } = await supabase
+    .from("menu_items")
+    .select("sort_order")
+    .eq("category_id", item.category_id ?? "")
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const { data: copy, error } = await supabase
+    .from("menu_items")
+    .insert({
+      restaurant_id: item.restaurant_id,
+      category_id: item.category_id,
+      name: `${item.name} ${t.menu.copySuffix}`,
+      description: item.description,
+      price: item.price,
+      image_url: null,
+      is_available: item.is_available,
+      sort_order: (last?.sort_order ?? -1) + 1,
+    })
+    .select("id")
+    .single();
+  if (error || !copy) return { ok: false, error: error?.message ?? t.menu.itemNotFound };
+
+  // Clone option groups and, under each, its options.
+  const { data: groups } = await supabase
+    .from("option_groups")
+    .select("id, name, is_required, max_select")
+    .eq("item_id", id);
+
+  for (const group of groups ?? []) {
+    const { data: newGroup } = await supabase
+      .from("option_groups")
+      .insert({
+        item_id: copy.id,
+        name: group.name,
+        is_required: group.is_required,
+        max_select: group.max_select,
+      })
+      .select("id")
+      .single();
+    if (!newGroup) continue;
+
+    const { data: options } = await supabase
+      .from("options")
+      .select("name, price_delta")
+      .eq("group_id", group.id);
+    if (options?.length) {
+      await supabase.from("options").insert(
+        options.map((option) => ({
+          group_id: newGroup.id,
+          name: option.name,
+          price_delta: option.price_delta,
+        }))
+      );
+    }
+  }
+
+  revalidatePath(MENU_PATH);
+  return { ok: true };
+}
+
 export async function deleteItem(id: string): Promise<ActionResult> {
   const supabase = await createClient();
 

@@ -230,6 +230,10 @@ export const ar = {
     templateImported: "تم استيراد القائمة",
     templateInvalid: "قالب غير معروف.",
     templateFailed: "تعذّر استيراد القالب.",
+    duplicateItem: "نسخ الصنف",
+    itemDuplicated: "تم نسخ الصنف",
+    copySuffix: "نسخة",
+    itemNotFound: "الصنف غير موجود.",
     deleteCategoryTitle: "حذف «{name}»؟",
     deleteCategoryWithItems:
       "الأصناف الـ {count} داخل هذا التصنيف لن تُحذف، لكنها ستنتقل إلى «بدون تصنيف». إذا كنت تريد إخفاءه مؤقتاً فقط، استخدم مفتاح الإظهار بدلاً من الحذف.",

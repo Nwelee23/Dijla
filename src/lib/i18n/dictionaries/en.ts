@@ -228,6 +228,10 @@ export const en: Dictionary = {
     templateImported: "Starter menu imported",
     templateInvalid: "Unknown template.",
     templateFailed: "Couldn't import the template.",
+    duplicateItem: "Duplicate item",
+    itemDuplicated: "Item duplicated",
+    copySuffix: "copy",
+    itemNotFound: "Item not found.",
     deleteCategoryTitle: "Delete “{name}”?",
     deleteCategoryWithItems:
       "The {count} items in this category won't be deleted, but they will move to “Uncategorised”. To hide it temporarily instead, use the visibility switch.",
