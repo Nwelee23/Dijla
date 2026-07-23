@@ -50,7 +50,12 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex flex-1 flex-col">
+    // River-night dark across the whole dashboard (ORDERS_DASHBOARD_SPEC §1).
+    // `dark` scopes the theme (and activates dark: variants) to this subtree
+    // only, so customer, auth and admin surfaces are untouched; `dj-dashboard`
+    // tints it teal and carries the print reset. text-foreground is set here so
+    // children recompute their colour from the dark tokens, not the light body.
+    <div className="dark dj-dashboard bg-background text-foreground flex flex-1 flex-col">
       {/* Chrome is screen-only: a printed report (cash sheet, QR sheet) must be
           the content alone, not the nav and header around it. */}
       <div className="print:hidden">

@@ -130,6 +130,44 @@
   --sidebar-ring: var(--brand);
 }
 
+/* River-night dark, applied across the restaurant dashboard
+   (ORDERS_DASHBOARD_SPEC §1: dark reduces eye strain over long shifts). Reuses
+   the whole .dark token set for guaranteed contrast, then tints the surfaces
+   toward the Tigris deep-teal so the screen reads as "ليل النهر", not flat black.
+   The brand CTA is already teal in dark, which lands as the river-night accent. */
+.dark.dj-dashboard {
+  --background: oklch(0.18 0.03 214);
+  --card: oklch(0.23 0.028 214);
+  --popover: oklch(0.23 0.028 214);
+  --secondary: oklch(0.28 0.024 214);
+  --muted: oklch(0.28 0.024 214);
+  --accent: oklch(0.28 0.024 214);
+  --sidebar: oklch(0.21 0.03 214);
+  --sidebar-accent: oklch(0.28 0.024 214);
+}
+
+/* Paper is always light. A QR sheet or cash sheet prints from inside the
+   dashboard, so reset its tokens for print — dark ink on white, never white ink
+   on a dark card. The print outputs use only semantic tokens, so this is enough. */
+@media print {
+  .dark.dj-dashboard {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.45 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --border: oklch(0.85 0 0);
+    --input: oklch(0.85 0 0);
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
