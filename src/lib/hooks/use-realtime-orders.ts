@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
+import { isActive } from "@/lib/order-status";
 import {
   ORDERS_SELECT,
   shapeOrder,
@@ -40,9 +41,10 @@ export function useRealtimeOrders(initial: LiveOrder[]) {
   // Orders whose arrival the operator has not acknowledged yet.
   const [unseen, setUnseen] = useState<Set<string>>(new Set());
   const onNewOrder = useRef<(() => void) | null>(null);
+  const onResync = useRef<((activeCount: number) => void) | null>(null);
   const knownIds = useRef(new Set(initial.map((order) => order.id)));
 
-  const refetch = useCallback(async () => {
+  const refetch = useCallback(async (): Promise<LiveOrder[] | null> => {
     const supabase = createClient();
     // RLS scopes this to the signed-in restaurant.
     const { data, error } = await supabase
@@ -51,7 +53,7 @@ export function useRealtimeOrders(initial: LiveOrder[]) {
       .order("created_at", { ascending: false })
       .limit(100);
 
-    if (error || !data) return;
+    if (error || !data) return null;
 
     const next = (data as unknown as FetchedOrder[]).map(shapeOrder);
 
@@ -69,6 +71,7 @@ export function useRealtimeOrders(initial: LiveOrder[]) {
 
     knownIds.current = new Set(next.map((order) => order.id));
     setOrders(next);
+    return next;
   }, []);
 
   useEffect(() => {
@@ -87,15 +90,21 @@ export function useRealtimeOrders(initial: LiveOrder[]) {
 
     const interval = setInterval(refetch, REFETCH_INTERVAL_MS);
     const onFocus = () => void refetch();
+    // Network recovery is the one refetch worth announcing (§8): confirm the
+    // board caught up, and with how many active orders, so staff trust it again.
+    const onOnline = () =>
+      void refetch().then((next) => {
+        if (next) onResync.current?.(next.filter((order) => isActive(order.status)).length);
+      });
 
     window.addEventListener("focus", onFocus);
-    window.addEventListener("online", onFocus);
+    window.addEventListener("online", onOnline);
     document.addEventListener("visibilitychange", onFocus);
 
     return () => {
       clearInterval(interval);
       window.removeEventListener("focus", onFocus);
-      window.removeEventListener("online", onFocus);
+      window.removeEventListener("online", onOnline);
       document.removeEventListener("visibilitychange", onFocus);
       void supabase.removeChannel(channel);
     };
@@ -116,6 +125,13 @@ export function useRealtimeOrders(initial: LiveOrder[]) {
     onNewOrder.current = handler;
   }, []);
 
+  const setResyncHandler = useCallback(
+    (handler: ((activeCount: number) => void) | null) => {
+      onResync.current = handler;
+    },
+    []
+  );
+
   return {
     orders,
     isLive,
@@ -124,5 +140,6 @@ export function useRealtimeOrders(initial: LiveOrder[]) {
     acknowledgeAll,
     refetch,
     setNewOrderHandler,
+    setResyncHandler,
   };
 }

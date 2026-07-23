@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { BellRing, ClipboardList, Volume2, VolumeX, Wifi, WifiOff } from "lucide-react";
+import Link from "next/link";
+import { Archive, BellRing, ClipboardList, Volume2, VolumeX, Wifi, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 
 import { useT } from "@/components/i18n/i18n-provider";
@@ -59,10 +60,10 @@ export function OrderBoard({
     acknowledge,
     acknowledgeAll,
     setNewOrderHandler,
+    setResyncHandler,
   } = useRealtimeOrders(initialOrders);
 
   const [soundOn, setSoundOn] = useState(false);
-  const [showDone, setShowDone] = useState(false);
 
   // Browsers only start audio from a gesture, so this cannot be restored
   // silently on load — the operator has to press the button once per session.
@@ -88,8 +89,14 @@ export function OrderBoard({
     return () => setNewOrderHandler(null);
   }, [soundOn, setNewOrderHandler]);
 
+  useEffect(() => {
+    setResyncHandler((count) =>
+      toast.success(interpolate(t.orders.resynced, { count }))
+    );
+    return () => setResyncHandler(null);
+  }, [setResyncHandler, t]);
+
   const active = orders.filter((order) => isActive(order.status));
-  const done = orders.filter((order) => !isActive(order.status));
 
   return (
     <div className="space-y-4">
@@ -116,13 +123,11 @@ export function OrderBoard({
           {soundOn ? t.orders.soundOn : t.orders.soundOff}
         </Button>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          className="ms-auto"
-          onClick={() => setShowDone((current) => !current)}
-        >
-          {showDone ? t.orders.hideDone : t.orders.showDone}
+        <Button asChild variant="ghost" size="sm" className="ms-auto">
+          <Link href="/dashboard/orders/archive">
+            <Archive />
+            {t.orders.archive}
+          </Link>
         </Button>
       </div>
 
@@ -147,7 +152,7 @@ export function OrderBoard({
         </TabsList>
 
         <TabsContent value="board" className="space-y-5 pt-4">
-          {active.length === 0 && !(showDone && done.length > 0) ? (
+          {active.length === 0 ? (
             <div className="text-muted-foreground flex flex-col items-center gap-3 rounded-xl border py-16 text-center">
               <ClipboardList className="size-10 opacity-40" />
               <div className="space-y-1">
@@ -156,63 +161,41 @@ export function OrderBoard({
               </div>
             </div>
           ) : (
-            <>
-              {active.length > 0 && (
-                <div className="grid gap-4 md:grid-cols-3">
-                  {BOARD_COLUMNS.map((column) => {
-                    const cards = active
-                      .filter((order) => (column.statuses as readonly string[]).includes(order.status))
-                      .sort(byOldest);
-                    return (
-                      <section key={column.key} className="space-y-3">
-                        <header className="flex items-center justify-between gap-2 border-b pb-2">
-                          <h2 className="text-sm font-bold">{statusLabel(t, column.key)}</h2>
-                          <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-bold tabular-nums">
-                            {cards.length}
-                          </span>
-                        </header>
-                        {cards.length === 0 ? (
-                          <p className="text-muted-foreground rounded-xl border border-dashed py-8 text-center text-xs">
-                            {t.orders.laneEmpty}
-                          </p>
-                        ) : (
-                          <div className="space-y-3">
-                            {cards.map((order) => (
-                              <OrderCard
-                                key={order.id}
-                                order={order}
-                                drivers={drivers}
-                                thresholds={thresholds}
-                                isUnseen={unseen.has(order.id)}
-                                onAcknowledge={() => acknowledge(order.id)}
-                              />
-                            ))}
-                          </div>
-                        )}
-                      </section>
-                    );
-                  })}
-                </div>
-              )}
-
-              {showDone && done.length > 0 && (
-                <div className="space-y-3">
-                  <h2 className="text-sm font-bold">{t.orders.doneToday}</h2>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {done.map((order) => (
-                      <OrderCard
-                        key={order.id}
-                        order={order}
-                        drivers={drivers}
-                        thresholds={thresholds}
-                        isUnseen={unseen.has(order.id)}
-                        onAcknowledge={() => acknowledge(order.id)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
+            <div className="grid gap-4 md:grid-cols-3">
+              {BOARD_COLUMNS.map((column) => {
+                const cards = active
+                  .filter((order) => (column.statuses as readonly string[]).includes(order.status))
+                  .sort(byOldest);
+                return (
+                  <section key={column.key} className="space-y-3">
+                    <header className="flex items-center justify-between gap-2 border-b pb-2">
+                      <h2 className="text-sm font-bold">{statusLabel(t, column.key)}</h2>
+                      <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-bold tabular-nums">
+                        {cards.length}
+                      </span>
+                    </header>
+                    {cards.length === 0 ? (
+                      <p className="text-muted-foreground rounded-xl border border-dashed py-8 text-center text-xs">
+                        {t.orders.laneEmpty}
+                      </p>
+                    ) : (
+                      <div className="space-y-3">
+                        {cards.map((order) => (
+                          <OrderCard
+                            key={order.id}
+                            order={order}
+                            drivers={drivers}
+                            thresholds={thresholds}
+                            isUnseen={unseen.has(order.id)}
+                            onAcknowledge={() => acknowledge(order.id)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </section>
+                );
+              })}
+            </div>
           )}
         </TabsContent>
 
