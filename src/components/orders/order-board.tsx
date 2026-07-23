@@ -17,12 +17,27 @@ import {
   type OrderDriver,
 } from "@/lib/hooks/use-realtime-orders";
 import { interpolate } from "@/lib/i18n";
-import { isActive } from "@/lib/order-status";
+import { isActive, statusLabel } from "@/lib/order-status";
 import type { PrepThresholds } from "@/lib/order-timing";
 import { armAudio, playOrderAlert } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 
 const SOUND_KEY = "dijla:orders:sound";
+
+/**
+ * The three kanban lanes (ORDERS_DASHBOARD_SPEC §1). `accepted` shares the
+ * preparing lane and `out_for_delivery` shares ready, so every active order has
+ * exactly one home and the board stays three columns wide.
+ */
+const BOARD_COLUMNS = [
+  { key: "new", statuses: ["new"] },
+  { key: "preparing", statuses: ["accepted", "preparing"] },
+  { key: "ready", statuses: ["ready", "out_for_delivery"] },
+] as const;
+
+/** Oldest first within a lane — act on what has waited longest. */
+const byOldest = (a: LiveOrder, b: LiveOrder) =>
+  new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime();
 
 export function OrderBoard({
   initialOrders,
@@ -75,7 +90,6 @@ export function OrderBoard({
 
   const active = orders.filter((order) => isActive(order.status));
   const done = orders.filter((order) => !isActive(order.status));
-  const visible = showDone ? [...active, ...done] : active;
 
   return (
     <div className="space-y-4">
@@ -132,8 +146,8 @@ export function OrderBoard({
           <TabsTrigger value="kitchen">{t.orders.kitchen}</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="board" className="pt-4">
-          {visible.length === 0 ? (
+        <TabsContent value="board" className="space-y-5 pt-4">
+          {active.length === 0 && !(showDone && done.length > 0) ? (
             <div className="text-muted-foreground flex flex-col items-center gap-3 rounded-xl border py-16 text-center">
               <ClipboardList className="size-10 opacity-40" />
               <div className="space-y-1">
@@ -142,18 +156,63 @@ export function OrderBoard({
               </div>
             </div>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
-              {visible.map((order) => (
-                <OrderCard
-                  key={order.id}
-                  order={order}
-                  drivers={drivers}
-                  thresholds={thresholds}
-                  isUnseen={unseen.has(order.id)}
-                  onAcknowledge={() => acknowledge(order.id)}
-                />
-              ))}
-            </div>
+            <>
+              {active.length > 0 && (
+                <div className="grid gap-4 md:grid-cols-3">
+                  {BOARD_COLUMNS.map((column) => {
+                    const cards = active
+                      .filter((order) => (column.statuses as readonly string[]).includes(order.status))
+                      .sort(byOldest);
+                    return (
+                      <section key={column.key} className="space-y-3">
+                        <header className="flex items-center justify-between gap-2 border-b pb-2">
+                          <h2 className="text-sm font-bold">{statusLabel(t, column.key)}</h2>
+                          <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-bold tabular-nums">
+                            {cards.length}
+                          </span>
+                        </header>
+                        {cards.length === 0 ? (
+                          <p className="text-muted-foreground rounded-xl border border-dashed py-8 text-center text-xs">
+                            {t.orders.laneEmpty}
+                          </p>
+                        ) : (
+                          <div className="space-y-3">
+                            {cards.map((order) => (
+                              <OrderCard
+                                key={order.id}
+                                order={order}
+                                drivers={drivers}
+                                thresholds={thresholds}
+                                isUnseen={unseen.has(order.id)}
+                                onAcknowledge={() => acknowledge(order.id)}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </section>
+                    );
+                  })}
+                </div>
+              )}
+
+              {showDone && done.length > 0 && (
+                <div className="space-y-3">
+                  <h2 className="text-sm font-bold">{t.orders.doneToday}</h2>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {done.map((order) => (
+                      <OrderCard
+                        key={order.id}
+                        order={order}
+                        drivers={drivers}
+                        thresholds={thresholds}
+                        isUnseen={unseen.has(order.id)}
+                        onAcknowledge={() => acknowledge(order.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </TabsContent>
 

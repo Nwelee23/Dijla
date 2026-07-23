@@ -395,6 +395,8 @@ export const en: Dictionary = {
     keepOrder: "Keep order",
     confirmCancel: "Confirm cancellation",
     cancelled: "Order cancelled",
+    laneEmpty: "Nothing here",
+    doneToday: "Completed today",
     updateFailed: "Could not update the status",
     navigate: "Navigate",
     assignDriver: "Assign a driver",

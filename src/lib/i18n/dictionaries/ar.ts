@@ -397,6 +397,8 @@ export const ar = {
     keepOrder: "الاحتفاظ بالطلب",
     confirmCancel: "تأكيد الإلغاء",
     cancelled: "تم إلغاء الطلب",
+    laneEmpty: "لا شيء هنا",
+    doneToday: "مكتملة اليوم",
     updateFailed: "تعذّر تحديث الحالة",
     navigate: "التنقّل إلى الموقع",
     assignDriver: "إسناد إلى سائق",
