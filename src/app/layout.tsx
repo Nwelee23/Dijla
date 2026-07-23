@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cairo } from "next/font/google";
+import localFont from "next/font/local";
 import { Direction } from "radix-ui";
 
 import { I18nProvider } from "@/components/i18n/i18n-provider";
@@ -12,10 +12,17 @@ import { getDictionary } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n/server";
 import "./globals.css";
 
-const cairo = Cairo({
+// Self-hosted so the production build never depends on a network call to Google
+// Fonts. The Arabic and Latin subsets are disjoint glyph sets, so the browser
+// picks the right face per character. Variable woff2 covers 200–1000.
+const cairo = localFont({
   variable: "--font-sans",
-  subsets: ["arabic", "latin"],
   display: "swap",
+  fallback: ["system-ui", "Segoe UI", "Tahoma", "Arial", "sans-serif"],
+  src: [
+    { path: "./fonts/cairo-arabic.woff2", weight: "200 1000", style: "normal" },
+    { path: "./fonts/cairo-latin.woff2", weight: "200 1000", style: "normal" },
+  ],
 });
 
 export const metadata: Metadata = {
