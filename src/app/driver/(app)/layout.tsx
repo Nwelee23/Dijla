@@ -31,5 +31,11 @@ export default async function DriverAppLayout({
   if (!profile || profile.role !== "driver") redirect("/dashboard");
   if (profile.is_active === false) redirect("/driver/login?disabled=1");
 
-  return <div className="flex min-h-dvh flex-col">{children}</div>;
+  // River-night dark for the driver app (DRIVER_REPORTS_ADMIN_SPEC §1), scoped
+  // to this subtree via the same tokens as the dashboard.
+  return (
+    <div className="dark dj-dashboard bg-background text-foreground flex min-h-dvh flex-col">
+      {children}
+    </div>
+  );
 }

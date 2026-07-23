@@ -30,7 +30,8 @@ export default async function AdminLayout({
   const t = await getT();
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    // River-night dark for the admin panel (DRIVER_REPORTS_ADMIN_SPEC §1).
+    <div className="dark dj-dashboard bg-background text-foreground flex min-h-dvh flex-col">
       <header className="bg-background sticky top-0 z-10 border-b">
         <div className="mx-auto flex w-full max-w-6xl items-center gap-3 p-3">
           <span className="flex items-center gap-2 font-bold">
