@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:types": "supabase gen types typescript --project-id jemayudqsspavnjwseqf > src/lib/supabase/types.ts",
+    "db:types": "node scripts/gen-types.mjs",
     "icons": "node scripts/generate-icons.mjs",
     "test": "vitest run",
     "test:watch": "vitest"

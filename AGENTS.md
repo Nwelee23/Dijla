@@ -60,6 +60,13 @@ One system, three surfaces:
 
 ## Docs
 
+- **Specs (these supersede the matching tasks in the `PHASE_*_BUILD` files — build from the spec, not the phase task):**
+  - `AUTH_UI_SPEC.md` — auth & onboarding (supersedes tasks 1.1–1.2).
+  - `MENU_BUILDER_SPEC.md` — menu builder + tables/QR (supersedes 1.5/1.6/2.2/2.3).
+  - `ORDERS_DASHBOARD_SPEC.md` — live orders dashboard (supersedes 2.6).
+  - `DRIVER_REPORTS_ADMIN_SPEC.md` — driver app, reports, admin (supersedes 4.4/4.5/4.8, 5.1/5.2/5.4/5.5).
+  - `REMAINING_SCREENS_SPEC.md` — delivery checkout, landing, supporting screens (supersedes 3.2/3.3; covers 1.7/2.8/5.10).
+  - `PHASE_0_1…PHASE_5_BUILD.md`, `PHASE_6_BUILD.md`, `PHASE_7_PLAYBOOK.md` — original phase plans.
 - Antigravity IDE: https://antigravity.google
 - (Portable `AGENTS.md` spec works across Antigravity, Cursor, and Claude Code.)
 
