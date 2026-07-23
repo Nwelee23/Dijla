@@ -11,6 +11,82 @@ export type AdminResult = { ok: true } | { ok: false; error: string };
 const TIERS = ["basic", "pro"] as const;
 const STATUSES = ["trial", "active", "past_due", "cancelled"] as const;
 
+/** How long a document's signed URL stays valid — long enough to open, not to share. */
+const DOC_URL_TTL_SECONDS = 300;
+
+export type VerificationDetails = {
+  ownerName: string | null;
+  phone: string | null;
+  phoneVerified: boolean;
+  restaurantType: string | null;
+  area: string | null;
+  district: string | null;
+  landmark: string | null;
+  createdAt: string | null;
+  menuItemCount: number;
+  idDocUrl: string | null;
+  licenseDocUrl: string | null;
+};
+
+/**
+ * Everything an admin needs to judge a pending restaurant (§C.4): owner details,
+ * the landmark, a genuine-intent signal (signup age + how many menu items they
+ * built), and the identity/licence documents as SHORT-LIVED SIGNED URLs from the
+ * private verification-docs bucket — never public URLs. Admin-gated; the docs
+ * columns hold storage paths, signed here with the service-role client.
+ */
+export async function getVerificationDetails(
+  restaurantId: string
+): Promise<{ ok: true; details: VerificationDetails } | { ok: false; error: string }> {
+  const t = await getT();
+  if (!(await requireAdmin())) return { ok: false, error: t.admin.notAllowed };
+
+  const admin = createAdminClient();
+  const { data: restaurant } = await admin
+    .from("restaurants")
+    .select("area, district, landmark, restaurant_type, created_at, license_document_url")
+    .eq("id", restaurantId)
+    .maybeSingle();
+  if (!restaurant) return { ok: false, error: t.admin.updateFailed };
+
+  const { data: owner } = await admin
+    .from("profiles")
+    .select("full_name, phone, phone_verified, id_document_url")
+    .eq("restaurant_id", restaurantId)
+    .eq("role", "owner")
+    .maybeSingle();
+
+  const { count } = await admin
+    .from("menu_items")
+    .select("id", { count: "exact", head: true })
+    .eq("restaurant_id", restaurantId);
+
+  const sign = async (path: string | null | undefined) => {
+    if (!path) return null;
+    const { data } = await admin.storage
+      .from("verification-docs")
+      .createSignedUrl(path, DOC_URL_TTL_SECONDS);
+    return data?.signedUrl ?? null;
+  };
+
+  return {
+    ok: true,
+    details: {
+      ownerName: owner?.full_name ?? null,
+      phone: owner?.phone ?? null,
+      phoneVerified: owner?.phone_verified ?? false,
+      restaurantType: restaurant.restaurant_type,
+      area: restaurant.area,
+      district: restaurant.district,
+      landmark: restaurant.landmark,
+      createdAt: restaurant.created_at,
+      menuItemCount: count ?? 0,
+      idDocUrl: await sign(owner?.id_document_url),
+      licenseDocUrl: await sign(restaurant.license_document_url),
+    },
+  };
+}
+
 /** Suspend or reactivate a whole restaurant. */
 export async function setRestaurantActive(
   restaurantId: string,

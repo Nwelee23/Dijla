@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { setRestaurantActive } from "@/app/admin/actions";
 import { SubscriptionEditor } from "@/components/admin/subscription-editor";
-import { VerificationControls } from "@/components/admin/verification-controls";
+import { VerificationReview } from "@/components/admin/verification-review";
 import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -187,8 +187,9 @@ export function AdminRestaurantList({
                   )}
                 </div>
 
-                <VerificationControls
+                <VerificationReview
                   restaurantId={restaurant.id}
+                  restaurantName={restaurant.name}
                   status={restaurant.verification_status ?? "pending"}
                   note={restaurant.verification_note}
                 />
