@@ -236,6 +236,8 @@ export const en: Dictionary = {
     countSummary: "{items} items · {categories} categories",
     readiness: "Menu {pct}% ready",
     addPhotosHint: "add photos to {count} items",
+    itemNameSecondary: "Name in a second language",
+    itemNameSecondaryPlaceholder: "Persian or English name",
     deleteCategoryTitle: "Delete “{name}”?",
     deleteCategoryWithItems:
       "The {count} items in this category won't be deleted, but they will move to “Uncategorised”. To hide it temporarily instead, use the visibility switch.",

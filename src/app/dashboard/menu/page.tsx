@@ -31,7 +31,7 @@ export default async function MenuPage() {
     supabase
       .from("menu_items")
       .select(
-        "id, name, description, price, image_url, is_available, sort_order, category_id"
+        "id, name, name_secondary, description, price, image_url, is_available, sort_order, category_id"
       )
       .order("sort_order", { ascending: true }),
   ]);

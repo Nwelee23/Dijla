@@ -30,7 +30,14 @@ import { cn } from "@/lib/utils";
 
 export type MenuItem = Pick<
   Tables<"menu_items">,
-  "id" | "name" | "description" | "price" | "image_url" | "is_available" | "sort_order"
+  | "id"
+  | "name"
+  | "name_secondary"
+  | "description"
+  | "price"
+  | "image_url"
+  | "is_available"
+  | "sort_order"
 >;
 
 export function ItemList({

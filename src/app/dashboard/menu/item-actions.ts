@@ -14,6 +14,7 @@ const BUCKET = "menu-images";
 
 export type ItemInput = {
   name: string;
+  nameSecondary: string;
   description: string;
   price: number;
   imageUrl: string | null;
@@ -62,6 +63,7 @@ export async function createItem(input: ItemInput): Promise<ActionResult> {
     restaurant_id: restaurant.id,
     category_id: input.categoryId,
     name: input.name.trim(),
+    name_secondary: input.nameSecondary.trim() || null,
     description: input.description.trim() || null,
     price: input.price,
     image_url: input.imageUrl,
@@ -96,6 +98,7 @@ export async function updateItem(
     .update({
       category_id: input.categoryId,
       name: input.name.trim(),
+      name_secondary: input.nameSecondary.trim() || null,
       description: input.description.trim() || null,
       price: input.price,
       image_url: input.imageUrl,
@@ -164,7 +167,9 @@ export async function duplicateItem(id: string): Promise<ActionResult> {
       restaurant_id: item.restaurant_id,
       category_id: item.category_id,
       name: `${item.name} ${t.menu.copySuffix}`,
+      name_secondary: item.name_secondary,
       description: item.description,
+      description_secondary: item.description_secondary,
       price: item.price,
       image_url: null,
       is_available: item.is_available,

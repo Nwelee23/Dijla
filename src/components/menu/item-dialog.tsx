@@ -39,6 +39,7 @@ export function ItemDialog({
   const [isPending, startTransition] = useTransition();
 
   const [name, setName] = useState(item?.name ?? "");
+  const [nameSecondary, setNameSecondary] = useState(item?.name_secondary ?? "");
   const [description, setDescription] = useState(item?.description ?? "");
   const [price, setPrice] = useState(item ? String(item.price) : "");
   const [imageUrl, setImageUrl] = useState<string | null>(item?.image_url ?? null);
@@ -47,6 +48,7 @@ export function ItemDialog({
 
   function reset() {
     setName(item?.name ?? "");
+    setNameSecondary(item?.name_secondary ?? "");
     setDescription(item?.description ?? "");
     setPrice(item ? String(item.price) : "");
     setImageUrl(item?.image_url ?? null);
@@ -55,6 +57,7 @@ export function ItemDialog({
   function submit() {
     const input = {
       name,
+      nameSecondary,
       description,
       price: Number(price),
       imageUrl,
@@ -75,6 +78,7 @@ export function ItemDialog({
       setOpen(false);
       if (!isEdit) {
         setName("");
+        setNameSecondary("");
         setDescription("");
         setPrice("");
         setImageUrl(null);
@@ -112,6 +116,19 @@ export function ItemDialog({
               placeholder={t.menu.itemNamePlaceholder}
               value={name}
               onChange={(event) => setName(event.target.value)}
+              disabled={isPending}
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="item-name-secondary">
+              {t.menu.itemNameSecondary} ({t.common.optional})
+            </Label>
+            <Input
+              id="item-name-secondary"
+              placeholder={t.menu.itemNameSecondaryPlaceholder}
+              value={nameSecondary}
+              onChange={(event) => setNameSecondary(event.target.value)}
               disabled={isPending}
             />
           </div>

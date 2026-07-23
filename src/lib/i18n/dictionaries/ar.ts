@@ -238,6 +238,8 @@ export const ar = {
     countSummary: "{items} صنف · {categories} فئة",
     readiness: "منيوك جاهز {pct}٪",
     addPhotosHint: "أضف صوراً لـ{count} أصناف",
+    itemNameSecondary: "الاسم بلغة ثانية",
+    itemNameSecondaryPlaceholder: "الاسم بالفارسية أو الإنجليزية",
     deleteCategoryTitle: "حذف «{name}»؟",
     deleteCategoryWithItems:
       "الأصناف الـ {count} داخل هذا التصنيف لن تُحذف، لكنها ستنتقل إلى «بدون تصنيف». إذا كنت تريد إخفاءه مؤقتاً فقط، استخدم مفتاح الإظهار بدلاً من الحذف.",
