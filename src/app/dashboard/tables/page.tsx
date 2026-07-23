@@ -1,6 +1,7 @@
 import { Printer, Plus, QrCode } from "lucide-react";
 import Link from "next/link";
 
+import { CopyLink } from "@/components/tables/copy-link";
 import { QrPreview } from "@/components/tables/qr-preview";
 import { TableDialog } from "@/components/tables/table-dialog";
 import { TableList } from "@/components/tables/table-list";
@@ -9,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { appUrl } from "@/lib/app-url";
 import { getT } from "@/lib/i18n/server";
 import { qrSvg, tableUrl } from "@/lib/qr";
+import { getRestaurant } from "@/lib/restaurant";
 import { createClient } from "@/lib/supabase/server";
 
 export async function generateMetadata() {
@@ -17,7 +19,7 @@ export async function generateMetadata() {
 }
 
 export default async function TablesPage() {
-  const [t, origin] = await Promise.all([getT(), appUrl()]);
+  const [t, origin, restaurant] = await Promise.all([getT(), appUrl(), getRestaurant()]);
   const supabase = await createClient();
 
   // RLS scopes this to the signed-in restaurant; no filter needed.
@@ -75,6 +77,16 @@ export default async function TablesPage() {
           />
         </div>
       </div>
+
+      {restaurant?.slug && (
+        <div className="space-y-1.5">
+          <div>
+            <p className="text-sm font-medium">{t.tables.deliveryLink}</p>
+            <p className="text-muted-foreground text-xs">{t.tables.deliveryLinkHint}</p>
+          </div>
+          <CopyLink url={`${origin.replace(/\/$/, "")}/r/${restaurant.slug}`} />
+        </div>
+      )}
 
       {tables.length === 0 ? (
         <Card>
