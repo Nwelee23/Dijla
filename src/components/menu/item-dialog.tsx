@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { createItem, updateItem } from "@/app/dashboard/menu/item-actions";
+import { OptionGroupsEditor } from "@/components/menu/option-groups-editor";
 import { useT } from "@/components/i18n/i18n-provider";
 import { ImageUpload } from "@/components/shared/image-upload";
 import { Button } from "@/components/ui/button";
@@ -172,6 +173,14 @@ export function ItemDialog({
               restaurantId={restaurantId}
             />
           </div>
+
+          {/* Options need an existing item to hang off, and name+price is enough
+              to save (§5), so they appear only when editing. */}
+          {isEdit ? (
+            <OptionGroupsEditor itemId={item.id} />
+          ) : (
+            <p className="text-muted-foreground text-xs">{t.menu.optionsAfterSave}</p>
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
