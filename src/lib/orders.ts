@@ -194,6 +194,97 @@ export function parseOrderRequest(
   };
 }
 
+// ---------------------------------------------------------------------------
+// Pricing — pure, so it can be unit-tested without a database. The route reads
+// the item/group/option rows from the DB and hands them here; this never sees a
+// client-sent price or delta (the request schema carries none), so a tampered
+// basket cannot move the bill.
+// ---------------------------------------------------------------------------
+
+export type PricingItem = { id: string; name: string; price: number };
+export type PricingGroup = {
+  id: string;
+  item_id: string;
+  is_required: boolean | null;
+  max_select: number | null;
+};
+export type PricingOption = {
+  id: string;
+  name: string;
+  price_delta: number | null;
+  group_id: string;
+};
+
+export type PricedLine = {
+  itemId: string;
+  nameSnapshot: string;
+  priceSnapshot: number;
+  quantity: number;
+  note: string | null;
+  lineTotal: number;
+  optionsSnapshot: { name: string; price_delta: number }[];
+};
+
+/**
+ * Reprice every line from authoritative rows: unit price + the summed deltas of
+ * the chosen options, times quantity. Validates that each option belongs to a
+ * group of that item, enforces max_select and required groups, and returns the
+ * subtotal (which never includes the delivery fee — the fee is added by the
+ * caller, so a minimum-order check against this subtotal measures the food).
+ */
+export function priceLines(
+  lines: OrderLineInput[],
+  itemById: Map<string, PricingItem>,
+  groupById: Map<string, PricingGroup>,
+  requiredGroupsByItem: Map<string, string[]>,
+  optionById: Map<string, PricingOption>
+): { ok: true; priced: PricedLine[]; subtotal: number } | { ok: false; error: OrderError } {
+  const priced: PricedLine[] = [];
+
+  for (const line of lines) {
+    const item = itemById.get(line.itemId);
+    if (!item) return { ok: false, error: "unavailable_items" };
+    const unitPrice = Number(item.price);
+
+    const chosen: { name: string; price_delta: number }[] = [];
+    const perGroupCount = new Map<string, number>();
+    const coveredGroups = new Set<string>();
+
+    for (const optionId of line.optionIds) {
+      const option = optionById.get(optionId);
+      if (!option) return { ok: false, error: "invalid_options" };
+      const group = groupById.get(option.group_id);
+      if (!group || group.item_id !== line.itemId) {
+        return { ok: false, error: "invalid_options" };
+      }
+      chosen.push({ name: option.name, price_delta: Number(option.price_delta ?? 0) });
+      coveredGroups.add(group.id);
+      perGroupCount.set(group.id, (perGroupCount.get(group.id) ?? 0) + 1);
+    }
+
+    for (const [groupId, count] of perGroupCount) {
+      const group = groupById.get(groupId)!;
+      if (count > (group.max_select ?? 1)) return { ok: false, error: "invalid_options" };
+    }
+    for (const groupId of requiredGroupsByItem.get(line.itemId) ?? []) {
+      if (!coveredGroups.has(groupId)) return { ok: false, error: "invalid_options" };
+    }
+
+    const extra = chosen.reduce((sum, o) => sum + o.price_delta, 0);
+    priced.push({
+      itemId: item.id,
+      nameSnapshot: item.name,
+      priceSnapshot: unitPrice,
+      quantity: line.quantity,
+      note: line.note || null,
+      lineTotal: (unitPrice + extra) * line.quantity,
+      optionsSnapshot: chosen,
+    });
+  }
+
+  return { ok: true, priced, subtotal: priced.reduce((sum, l) => sum + l.lineTotal, 0) };
+}
+
 function parseCoordinate(value: unknown, limit: number): number | null {
   if (typeof value !== "number" || !Number.isFinite(value)) return null;
   return Math.abs(value) <= limit ? value : null;

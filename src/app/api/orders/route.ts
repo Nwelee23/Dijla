@@ -6,9 +6,12 @@ import {
   RATE_LIMIT_MAX_PER_RESTAURANT,
   RATE_LIMIT_WINDOW_MINUTES,
   parseOrderRequest,
+  priceLines,
   type OrderError,
   type PlaceOrderRequest,
   type PlaceOrderResponse,
+  type PricingItem,
+  type PricingOption,
 } from "@/lib/orders";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -272,7 +275,7 @@ export async function POST(request: Request) {
   }
 
   const allOptionIds = [...new Set(order.lines.flatMap((line) => line.optionIds))];
-  const optionById = new Map<string, { id: string; name: string; price_delta: number | null; group_id: string }>();
+  const optionById = new Map<string, PricingOption>();
   if (allOptionIds.length > 0) {
     const { data: options } = await admin
       .from("options")
@@ -281,60 +284,15 @@ export async function POST(request: Request) {
     for (const option of options ?? []) optionById.set(option.id, option);
   }
 
-  const priced: {
-    itemId: string;
-    nameSnapshot: string;
-    priceSnapshot: number;
-    quantity: number;
-    note: string | null;
-    lineTotal: number;
-    optionsSnapshot: { name: string; price_delta: number }[];
-  }[] = [];
+  const itemById = new Map<string, PricingItem>(
+    [...byId.values()].map((item) => [item.id, { id: item.id, name: item.name, price: Number(item.price) }])
+  );
 
-  for (const line of order.lines) {
-    const item = byId.get(line.itemId)!;
-    const unitPrice = Number(item.price);
-
-    const chosen: { name: string; price_delta: number }[] = [];
-    const perGroupCount = new Map<string, number>();
-    const coveredGroups = new Set<string>();
-
-    for (const optionId of line.optionIds) {
-      const option = optionById.get(optionId);
-      if (!option) return fail("invalid_options", 409);
-      const group = groupById.get(option.group_id);
-      // The option must belong to a group of THIS item (of this restaurant, since
-      // groups were fetched scoped to the ordered items). Anything else is forged.
-      if (!group || group.item_id !== line.itemId) return fail("invalid_options", 409);
-
-      chosen.push({ name: option.name, price_delta: Number(option.price_delta ?? 0) });
-      coveredGroups.add(group.id);
-      perGroupCount.set(group.id, (perGroupCount.get(group.id) ?? 0) + 1);
-    }
-
-    // max_select per group, enforced server-side, not just in the sheet.
-    for (const [groupId, count] of perGroupCount) {
-      const group = groupById.get(groupId)!;
-      if (count > (group.max_select ?? 1)) return fail("invalid_options", 409);
-    }
-    // Every required group of this item must have a choice.
-    for (const groupId of requiredGroupsByItem.get(line.itemId) ?? []) {
-      if (!coveredGroups.has(groupId)) return fail("invalid_options", 409);
-    }
-
-    const extra = chosen.reduce((sum, o) => sum + o.price_delta, 0);
-    priced.push({
-      itemId: item.id,
-      nameSnapshot: item.name,
-      priceSnapshot: unitPrice,
-      quantity: line.quantity,
-      note: line.note || null,
-      lineTotal: (unitPrice + extra) * line.quantity,
-      optionsSnapshot: chosen,
-    });
-  }
-
-  const subtotal = priced.reduce((sum, line) => sum + line.lineTotal, 0);
+  // Pure, DB-free, unit-tested (see orders.test.ts). Returns the priced lines and
+  // a subtotal that excludes the delivery fee.
+  const pricing = priceLines(order.lines, itemById, groupById, requiredGroupsByItem, optionById);
+  if (!pricing.ok) return fail(pricing.error, 409);
+  const { priced, subtotal } = pricing;
 
   // Minimum order, measured against the food and not the bill: counting the
   // delivery fee toward the minimum would let a 3,000 basket clear a 5,000
