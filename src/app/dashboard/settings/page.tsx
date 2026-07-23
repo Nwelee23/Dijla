@@ -2,6 +2,7 @@ import { DeliveryForm } from "@/components/settings/delivery-form";
 import { HoursForm } from "@/components/settings/hours-form";
 import { PrepThresholdsForm } from "@/components/settings/prep-thresholds-form";
 import { ProfileForm } from "@/components/settings/profile-form";
+import { TemporarilyClosedSwitch } from "@/components/settings/temporarily-closed-switch";
 import {
   Card,
   CardContent,
@@ -69,7 +70,8 @@ export default async function SettingsPage() {
             {t.settings.hoursHint}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <TemporarilyClosedSwitch settings={restaurant!.settings} />
           <HoursForm initial={parseHours(restaurant!.settings)} />
         </CardContent>
       </Card>

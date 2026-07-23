@@ -178,6 +178,34 @@ export async function updateOpeningHours(
 }
 
 /**
+ * The manual "temporarily closed" switch (REMAINING_SCREENS §C.2). Flipping it on
+ * stops every ordering channel immediately, regardless of the schedule — for when
+ * the kitchen is slammed or out of a staple. Stored in `settings.closed_now`.
+ */
+export async function setTemporarilyClosed(closed: boolean): Promise<ActionResult> {
+  const t = await getT();
+  const restaurant = await getRestaurant();
+  if (!restaurant) return { ok: false, error: t.onboarding.restaurantNotFound };
+
+  const supabase = await createClient();
+  const existing =
+    restaurant.settings && typeof restaurant.settings === "object"
+      ? (restaurant.settings as Record<string, unknown>)
+      : {};
+
+  const { error } = await supabase
+    .from("restaurants")
+    .update({ settings: { ...existing, closed_now: closed } })
+    .eq("id", restaurant.id);
+
+  if (error) return { ok: false, error: error.message };
+
+  // The customer menu reads open-state on the public routes.
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+/**
  * The kitchen accountability thresholds (ORDERS_DASHBOARD_SPEC §3): after how
  * many minutes an active order's timer turns warning, then danger. Stored in the
  * shared `settings` jsonb under `prep`.

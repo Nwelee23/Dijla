@@ -67,10 +67,25 @@ function coversNow(shift: DayHours, minutes: number, isYesterday: boolean): bool
 
 export type OpenState = {
   isOpen: boolean;
+  /** The owner flipped the manual "temporarily closed" switch (§C.2). */
+  temporarilyClosed: boolean;
   /** Today's hours, for telling the diner when to come back. */
   today: DayHours;
   todayKey: DayKey;
 };
+
+/**
+ * The manual "temporarily closed" override (REMAINING_SCREENS §C.2): the owner
+ * stops taking orders mid-shift regardless of the schedule. Stored in the shared
+ * `settings` jsonb under `closed_now`.
+ */
+export function isTemporarilyClosed(settings: unknown): boolean {
+  return !!(
+    settings &&
+    typeof settings === "object" &&
+    (settings as Record<string, unknown>).closed_now === true
+  );
+}
 
 export function getOpenState(settings: unknown, at: Date = new Date()): OpenState {
   const hours = parseHours(settings);
@@ -78,10 +93,13 @@ export function getOpenState(settings: unknown, at: Date = new Date()): OpenStat
 
   const today = hours[day];
   const yesterday = hours[previousDay(day)];
+  const temporarilyClosed = isTemporarilyClosed(settings);
+  const withinHours =
+    coversNow(today, minutes, false) || coversNow(yesterday, minutes, true);
 
   return {
-    isOpen:
-      coversNow(today, minutes, false) || coversNow(yesterday, minutes, true),
+    isOpen: withinHours && !temporarilyClosed,
+    temporarilyClosed,
     today,
     todayKey: day,
   };
