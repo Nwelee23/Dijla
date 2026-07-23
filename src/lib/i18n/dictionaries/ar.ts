@@ -549,6 +549,8 @@ export const ar = {
     ordersN: "{count} طلب",
     never: "لا نشاط",
     suspendedTag: "معلَّق",
+    dormantFilter: "المتوقفة ({count})",
+    dormantTag: "متوقفة منذ {count} يوم",
     activeSwitch: "تفعيل المطعم",
     activated: "تم تفعيل المطعم",
     suspended: "تم تعليق المطعم",

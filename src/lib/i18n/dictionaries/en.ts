@@ -538,6 +538,8 @@ export const en: Dictionary = {
     ordersN: "{count} orders",
     never: "No activity",
     suspendedTag: "Suspended",
+    dormantFilter: "Dormant ({count})",
+    dormantTag: "Quiet for {count}d",
     activeSwitch: "Activate restaurant",
     activated: "Restaurant activated",
     suspended: "Restaurant suspended",
