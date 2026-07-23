@@ -94,6 +94,26 @@ export function OrderBoard({
     return () => setResyncHandler(null);
   }, [setResyncHandler, t]);
 
+  // Re-sound every 20s while orders sit unacknowledged (§4): a single chime is
+  // easy to miss over a fryer. Acknowledging clears `unseen` and stops it.
+  useEffect(() => {
+    if (!soundOn || unseen.size === 0) return;
+    const id = setInterval(() => playOrderAlert(), 20_000);
+    return () => clearInterval(id);
+  }, [soundOn, unseen.size]);
+
+  // Visual fallback that survives a muted tab (§4): a count in the tab title, so
+  // a backgrounded board still shows "(2)" next to the name. Cleanup restores
+  // the real title, so the prefix never stacks as the count changes.
+  useEffect(() => {
+    if (unseen.size === 0) return;
+    const original = document.title;
+    document.title = `(${unseen.size}) ${original}`;
+    return () => {
+      document.title = original;
+    };
+  }, [unseen.size]);
+
   const active = orders.filter((order) => isActive(order.status));
 
   return (
