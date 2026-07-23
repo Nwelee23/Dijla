@@ -367,6 +367,7 @@ export const ar = {
     subtitle: "الطلبات الجديدة تصل هنا فوراً.",
     board: "اللوحة",
     kitchen: "المطبخ",
+    kitchenTitle: "شاشة المطبخ",
     live: "متصل مباشرة",
     reconnecting: "جارٍ إعادة الاتصال…",
     soundOn: "الصوت مفعّل",

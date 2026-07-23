@@ -2,15 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Archive, BellRing, ClipboardList, Volume2, VolumeX, Wifi, WifiOff } from "lucide-react";
+import { Archive, BellRing, ChefHat, ClipboardList, Volume2, VolumeX, Wifi, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 
 import { useT } from "@/components/i18n/i18n-provider";
-import { KitchenView } from "@/components/orders/kitchen-view";
 import { OrderCard } from "@/components/orders/order-card";
 import { WaiterCalls, type Call } from "@/components/orders/waiter-calls";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLiveDrivers } from "@/lib/hooks/use-live-drivers";
 import {
   useRealtimeOrders,
@@ -123,12 +121,20 @@ export function OrderBoard({
           {soundOn ? t.orders.soundOn : t.orders.soundOff}
         </Button>
 
-        <Button asChild variant="ghost" size="sm" className="ms-auto">
-          <Link href="/dashboard/orders/archive">
-            <Archive />
-            {t.orders.archive}
-          </Link>
-        </Button>
+        <div className="ms-auto flex items-center gap-1">
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/dashboard/orders/kitchen">
+              <ChefHat />
+              {t.orders.kitchen}
+            </Link>
+          </Button>
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/dashboard/orders/archive">
+              <Archive />
+              {t.orders.archive}
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <WaiterCalls initialCalls={initialCalls} />
@@ -145,64 +151,51 @@ export function OrderBoard({
         </div>
       )}
 
-      <Tabs defaultValue="board">
-        <TabsList>
-          <TabsTrigger value="board">{t.orders.board}</TabsTrigger>
-          <TabsTrigger value="kitchen">{t.orders.kitchen}</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="board" className="space-y-5 pt-4">
-          {active.length === 0 ? (
-            <div className="text-muted-foreground flex flex-col items-center gap-3 rounded-xl border py-16 text-center">
-              <ClipboardList className="size-10 opacity-40" />
-              <div className="space-y-1">
-                <p className="text-foreground font-medium">{t.orders.noOrders}</p>
-                <p className="text-sm">{t.orders.noOrdersHint}</p>
-              </div>
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-3">
-              {BOARD_COLUMNS.map((column) => {
-                const cards = active
-                  .filter((order) => (column.statuses as readonly string[]).includes(order.status))
-                  .sort(byOldest);
-                return (
-                  <section key={column.key} className="space-y-3">
-                    <header className="flex items-center justify-between gap-2 border-b pb-2">
-                      <h2 className="text-sm font-bold">{statusLabel(t, column.key)}</h2>
-                      <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-bold tabular-nums">
-                        {cards.length}
-                      </span>
-                    </header>
-                    {cards.length === 0 ? (
-                      <p className="text-muted-foreground rounded-xl border border-dashed py-8 text-center text-xs">
-                        {t.orders.laneEmpty}
-                      </p>
-                    ) : (
-                      <div className="space-y-3">
-                        {cards.map((order) => (
-                          <OrderCard
-                            key={order.id}
-                            order={order}
-                            drivers={drivers}
-                            thresholds={thresholds}
-                            isUnseen={unseen.has(order.id)}
-                            onAcknowledge={() => acknowledge(order.id)}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </section>
-                );
-              })}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="kitchen" className="pt-4">
-          <KitchenView orders={active} />
-        </TabsContent>
-      </Tabs>
+      {active.length === 0 ? (
+        <div className="text-muted-foreground flex flex-col items-center gap-3 rounded-xl border py-16 text-center">
+          <ClipboardList className="size-10 opacity-40" />
+          <div className="space-y-1">
+            <p className="text-foreground font-medium">{t.orders.noOrders}</p>
+            <p className="text-sm">{t.orders.noOrdersHint}</p>
+          </div>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-3">
+          {BOARD_COLUMNS.map((column) => {
+            const cards = active
+              .filter((order) => (column.statuses as readonly string[]).includes(order.status))
+              .sort(byOldest);
+            return (
+              <section key={column.key} className="space-y-3">
+                <header className="flex items-center justify-between gap-2 border-b pb-2">
+                  <h2 className="text-sm font-bold">{statusLabel(t, column.key)}</h2>
+                  <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-bold tabular-nums">
+                    {cards.length}
+                  </span>
+                </header>
+                {cards.length === 0 ? (
+                  <p className="text-muted-foreground rounded-xl border border-dashed py-8 text-center text-xs">
+                    {t.orders.laneEmpty}
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {cards.map((order) => (
+                      <OrderCard
+                        key={order.id}
+                        order={order}
+                        drivers={drivers}
+                        thresholds={thresholds}
+                        isUnseen={unseen.has(order.id)}
+                        onAcknowledge={() => acknowledge(order.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

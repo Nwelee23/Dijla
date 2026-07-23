@@ -365,6 +365,7 @@ export const en: Dictionary = {
     subtitle: "New orders arrive here instantly.",
     board: "Board",
     kitchen: "Kitchen",
+    kitchenTitle: "Kitchen screen",
     live: "Live",
     reconnecting: "Reconnecting…",
     soundOn: "Sound on",
