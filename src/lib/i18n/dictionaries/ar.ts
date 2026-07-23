@@ -234,6 +234,10 @@ export const ar = {
     itemDuplicated: "تم نسخ الصنف",
     copySuffix: "نسخة",
     itemNotFound: "الصنف غير موجود.",
+    preview: "معاينة القائمة",
+    countSummary: "{items} صنف · {categories} فئة",
+    readiness: "منيوك جاهز {pct}٪",
+    addPhotosHint: "أضف صوراً لـ{count} أصناف",
     deleteCategoryTitle: "حذف «{name}»؟",
     deleteCategoryWithItems:
       "الأصناف الـ {count} داخل هذا التصنيف لن تُحذف، لكنها ستنتقل إلى «بدون تصنيف». إذا كنت تريد إخفاءه مؤقتاً فقط، استخدم مفتاح الإظهار بدلاً من الحذف.",

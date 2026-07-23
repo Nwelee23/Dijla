@@ -1,4 +1,4 @@
-import { Plus, Sparkles, UtensilsCrossed } from "lucide-react";
+import { Eye, Plus, Sparkles, UtensilsCrossed } from "lucide-react";
 
 import { CategoryDialog } from "@/components/menu/category-dialog";
 import { CategoryList } from "@/components/menu/category-list";
@@ -9,6 +9,7 @@ import { StarterMenuDialog } from "@/components/menu/starter-menu-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getT } from "@/lib/i18n/server";
+import { interpolate } from "@/lib/i18n";
 import { getRestaurant } from "@/lib/restaurant";
 import { createClient } from "@/lib/supabase/server";
 
@@ -50,24 +51,53 @@ export default async function MenuPage() {
 
   const isEmpty = withItems.length === 0 && uncategorised.length === 0;
 
+  // Completeness (§3.3): a soft nudge, never a blocker. Having items is half the
+  // way; photos are the rest, since they are what a diner actually sees.
+  const totalItems = allItems.length;
+  const withoutPhoto = allItems.filter((item) => !item.image_url).length;
+  const readiness =
+    totalItems === 0
+      ? 0
+      : Math.round(50 + 50 * ((totalItems - withoutPhoto) / totalItems));
+
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 p-4 sm:p-6">
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="space-y-1">
           <h1 className="text-2xl font-bold">{t.menu.title}</h1>
-          <p className="text-muted-foreground text-sm">
-            {t.menu.subtitle}
-          </p>
+          <p className="text-muted-foreground text-sm">{t.menu.subtitle}</p>
+          {totalItems > 0 && (
+            <p className="text-muted-foreground text-xs">
+              {interpolate(t.menu.countSummary, {
+                items: totalItems,
+                categories: withItems.length,
+              })}
+              {" · "}
+              {interpolate(t.menu.readiness, { pct: readiness })}
+              {withoutPhoto > 0 &&
+                ` · ${interpolate(t.menu.addPhotosHint, { count: withoutPhoto })}`}
+            </p>
+          )}
         </div>
 
-        <CategoryDialog
-          trigger={
-            <Button>
-              <Plus />
-              {t.menu.addCategory}
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {!isEmpty && restaurant?.slug && (
+            <Button asChild variant="outline">
+              <a href={`/r/${restaurant.slug}`} target="_blank" rel="noreferrer">
+                <Eye />
+                {t.menu.preview}
+              </a>
             </Button>
-          }
-        />
+          )}
+          <CategoryDialog
+            trigger={
+              <Button>
+                <Plus />
+                {t.menu.addCategory}
+              </Button>
+            }
+          />
+        </div>
       </div>
 
       {isEmpty ? (

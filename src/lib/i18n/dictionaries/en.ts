@@ -232,6 +232,10 @@ export const en: Dictionary = {
     itemDuplicated: "Item duplicated",
     copySuffix: "copy",
     itemNotFound: "Item not found.",
+    preview: "Preview menu",
+    countSummary: "{items} items · {categories} categories",
+    readiness: "Menu {pct}% ready",
+    addPhotosHint: "add photos to {count} items",
     deleteCategoryTitle: "Delete “{name}”?",
     deleteCategoryWithItems:
       "The {count} items in this category won't be deleted, but they will move to “Uncategorised”. To hide it temporarily instead, use the visibility switch.",
