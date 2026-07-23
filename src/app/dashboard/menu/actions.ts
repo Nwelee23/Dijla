@@ -3,12 +3,67 @@
 import { revalidatePath } from "next/cache";
 
 import { getT } from "@/lib/i18n/server";
+import { MENU_TEMPLATES } from "@/lib/menu-templates";
 import { createClient } from "@/lib/supabase/server";
 import { getRestaurant } from "@/lib/restaurant";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
 const MENU_PATH = "/dashboard/menu";
+
+/**
+ * Import a starter menu (MENU_BUILDER_SPEC §2.1): create the template's
+ * categories and items for this restaurant, appended after anything already
+ * there. Everything lands as ordinary editable rows — the owner edits and
+ * deletes rather than typing from scratch. RLS scopes every write to the
+ * signed-in restaurant.
+ */
+export async function importStarterMenu(templateKey: string): Promise<ActionResult> {
+  const t = await getT();
+  const template = MENU_TEMPLATES[templateKey];
+  if (!template) return { ok: false, error: t.menu.templateInvalid };
+
+  const restaurant = await getRestaurant();
+  if (!restaurant) return { ok: false, error: t.onboarding.restaurantNotFound };
+
+  const supabase = await createClient();
+  const { data: lastCat } = await supabase
+    .from("menu_categories")
+    .select("sort_order")
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  let categoryOrder = (lastCat?.sort_order ?? -1) + 1;
+
+  for (const category of template.categories) {
+    const { data: created, error: categoryError } = await supabase
+      .from("menu_categories")
+      .insert({
+        restaurant_id: restaurant.id,
+        name: category.name,
+        sort_order: categoryOrder++,
+      })
+      .select("id")
+      .single();
+    if (categoryError || !created) {
+      return { ok: false, error: categoryError?.message ?? t.menu.templateFailed };
+    }
+
+    const { error: itemsError } = await supabase.from("menu_items").insert(
+      category.items.map((item, index) => ({
+        restaurant_id: restaurant.id,
+        category_id: created.id,
+        name: item.name,
+        price: item.price,
+        sort_order: index,
+      }))
+    );
+    if (itemsError) return { ok: false, error: itemsError.message };
+  }
+
+  revalidatePath(MENU_PATH);
+  return { ok: true };
+}
 
 /**
  * Every action below relies on RLS for tenant isolation — the policies in

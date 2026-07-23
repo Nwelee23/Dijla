@@ -223,6 +223,13 @@ export const ar = {
     noCategoriesHint:
       "ابدأ بتصنيف مثل «المشاوي» أو «المشروبات»، ثم أضف الأصناف داخله.",
     addFirstCategory: "أضف أول تصنيف",
+    importTemplate: "استيراد قائمة جاهزة",
+    starterMenuTitle: "اختر قائمة جاهزة",
+    starterMenuHint: "نبدأ بأصناف شائعة تعدّلها وتحذفها — أسرع بكثير من الكتابة من الصفر.",
+    itemsCount: "{count} صنف",
+    templateImported: "تم استيراد القائمة",
+    templateInvalid: "قالب غير معروف.",
+    templateFailed: "تعذّر استيراد القالب.",
     deleteCategoryTitle: "حذف «{name}»؟",
     deleteCategoryWithItems:
       "الأصناف الـ {count} داخل هذا التصنيف لن تُحذف، لكنها ستنتقل إلى «بدون تصنيف». إذا كنت تريد إخفاءه مؤقتاً فقط، استخدم مفتاح الإظهار بدلاً من الحذف.",

@@ -1,10 +1,11 @@
-import { Plus, UtensilsCrossed } from "lucide-react";
+import { Plus, Sparkles, UtensilsCrossed } from "lucide-react";
 
 import { CategoryDialog } from "@/components/menu/category-dialog";
 import { CategoryList } from "@/components/menu/category-list";
 import type { CategoryWithItems } from "@/components/menu/category-section";
 import { ItemDialog } from "@/components/menu/item-dialog";
 import { ItemList, type MenuItem } from "@/components/menu/item-list";
+import { StarterMenuDialog } from "@/components/menu/starter-menu-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getT } from "@/lib/i18n/server";
@@ -77,14 +78,24 @@ export default async function MenuPage() {
               <p className="text-foreground font-medium">{t.menu.noCategories}</p>
               <p className="text-sm">{t.menu.noCategoriesHint}</p>
             </div>
-            <CategoryDialog
-              trigger={
-                <Button variant="outline">
-                  <Plus />
-                  {t.menu.addFirstCategory}
-                </Button>
-              }
-            />
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <StarterMenuDialog
+                trigger={
+                  <Button>
+                    <Sparkles />
+                    {t.menu.importTemplate}
+                  </Button>
+                }
+              />
+              <CategoryDialog
+                trigger={
+                  <Button variant="outline">
+                    <Plus />
+                    {t.menu.addFirstCategory}
+                  </Button>
+                }
+              />
+            </div>
           </CardContent>
         </Card>
       ) : (

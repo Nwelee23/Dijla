@@ -221,6 +221,13 @@ export const en: Dictionary = {
     noCategoriesHint:
       "Start with a category like “Grills” or “Drinks”, then add items to it.",
     addFirstCategory: "Add your first category",
+    importTemplate: "Import a starter menu",
+    starterMenuTitle: "Choose a starter menu",
+    starterMenuHint: "Start from common items you can edit and delete — far faster than typing from scratch.",
+    itemsCount: "{count} items",
+    templateImported: "Starter menu imported",
+    templateInvalid: "Unknown template.",
+    templateFailed: "Couldn't import the template.",
     deleteCategoryTitle: "Delete “{name}”?",
     deleteCategoryWithItems:
       "The {count} items in this category won't be deleted, but they will move to “Uncategorised”. To hide it temporarily instead, use the visibility switch.",
