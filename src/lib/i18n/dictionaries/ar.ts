@@ -728,6 +728,8 @@ export const ar = {
     noDeliveries: "لا توجد طلبات موكَلة إليك الآن",
     noDeliveriesHint: "عند إسناد طلب توصيل إليك سيظهر هنا فوراً.",
     signOut: "خروج",
+    cashInHand: "نقد بيدك",
+    deliveriesToday: "توصيلات اليوم: {count}",
     live: "مباشر",
     reconnecting: "جارٍ إعادة الاتصال…",
     soundOn: "الصوت مفعّل",

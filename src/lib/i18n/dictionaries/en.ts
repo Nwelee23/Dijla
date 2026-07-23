@@ -717,6 +717,8 @@ export const en: Dictionary = {
     noDeliveries: "Nothing assigned to you right now",
     noDeliveriesHint: "When a delivery is assigned to you it will appear here immediately.",
     signOut: "Sign out",
+    cashInHand: "Cash in hand",
+    deliveriesToday: "Today: {count}",
     live: "Live",
     reconnecting: "Reconnecting…",
     soundOn: "Sound on",
