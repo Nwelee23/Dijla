@@ -41,6 +41,33 @@ export async function setOrderStatus(
 }
 
 /**
+ * Cancel a live order with a reason (ORDERS_DASHBOARD_SPEC §8).
+ *
+ * The reason is required — a cancellation with no explanation is worthless at
+ * end-of-day accounting or in a customer dispute. RLS scopes the update to the
+ * signed-in restaurant, and the status trigger (0007) records the transition.
+ */
+export async function cancelOrder(
+  orderId: string,
+  reason: string
+): Promise<ActionResult> {
+  const t = await getT();
+  const trimmed = reason.trim();
+  if (!trimmed) return { ok: false, error: t.orders.cancelReasonRequired };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("orders")
+    .update({ status: "cancelled", cancellation_reason: trimmed })
+    .eq("id", orderId);
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/dashboard/orders");
+  return { ok: true };
+}
+
+/**
  * Assign a delivery order to one of the restaurant's own drivers, reassign it,
  * or (with driverId null) take it back.
  *

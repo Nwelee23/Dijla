@@ -274,6 +274,7 @@ export type Database = {
       orders: {
         Row: {
           cash_collected: number | null
+          cancellation_reason: string | null
           client_request_id: string | null
           created_at: string | null
           customer_landmark: string | null
@@ -298,6 +299,7 @@ export type Database = {
         }
         Insert: {
           cash_collected?: number | null
+          cancellation_reason?: string | null
           client_request_id?: string | null
           created_at?: string | null
           customer_landmark?: string | null
@@ -322,6 +324,7 @@ export type Database = {
         }
         Update: {
           cash_collected?: number | null
+          cancellation_reason?: string | null
           client_request_id?: string | null
           created_at?: string | null
           customer_landmark?: string | null

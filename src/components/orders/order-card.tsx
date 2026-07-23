@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { Bike, ChevronLeft, Loader2, MapPin, Navigation, Phone, Store, User, X } from "lucide-react";
 
 import { AssignDriver } from "@/components/orders/assign-driver";
+import { CancelOrderDialog } from "@/components/orders/cancel-order-dialog";
 import { ElapsedTimer } from "@/components/orders/elapsed-timer";
 import { MapThumb } from "@/components/orders/map-thumb";
 import { useOrderMove } from "@/components/orders/use-order-move";
@@ -39,6 +41,8 @@ export function OrderCard({
 
   const status = order.status as OrderStatus;
   const next = nextStatus(status, order.type);
+
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   const isDelivery = order.type === "delivery";
   const isPickup = order.type === "pickup";
@@ -211,7 +215,7 @@ export function OrderCard({
               size="sm"
               className="text-destructive"
               disabled={isPending}
-              onClick={() => move(order.id, status, "cancelled", onAcknowledge)}
+              onClick={() => setCancelOpen(true)}
             >
               <X />
               {t.orders.cancel}
@@ -226,6 +230,14 @@ export function OrderCard({
           )}
         </div>
       </div>
+
+      <CancelOrderDialog
+        orderId={order.id}
+        orderNumber={order.order_number}
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        onCancelled={onAcknowledge}
+      />
     </article>
   );
 }
