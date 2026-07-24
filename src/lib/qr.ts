@@ -29,6 +29,11 @@ export function tableUrl(qrToken: string, origin: string): string {
   return `${origin.replace(/\/$/, "")}/t/${qrToken}`;
 }
 
+/** The restaurant's public delivery link, encoded into the storefront QR (§9). */
+export function restaurantUrl(slug: string, origin: string): string {
+  return `${origin.replace(/\/$/, "")}/r/${slug}`;
+}
+
 /**
  * Error correction level M recovers ~15% of the symbol.
  *

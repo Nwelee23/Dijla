@@ -15,8 +15,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { useContentLang } from "@/lib/hooks/use-content-lang";
 import { interpolate } from "@/lib/i18n";
-import type { MenuItem, MenuOption } from "@/lib/menu";
+import { pickDescription, pickName, type MenuItem, type MenuOption } from "@/lib/menu";
 import { cn, formatMoney } from "@/lib/utils";
 
 /**
@@ -42,6 +43,7 @@ export function ItemSheet({
   onAdd: (item: MenuItem, quantity: number, note: string, options: MenuOption[]) => void;
 }) {
   const t = useT();
+  const { lang } = useContentLang();
   const [quantity, setQuantity] = useState(1);
   const [note, setNote] = useState("");
   // groupId -> selected option ids
@@ -90,9 +92,11 @@ export function ItemSheet({
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto">
         <SheetHeader className="text-start">
-          <SheetTitle className="text-xl">{item.name}</SheetTitle>
-          {item.description && (
-            <SheetDescription className="text-base">{item.description}</SheetDescription>
+          <SheetTitle className="text-xl">{pickName(item, lang)}</SheetTitle>
+          {pickDescription(item, lang) && (
+            <SheetDescription className="text-base">
+              {pickDescription(item, lang)}
+            </SheetDescription>
           )}
         </SheetHeader>
 

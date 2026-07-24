@@ -12,9 +12,9 @@ import {
   QrCode,
   UserPlus,
   UtensilsCrossed,
-  Waves,
 } from "lucide-react";
 
+import { LogoMark } from "@/components/brand/logo-mark";
 import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { SavingsCalculator } from "@/components/landing/savings-calculator";
 import { getUser } from "@/lib/auth/user";
@@ -64,7 +64,7 @@ export default async function Home() {
         <div className="mx-auto flex w-full max-w-5xl items-center gap-3 p-4">
           <Link href="/" className="flex items-center gap-2 font-bold">
             <span className="dj-logo-tile size-9">
-              <Waves className="size-5" />
+              <LogoMark variant="plain" className="size-5" />
             </span>
             {t.brand.name}
           </Link>

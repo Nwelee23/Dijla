@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Inbox, Volume2, VolumeX, Wifi, WifiOff } from "lucide-react";
+import { Clock, Inbox, Navigation, Volume2, VolumeX, Wifi, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 
 import { DriverOrderCard } from "@/components/driver/driver-order-card";
@@ -11,15 +11,51 @@ import {
   useDriverOrders,
   type DriverOrder,
 } from "@/lib/hooks/use-driver-orders";
+import { useScreenWakeLock } from "@/lib/hooks/use-screen-wake-lock";
+import { haversineKm, type LatLng } from "@/lib/haversine";
+import { interpolate } from "@/lib/i18n";
 import { armAudio, playOrderAlert } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 
 const SOUND_KEY = "dijla:driver:sound";
 
-export function DriverOrderList({ initial }: { initial: DriverOrder[] }) {
+export function DriverOrderList({
+  initial,
+  origin,
+}: {
+  initial: DriverOrder[];
+  /** The restaurant location, to order deliveries by nearness (§C.2). */
+  origin: LatLng | null;
+}) {
   const t = useT();
   const { orders, isLive, setNewOrderHandler } = useDriverOrders(initial);
   const [soundOn, setSoundOn] = useState(false);
+  const [byNearest, setByNearest] = useState(true);
+
+  // Keep the phone awake while there is a delivery in hand — a driver navigating
+  // should not have to keep tapping the screen alive (§C.1).
+  useScreenWakeLock(orders.length > 0);
+
+  // Distance from the restaurant to each destination (§C.2). Orders without a
+  // pin get no distance and fall to the end when sorting by nearness.
+  const withDistance = orders.map((order) => ({
+    order,
+    km:
+      origin && order.customer_lat != null && order.customer_lng != null
+        ? haversineKm(origin, {
+            lat: Number(order.customer_lat),
+            lng: Number(order.customer_lng),
+          })
+        : null,
+  }));
+  const canSortByNearest =
+    origin != null && orders.length > 1 && withDistance.some((row) => row.km != null);
+  const rows =
+    byNearest && canSortByNearest
+      ? [...withDistance].sort(
+          (a, b) => (a.km ?? Infinity) - (b.km ?? Infinity)
+        )
+      : withDistance;
 
   // Audio only starts from a gesture, so the driver arms it once per shift.
   const enableSound = useCallback(async () => {
@@ -62,10 +98,26 @@ export function DriverOrderList({ initial }: { initial: DriverOrder[] }) {
           {isLive ? t.driverApp.live : t.driverApp.reconnecting}
         </span>
 
+        {canSortByNearest && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="ms-auto"
+            onClick={() => setByNearest((value) => !value)}
+          >
+            {byNearest ? (
+              <Navigation className="size-3.5" />
+            ) : (
+              <Clock className="size-3.5" />
+            )}
+            {byNearest ? t.driverApp.nearestFirst : t.driverApp.oldestFirst}
+          </Button>
+        )}
+
         <Button
           variant={soundOn ? "ghost" : "default"}
           size="sm"
-          className="ms-auto"
+          className={canSortByNearest ? undefined : "ms-auto"}
           onClick={soundOn ? () => setSoundOn(false) : enableSound}
         >
           {soundOn ? <Volume2 /> : <VolumeX />}
@@ -83,8 +135,14 @@ export function DriverOrderList({ initial }: { initial: DriverOrder[] }) {
         </div>
       ) : (
         <ul className="space-y-3">
-          {orders.map((order) => (
-            <li key={order.id}>
+          {rows.map(({ order, km }) => (
+            <li key={order.id} className="space-y-1">
+              {km != null && (
+                <p className="text-muted-foreground flex items-center gap-1 px-1 text-xs">
+                  <Navigation className="size-3" />
+                  {interpolate(t.driverApp.kmAway, { km: km.toFixed(1) })}
+                </p>
+              )}
               <DriverOrderCard order={order} />
             </li>
           ))}

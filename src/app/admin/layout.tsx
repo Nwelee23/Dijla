@@ -3,6 +3,7 @@ import Link from "next/link";
 import { LayoutDashboard, LineChart, ShieldCheck, Store } from "lucide-react";
 
 import { LanguageSwitcher } from "@/components/i18n/language-switcher";
+import { StaffThemeScope } from "@/components/theme/staff-theme-scope";
 import { requireAdmin } from "@/lib/admin";
 import { getUser } from "@/lib/auth/user";
 import { getT } from "@/lib/i18n/server";
@@ -30,8 +31,8 @@ export default async function AdminLayout({
   const t = await getT();
 
   return (
-    // River-night dark for the admin panel (DRIVER_REPORTS_ADMIN_SPEC §1).
-    <div className="dark dj-dashboard bg-background text-foreground flex min-h-dvh flex-col">
+    // Dark by default for the admin panel (DRIVER_REPORTS_ADMIN_SPEC §1).
+    <StaffThemeScope className="flex min-h-dvh flex-col">
       <header className="bg-background sticky top-0 z-10 border-b">
         <div className="mx-auto flex w-full max-w-6xl items-center gap-3 p-3">
           <span className="flex items-center gap-2 font-bold">
@@ -67,6 +68,6 @@ export default async function AdminLayout({
       </header>
 
       <main className="flex-1">{children}</main>
-    </div>
+    </StaffThemeScope>
   );
 }

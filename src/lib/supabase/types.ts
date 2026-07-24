@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_outreach: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          note: string | null
+          restaurant_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          restaurant_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          restaurant_id?: string
+        }
+        Relationships: []
+      }
       menu_categories: {
         Row: {
           id: string
@@ -49,45 +73,66 @@ export type Database = {
       menu_items: {
         Row: {
           category_id: string | null
+          cost: number | null
           created_at: string | null
           description: string | null
+          description_fa: string | null
           description_secondary: string | null
           id: string
           image_url: string | null
           is_available: boolean | null
+          auto_restore: boolean
           name: string
+          name_fa: string | null
           name_secondary: string | null
+          prep_minutes: number | null
           price: number
           restaurant_id: string
+          sold_out_at: string | null
           sort_order: number | null
+          tags: string[]
         }
         Insert: {
           category_id?: string | null
+          cost?: number | null
           created_at?: string | null
           description?: string | null
+          description_fa?: string | null
           description_secondary?: string | null
           id?: string
           image_url?: string | null
           is_available?: boolean | null
+          auto_restore?: boolean
           name: string
+          name_fa?: string | null
           name_secondary?: string | null
+          prep_minutes?: number | null
           price: number
           restaurant_id: string
+          sold_out_at?: string | null
           sort_order?: number | null
+          tags?: string[]
         }
         Update: {
           category_id?: string | null
+          cost?: number | null
           created_at?: string | null
           description?: string | null
+          description_fa?: string | null
           description_secondary?: string | null
           id?: string
           image_url?: string | null
           is_available?: boolean | null
+          auto_restore?: boolean
           name?: string
+          name_fa?: string | null
           name_secondary?: string | null
+          prep_minutes?: number | null
           price?: number
           restaurant_id?: string
+          sold_out_at?: string | null
           sort_order?: number | null
+          tags?: string[]
         }
         Relationships: [
           {
@@ -290,6 +335,7 @@ export type Database = {
           customer_phone: string | null
           delivery_fee: number
           delivery_notes: string | null
+          driver_arrived_at: string | null
           driver_id: string | null
           id: string
           order_number: number
@@ -315,6 +361,7 @@ export type Database = {
           customer_phone?: string | null
           delivery_fee?: number
           delivery_notes?: string | null
+          driver_arrived_at?: string | null
           driver_id?: string | null
           id?: string
           order_number: number
@@ -340,6 +387,7 @@ export type Database = {
           customer_phone?: string | null
           delivery_fee?: number
           delivery_notes?: string | null
+          driver_arrived_at?: string | null
           driver_id?: string | null
           id?: string
           order_number?: number
@@ -427,6 +475,39 @@ export type Database = {
           },
         ]
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string | null
+          endpoint: string
+          id: string
+          p256dh: string
+          restaurant_id: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          p256dh: string
+          restaurant_id?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          restaurant_id?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       restaurants: {
         Row: {
           area: string | null
@@ -442,6 +523,7 @@ export type Database = {
           license_document_url: string | null
           lng: number | null
           logo_url: string | null
+          menu_layout: string
           min_order: number
           name: string
           phone: string | null
@@ -467,6 +549,7 @@ export type Database = {
           license_document_url?: string | null
           lng?: number | null
           logo_url?: string | null
+          menu_layout?: string
           min_order?: number
           name: string
           phone?: string | null
@@ -492,6 +575,7 @@ export type Database = {
           license_document_url?: string | null
           lng?: number | null
           logo_url?: string | null
+          menu_layout?: string
           min_order?: number
           name?: string
           phone?: string | null
@@ -631,6 +715,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      learned_prep_minutes: {
+        Args: { p_days?: number; p_min_sample?: number }
+        Returns: {
+          menu_item_id: string
+          median_minutes: number
+          sample_size: number
+        }[]
+      }
       admin_churn_log: {
         Args: never
         Returns: {
@@ -638,6 +730,27 @@ export type Database = {
           name: string
           reason: string
           restaurant_id: string
+        }[]
+      }
+      admin_dormant_restaurants: {
+        Args: { days?: number }
+        Returns: {
+          restaurant_id: string
+          name: string
+          area: string | null
+          phone: string | null
+          last_order_at: string | null
+          days_dormant: number
+          lifetime_orders: number
+        }[]
+      }
+      admin_cohort_retention: {
+        Args: never
+        Returns: {
+          cohort_month: string
+          months_since: number
+          active_count: number
+          cohort_size: number
         }[]
       }
       admin_growth_metrics: {
@@ -725,6 +838,7 @@ export type Database = {
       is_restaurant_staff: { Args: never; Returns: boolean }
       menu_payload: { Args: { p_restaurant: string }; Returns: Json }
       next_order_number: { Args: { rid: string }; Returns: number }
+      restore_sold_out: { Args: { p_restaurant: string }; Returns: undefined }
       restaurant_hourly: {
         Args: { from_ts: string; rid: string; to_ts: string }
         Returns: {

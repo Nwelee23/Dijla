@@ -5,8 +5,39 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
 import { getT } from "@/lib/i18n/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 export type AdminResult = { ok: true } | { ok: false; error: string };
+
+/**
+ * Record an outreach note against a churn-risk restaurant (§A.3), so the same
+ * one isn't chased twice. Inserted through the admin's own session — the
+ * admin_only_outreach RLS policy (0032) is the fence, and created_by is set to
+ * the caller.
+ */
+export async function logOutreach(
+  restaurantId: string,
+  note: string
+): Promise<AdminResult> {
+  const t = await getT();
+  if (!(await requireAdmin())) return { ok: false, error: t.admin.notAllowed };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { error } = await supabase.from("admin_outreach").insert({
+    restaurant_id: restaurantId,
+    note: note.trim() || null,
+    created_by: user?.id ?? null,
+  });
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin");
+  return { ok: true };
+}
 
 const TIERS = ["basic", "pro"] as const;
 const STATUSES = ["trial", "active", "past_due", "cancelled"] as const;

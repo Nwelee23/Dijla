@@ -9,6 +9,8 @@ export type OrderStatusView = {
   status: string;
   total: number;
   createdAt: string | null;
+  /** The driver has reached the door (§C.3). */
+  arrived: boolean;
 };
 
 /**
@@ -34,6 +36,7 @@ function parse(payload: unknown): OrderStatusView | null {
     status,
     total: Number(raw.total ?? 0),
     createdAt: typeof raw.createdAt === "string" ? raw.createdAt : null,
+    arrived: raw.arrived === true,
   };
 }
 

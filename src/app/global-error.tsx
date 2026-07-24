@@ -8,6 +8,10 @@
  * layout that just failed. Hence inline styles and a bilingual message: it only
  * appears when everything else is gone, and it must not itself depend on
  * anything that could be the thing that broke.
+ *
+ * This is the one deliberate exception to "no literal hex in components": the
+ * stylesheet defining the tokens is exactly what is unavailable here, so the
+ * REDESIGN_V2_SPEC §1 light values are inlined by hand.
  */
 export default function GlobalError({ reset }: { error: Error; reset: () => void }) {
   return (
@@ -45,7 +49,7 @@ export default function GlobalError({ reset }: { error: Error; reset: () => void
             fontSize: "1rem",
             fontWeight: 600,
             color: "#fff",
-            background: "#008383",
+            background: "#047857",
             cursor: "pointer",
           }}
         >

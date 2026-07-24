@@ -13,6 +13,7 @@ import {
   CategorySection,
   type CategoryWithItems,
 } from "@/components/menu/category-section";
+import type { OptionCounts } from "@/components/menu/item-list";
 import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { interpolate } from "@/lib/i18n";
@@ -30,9 +31,11 @@ export type { CategoryWithItems };
 export function CategoryList({
   categories,
   restaurantId,
+  optionCounts,
 }: {
   categories: CategoryWithItems[];
   restaurantId: string;
+  optionCounts: OptionCounts;
 }) {
   const t = useT();
   const [isPending, startTransition] = useTransition();
@@ -94,6 +97,7 @@ export function CategoryList({
             onMove={(direction) => move(index, direction)}
             onToggleActive={(isActive) => toggleActive(category.id, isActive)}
             onRequestDelete={() => setPendingDelete(category)}
+            optionCounts={optionCounts}
           />
         ))}
       </div>

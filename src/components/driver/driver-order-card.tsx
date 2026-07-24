@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { Check, Loader2, MapPin, Navigation, Phone, Package, PackageCheck } from "lucide-react";
 import { toast } from "sonner";
 
-import { markPickedUp } from "@/app/driver/actions";
+import { markArrived, markPickedUp } from "@/app/driver/actions";
 import { MapThumb } from "@/components/orders/map-thumb";
 import { DeliverSheet } from "@/components/driver/deliver-sheet";
 import { useT } from "@/components/i18n/i18n-provider";
@@ -41,6 +41,14 @@ export function DriverOrderCard({ order }: { order: DriverOrder }) {
       const result = await markPickedUp(order.id);
       if (!result.ok) toast.error(result.error);
       else toast.success(t.driverApp.pickedUpDone);
+    });
+  }
+
+  function arrive() {
+    startTransition(async () => {
+      const result = await markArrived(order.id);
+      if (!result.ok) toast.error(result.error);
+      else toast.success(t.driverApp.arrivedDone);
     });
   }
 
@@ -148,14 +156,32 @@ export function DriverOrderCard({ order }: { order: DriverOrder }) {
       )}
 
       {isOut && (
-        <Button
-          className="h-14 w-full text-base"
-          disabled={isPending}
-          onClick={() => setDeliverOpen(true)}
-        >
-          <Check />
-          {t.driverApp.markDelivered}
-        </Button>
+        <div className="space-y-2">
+          {order.driver_arrived_at == null ? (
+            <Button
+              variant="outline"
+              className="h-12 w-full"
+              disabled={isPending}
+              onClick={arrive}
+            >
+              <MapPin />
+              {t.driverApp.arrived}
+            </Button>
+          ) : (
+            <p className="text-brand flex items-center justify-center gap-1.5 text-sm font-medium">
+              <Check className="size-4" />
+              {t.driverApp.arrivedDone}
+            </p>
+          )}
+          <Button
+            className="h-14 w-full text-base"
+            disabled={isPending}
+            onClick={() => setDeliverOpen(true)}
+          >
+            <Check />
+            {t.driverApp.markDelivered}
+          </Button>
+        </div>
       )}
 
       <DeliverSheet

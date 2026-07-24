@@ -1,10 +1,23 @@
-import { Eye, Plus, Sparkles, UtensilsCrossed } from "lucide-react";
+import {
+  ClipboardList,
+  ImagePlus,
+  Plus,
+  Sparkles,
+  UtensilsCrossed,
+} from "lucide-react";
 
+import { BulkPhotoDialog } from "@/components/menu/bulk-photo-dialog";
 import { CategoryDialog } from "@/components/menu/category-dialog";
 import { CategoryList } from "@/components/menu/category-list";
 import type { CategoryWithItems } from "@/components/menu/category-section";
 import { ItemDialog } from "@/components/menu/item-dialog";
-import { ItemList, type MenuItem } from "@/components/menu/item-list";
+import {
+  ItemList,
+  type MenuItem,
+  type OptionCounts,
+} from "@/components/menu/item-list";
+import { LivePreviewButton } from "@/components/menu/live-preview-button";
+import { PasteLinesDialog } from "@/components/menu/paste-lines-dialog";
 import { StarterMenuDialog } from "@/components/menu/starter-menu-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,21 +35,48 @@ export default async function MenuPage() {
   const [restaurant, t] = await Promise.all([getRestaurant(), getT()]);
   const supabase = await createClient();
 
-  // RLS scopes both queries to the signed-in restaurant; no filter needed.
-  const [{ data: categories }, { data: items }] = await Promise.all([
-    supabase
-      .from("menu_categories")
-      .select("id, name, is_active, sort_order")
-      .order("sort_order", { ascending: true }),
-    supabase
-      .from("menu_items")
-      .select(
-        "id, name, name_secondary, description, price, image_url, is_available, sort_order, category_id"
-      )
-      .order("sort_order", { ascending: true }),
-  ]);
+  // RLS scopes every query to the signed-in restaurant; no filter needed.
+  const [{ data: categories }, { data: items }, { data: groups }, { data: prep }] =
+    await Promise.all([
+      supabase
+        .from("menu_categories")
+        .select("id, name, is_active, sort_order")
+        .order("sort_order", { ascending: true }),
+      supabase
+        .from("menu_items")
+        .select(
+          "id, name, name_secondary, name_fa, description, description_secondary, description_fa, price, image_url, is_available, sort_order, category_id, tags, prep_minutes, auto_restore, cost"
+        )
+        .order("sort_order", { ascending: true }),
+      // Option-group option counts, for the «N أحجام · N إضافات» card meta (§7.1).
+      supabase.from("option_groups").select("item_id, max_select, options(count)"),
+      // Learned prep time per item (§D.2). Scoped to this restaurant by the RPC;
+      // returns only items with a trustworthy sample, so most start out empty.
+      supabase.rpc("learned_prep_minutes", {}),
+    ]);
 
-  const allItems = items ?? [];
+  // itemId → { median, sample }, attached to each item for the builder suggestion.
+  const prepByItem = new Map(
+    (prep ?? []).map((row) => [
+      row.menu_item_id,
+      { median: row.median_minutes, sample: row.sample_size },
+    ])
+  );
+
+  const allItems = (items ?? []).map((item) => ({
+    ...item,
+    learnedPrep: prepByItem.get(item.id) ?? null,
+  }));
+
+  // Fold groups into per-item counts: single-select groups are sizes, multi are
+  // extras. A group's option count arrives as options: [{ count }].
+  const optionCounts: OptionCounts = {};
+  for (const group of groups ?? []) {
+    const count = group.options?.[0]?.count ?? 0;
+    const meta = (optionCounts[group.item_id] ??= { sizes: 0, extras: 0 });
+    if ((group.max_select ?? 1) <= 1) meta.sizes += count;
+    else meta.extras += count;
+  }
 
   const withItems: CategoryWithItems[] = (categories ?? []).map((category) => ({
     ...category,
@@ -82,12 +122,19 @@ export default async function MenuPage() {
 
         <div className="flex flex-wrap items-center justify-end gap-2">
           {!isEmpty && restaurant?.slug && (
-            <Button asChild variant="outline">
-              <a href={`/r/${restaurant.slug}`} target="_blank" rel="noreferrer">
-                <Eye />
-                {t.menu.preview}
-              </a>
-            </Button>
+            <LivePreviewButton slug={restaurant.slug} />
+          )}
+          {!isEmpty && restaurant && totalItems > 0 && (
+            <BulkPhotoDialog
+              restaurantId={restaurant.id}
+              items={allItems.map((item) => ({ id: item.id, name: item.name }))}
+              trigger={
+                <Button variant="outline">
+                  <ImagePlus />
+                  {t.menu.bulkPhoto}
+                </Button>
+              }
+            />
           )}
           <CategoryDialog
             trigger={
@@ -133,6 +180,7 @@ export default async function MenuPage() {
           <CategoryList
             categories={withItems}
             restaurantId={restaurant!.id}
+            optionCounts={optionCounts}
           />
 
           {uncategorised.length > 0 && (
@@ -150,15 +198,24 @@ export default async function MenuPage() {
                 items={uncategorised}
                 restaurantId={restaurant!.id}
                 categoryId={null}
+                optionCounts={optionCounts}
               />
-              <div className="border-t p-2">
+              <div className="flex items-center gap-1 border-t p-2">
                 <ItemDialog
                   restaurantId={restaurant!.id}
                   categoryId={null}
                   trigger={
-                    <Button variant="ghost" size="sm" className="w-full">
+                    <Button variant="ghost" size="sm" className="flex-1">
                       <Plus />
                       {t.menu.addItemUncategorised}
+                    </Button>
+                  }
+                />
+                <PasteLinesDialog
+                  categoryId={null}
+                  trigger={
+                    <Button variant="ghost" size="sm" aria-label={t.menu.pasteLines}>
+                      <ClipboardList className="size-4" />
                     </Button>
                   }
                 />

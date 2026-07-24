@@ -13,7 +13,7 @@ export async function generateMetadata() {
 // Kept in step with DRIVER_SELECT in use-driver-orders, so the server's first
 // paint and the client's live refetch read the same shape.
 const DRIVER_SELECT =
-  "id, order_number, status, customer_name, customer_phone, customer_landmark, customer_lat, customer_lng, delivery_notes, subtotal, delivery_fee, total, payment_status, cash_collected, created_at, order_items(id, name_snapshot, price_snapshot, quantity, notes)";
+  "id, order_number, status, customer_name, customer_phone, customer_landmark, customer_lat, customer_lng, delivery_notes, subtotal, delivery_fee, total, payment_status, cash_collected, created_at, driver_arrived_at, order_items(id, name_snapshot, price_snapshot, quantity, notes)";
 
 /** Midnight today in Baghdad (UTC+3, no DST), as an ISO instant. */
 function baghdadDayStartISO(): string {
@@ -33,7 +33,7 @@ export default async function DriverHomePage() {
   // active orders are only those assigned to them, and the delivered-today set
   // (for "cash in hand") is likewise their own.
   const [{ data: restaurant }, { data: orders }, { data: doneToday }] = await Promise.all([
-    supabase.from("restaurants").select("name").maybeSingle(),
+    supabase.from("restaurants").select("name, lat, lng").maybeSingle(),
     supabase
       .from("orders")
       .select(DRIVER_SELECT)
@@ -70,7 +70,14 @@ export default async function DriverHomePage() {
       />
 
       <main className="mx-auto w-full max-w-md flex-1 p-4">
-        <DriverOrderList initial={initial} />
+        <DriverOrderList
+          initial={initial}
+          origin={
+            restaurant?.lat != null && restaurant?.lng != null
+              ? { lat: Number(restaurant.lat), lng: Number(restaurant.lng) }
+              : null
+          }
+        />
       </main>
     </>
   );

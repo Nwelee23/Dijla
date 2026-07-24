@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { CartBar } from "@/components/customer/cart-bar";
 import { OrderTracker } from "@/components/customer/order-tracker";
 import { ItemSheet } from "@/components/customer/item-sheet";
-import { MenuList } from "@/components/customer/menu-list";
+import { MenuBrowser } from "@/components/customer/menu-browser";
 import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,10 +28,12 @@ export function MenuView({
   menu,
   qrToken,
   openState,
+  layout,
 }: {
   menu: DineInMenu;
   qrToken: string;
   openState: OpenState;
+  layout?: string | null;
 }) {
   const t = useT();
   const cart = useCart(menu.table.id);
@@ -51,13 +53,18 @@ export function MenuView({
   // A cart can outlive the menu it was built from — the phone was locked for an
   // hour and the kitchen sold out in the meantime. Work out which lines are
   // still orderable during render rather than mutating the cart in an effect.
+  // Only currently-available items are orderable. A sold-out dish stays visible
+  // (dimmed) but a stale cart line for it reads as unavailable, and the server
+  // refuses it either way.
   const liveIds = new Set(
-    menu.categories.flatMap((category) => category.items.map((item) => item.id))
+    menu.categories.flatMap((category) =>
+      category.items.filter((item) => item.isAvailable).map((item) => item.id)
+    )
   );
   const orderableLines = cart.lines.filter((line) => liveIds.has(line.itemId));
   const hasStaleLines = orderableLines.length !== cart.lines.length;
   const orderableTotal = orderableLines.reduce(
-    (sum, line) => sum + line.price * line.quantity,
+    (sum, line) => sum + (line.price + (line.extra ?? 0)) * line.quantity,
     0
   );
   const orderableCount = orderableLines.reduce(
@@ -111,6 +118,11 @@ export function MenuView({
     setItemOpen(true);
   }
 
+  function quickAdd(item: MenuItem) {
+    cart.add(item, 1, "", []);
+    toast.success(t.customer.added);
+  }
+
   if (placed.order) {
     return (
       <OrderTracker
@@ -145,11 +157,13 @@ export function MenuView({
         </div>
       )}
 
-      <MenuList
+      <MenuBrowser
         categories={menu.categories}
         currency={currency}
         disabled={!openState.isOpen}
+        layout={layout}
         onSelect={openItem}
+        onQuickAdd={quickAdd}
       />
 
       <ItemSheet
@@ -157,8 +171,8 @@ export function MenuView({
         currency={currency}
         open={itemOpen}
         onOpenChange={setItemOpen}
-        onAdd={(item, quantity, note) => {
-          cart.add(item, quantity, note);
+        onAdd={(item, quantity, note, options) => {
+          cart.add(item, quantity, note, options);
           toast.success(t.customer.added);
         }}
       />
@@ -193,6 +207,11 @@ export function MenuView({
                     >
                       <div className="min-w-0 flex-1">
                         <p className="font-medium">{line.name}</p>
+                        {line.options && line.options.length > 0 && (
+                          <p className="text-muted-foreground text-sm">
+                            {line.options.map((o) => o.name).join("، ")}
+                          </p>
+                        )}
                         {line.note && (
                           <p className="text-muted-foreground text-sm">
                             {line.note}
@@ -200,7 +219,10 @@ export function MenuView({
                         )}
                         {liveIds.has(line.itemId) ? (
                           <p className="text-muted-foreground text-sm tabular-nums">
-                            {formatMoney(line.price * line.quantity, currency)}
+                            {formatMoney(
+                              (line.price + (line.extra ?? 0)) * line.quantity,
+                              currency
+                            )}
                           </p>
                         ) : (
                           <p className="text-destructive text-sm font-medium">

@@ -42,7 +42,7 @@ export function MapThumb({
       ))}
 
       {/* The window is built so the pin lands exactly at the centre. */}
-      <span className="absolute left-1/2 top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#008383] shadow" />
+      <span className="bg-brand absolute left-1/2 top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow" />
     </div>
   );
 }

@@ -1,8 +1,7 @@
 import { cache } from "react";
-import Image from "next/image";
-import { QrCode, Store, UtensilsCrossed } from "lucide-react";
+import { QrCode, UtensilsCrossed } from "lucide-react";
 
-import { LanguageSwitcher } from "@/components/i18n/language-switcher";
+import { MenuHeader } from "@/components/customer/menu-header";
 import { MenuView } from "@/components/customer/menu-view";
 import { interpolate } from "@/lib/i18n";
 import { getT } from "@/lib/i18n/server";
@@ -48,15 +47,22 @@ const loadMenu = cache(async (token: string) => {
  * are not the diner's business. Read server-side and scoped to the restaurant
  * the token already resolved to.
  */
-async function loadOpenState(restaurantId: string) {
+async function loadContext(restaurantId: string) {
   const admin = createAdminClient();
-  const { data } = await admin
-    .from("restaurants")
-    .select("settings")
-    .eq("id", restaurantId)
-    .maybeSingle();
 
-  return getOpenState(data?.settings);
+  // Bring back yesterday's sold-out items at the start of the service day (§6),
+  // lazily on first read. Best effort — a failed restore must never blank the
+  // menu, so it is fired alongside the read and its result ignored.
+  const [{ data }] = await Promise.all([
+    admin
+      .from("restaurants")
+      .select("settings, menu_layout")
+      .eq("id", restaurantId)
+      .maybeSingle(),
+    admin.rpc("restore_sold_out", { p_restaurant: restaurantId }),
+  ]);
+
+  return { openState: getOpenState(data?.settings), layout: data?.menu_layout ?? null };
 }
 
 export default async function TableMenuPage({
@@ -84,36 +90,18 @@ export default async function TableMenuPage({
   }
 
   const { restaurant, table } = menu;
-  const open = await loadOpenState(restaurant.id);
+  const { openState, layout } = await loadContext(restaurant.id);
 
   return (
     <main className="mx-auto w-full max-w-lg flex-1 px-4">
-      <header className="flex items-center gap-3 py-4">
-        {restaurant.logoUrl ? (
-          <Image
-            src={restaurant.logoUrl}
-            alt=""
-            width={48}
-            height={48}
-            className="size-12 shrink-0 rounded-xl object-cover"
-          />
-        ) : (
-          <span className="bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-xl">
-            <Store className="size-6" />
-          </span>
-        )}
-
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-lg font-bold leading-tight">
-            {restaurant.name}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {interpolate(t.customer.tableLabel, { number: table.tableNumber })}
-          </p>
-        </div>
-
-        <LanguageSwitcher />
-      </header>
+      <MenuHeader
+        name={restaurant.name}
+        logoUrl={restaurant.logoUrl}
+        isOpen={openState.isOpen}
+        contextLabel={interpolate(t.customer.tableLabel, {
+          number: table.tableNumber,
+        })}
+      />
 
       {menu.categories.length === 0 ? (
         <div className="text-muted-foreground flex flex-col items-center gap-3 py-16 text-center">
@@ -126,7 +114,12 @@ export default async function TableMenuPage({
           </div>
         </div>
       ) : (
-        <MenuView menu={menu} qrToken={qr_token} openState={open} />
+        <MenuView
+          menu={menu}
+          qrToken={qr_token}
+          openState={openState}
+          layout={layout}
+        />
       )}
     </main>
   );

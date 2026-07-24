@@ -17,8 +17,11 @@ import { LOCALES, LOCALE_META, type Locale } from "@/lib/i18n/config";
 
 export function LanguageSwitcher({
   variant = "ghost",
+  className,
 }: {
   variant?: "ghost" | "outline";
+  /** Extra classes for the trigger — e.g. white text when it sits on a gradient. */
+  className?: string;
 }) {
   const { locale, t } = useI18n();
   const router = useRouter();
@@ -41,6 +44,7 @@ export function LanguageSwitcher({
           size="sm"
           aria-label={t.common.language}
           disabled={isPending}
+          className={className}
         >
           {isPending ? (
             <Loader2 className="animate-spin" />

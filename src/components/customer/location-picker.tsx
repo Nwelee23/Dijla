@@ -89,7 +89,7 @@ export function LocationPicker({
       // bundler-mangled paths and 404 in production.
       const icon = leaflet.divIcon({
         className: "",
-        html: `<div style="width:28px;height:28px;border-radius:9999px;background:#008383;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4)"></div>`,
+        html: `<div style="width:28px;height:28px;border-radius:9999px;background:var(--brand);border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4)"></div>`,
         iconSize: [28, 28],
         iconAnchor: [14, 14],
       });

@@ -8,7 +8,7 @@ import { CartBar } from "@/components/customer/cart-bar";
 import { CheckoutSheet, type CheckoutDetails } from "@/components/customer/checkout-sheet";
 import { OrderTracker } from "@/components/customer/order-tracker";
 import { ItemSheet } from "@/components/customer/item-sheet";
-import { MenuList } from "@/components/customer/menu-list";
+import { MenuBrowser } from "@/components/customer/menu-browser";
 import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,11 +36,13 @@ export function DeliveryView({
   menu,
   openState,
   canDeliver,
+  layout,
 }: {
   menu: RestaurantMenu;
   openState: OpenState;
   /** Subscription tier allows delivery. Decided server-side; see lib/plan.ts. */
   canDeliver: boolean;
+  layout?: string | null;
 }) {
   const t = useT();
   // Scoped by restaurant: someone ordering from two restaurants in one evening
@@ -125,14 +127,18 @@ export function DeliveryView({
   // still wants its menu online. Show the menu, take no orders.
   const takesOrders = offered.length > 0;
 
-  // A basket can outlive the menu it was built from.
+  // A basket can outlive the menu it was built from — and a dish can sell out
+  // between building it and checkout. Only available items are orderable; the
+  // server refuses the rest regardless.
   const liveIds = new Set(
-    menu.categories.flatMap((category) => category.items.map((item) => item.id))
+    menu.categories.flatMap((category) =>
+      category.items.filter((item) => item.isAvailable).map((item) => item.id)
+    )
   );
   const orderableLines = cart.lines.filter((line) => liveIds.has(line.itemId));
   const hasStaleLines = orderableLines.length !== cart.lines.length;
   const subtotal = orderableLines.reduce(
-    (sum, line) => sum + line.price * line.quantity,
+    (sum, line) => sum + (line.price + (line.extra ?? 0)) * line.quantity,
     0
   );
   const count = orderableLines.reduce((sum, line) => sum + line.quantity, 0);
@@ -184,13 +190,18 @@ export function DeliveryView({
         </div>
       )}
 
-      <MenuList
+      <MenuBrowser
         categories={menu.categories}
         currency={currency}
         disabled={!openState.isOpen || !takesOrders}
+        layout={layout}
         onSelect={(item) => {
           setSelected(item);
           setItemOpen(true);
+        }}
+        onQuickAdd={(item) => {
+          cart.add(item, 1, "", []);
+          toast.success(t.customer.added);
         }}
       />
 
@@ -199,8 +210,8 @@ export function DeliveryView({
         currency={currency}
         open={itemOpen}
         onOpenChange={setItemOpen}
-        onAdd={(item, quantity, note) => {
-          cart.add(item, quantity, note);
+        onAdd={(item, quantity, note, options) => {
+          cart.add(item, quantity, note, options);
           toast.success(t.customer.added);
         }}
       />
@@ -235,6 +246,11 @@ export function DeliveryView({
                     >
                       <div className="min-w-0 flex-1">
                         <p className="font-medium">{line.name}</p>
+                        {line.options && line.options.length > 0 && (
+                          <p className="text-muted-foreground text-sm">
+                            {line.options.map((o) => o.name).join("، ")}
+                          </p>
+                        )}
                         {line.note && (
                           <p className="text-muted-foreground text-sm">
                             {line.note}
@@ -242,7 +258,10 @@ export function DeliveryView({
                         )}
                         {liveIds.has(line.itemId) ? (
                           <p className="text-muted-foreground text-sm tabular-nums">
-                            {formatMoney(line.price * line.quantity, currency)}
+                            {formatMoney(
+                              (line.price + (line.extra ?? 0)) * line.quantity,
+                              currency
+                            )}
                           </p>
                         ) : (
                           <p className="text-destructive text-sm font-medium">

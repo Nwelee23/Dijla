@@ -1,32 +1,37 @@
-// Generates the PWA icon set from an inline SVG. Placeholder art — swap the
-// river mark for the real logo later and re-run: npm run icons
+// Generates the PWA icon set from the Dijla mark (REDESIGN_V2_SPEC §3) — a
+// flowing river line above a bowl. Re-run after editing the mark: npm run icons
 import sharp from "sharp";
 import fs from "node:fs";
 
 const OUT = "./public/icons";
-const BRAND = "#008383";
+const BRAND = "#047857"; // emerald-700, the light-mode brand
+const INK = "#ffffff"; // brand-foreground on the tile
 
-/** @param inset 0 = full bleed (maskable), higher = more padding */
+/**
+ * The mark on a 100×100 tile — the same geometry as the LogoMark component.
+ * @param rounded rounded tile corners (standard) vs square full-bleed (maskable)
+ * @param inset   padding fraction so the mark clears a maskable safe area
+ */
 function svg({ rounded, inset }) {
-  const S = 512;
   const scale = 1 - inset * 2;
-  // One bold S-curve. Anything finer disappears at 192px on a phone.
-  const river = `
-    <g transform="translate(${S * inset} ${S * inset}) scale(${scale})">
-      <path d="M256 48 C 128 132, 128 216, 256 256 C 384 296, 384 380, 256 464"
-            stroke="#ffffff" stroke-width="58" stroke-linecap="round" fill="none"/>
+  const t = 100 * inset;
+  const mark = `
+    <g transform="translate(${t} ${t}) scale(${scale})">
+      <path d="M26 44c9-7 14 4 24 0s15-8 24-1" stroke="${INK}" stroke-width="5.5"
+            stroke-linecap="round" fill="none" opacity="0.55"/>
+      <path d="M24 56c0 12 11 20 26 20s26-8 26-20z" fill="${INK}"/>
     </g>`;
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${S}" height="${S}" viewBox="0 0 ${S} ${S}">
-    <rect width="${S}" height="${S}" ${rounded ? 'rx="112"' : ""} fill="${BRAND}"/>
-    ${river}
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 100 100">
+    <rect width="100" height="100" ${rounded ? 'rx="24"' : ""} fill="${BRAND}"/>
+    ${mark}
   </svg>`;
 }
 
 const standard = Buffer.from(svg({ rounded: true, inset: 0 }));
-// Maskable icons get cropped to a circle by the launcher, so the mark must sit
-// inside the middle ~80%. Background is full bleed.
-const maskable = Buffer.from(svg({ rounded: false, inset: 0.14 }));
+// Maskable icons are cropped to a shape by the launcher, so the mark sits inside
+// the middle ~80% and the emerald is full bleed to the edges.
+const maskable = Buffer.from(svg({ rounded: false, inset: 0.12 }));
 
 const jobs = [
   ["icon-192.png", standard, 192],

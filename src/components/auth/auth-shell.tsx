@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Waves } from "lucide-react";
 
+import { LogoMark } from "@/components/brand/logo-mark";
 import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 
 /**
@@ -27,7 +27,8 @@ export function AuthShell({
       <div className="flex w-full max-w-[340px] items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-bold">
           <span className="dj-logo-tile">
-            <Waves className="size-6" />
+            {/* plain mark: inherits the tile's emerald currentColor on glass */}
+            <LogoMark variant="plain" className="size-6" />
           </span>
           <span className="text-lg">{brand}</span>
         </Link>

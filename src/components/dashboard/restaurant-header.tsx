@@ -4,6 +4,7 @@ import { ShieldCheck, Store } from "lucide-react";
 
 import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { SignOutButton } from "@/components/layout/sign-out-button";
+import { DashboardThemeToggle } from "@/components/theme/dashboard-theme-toggle";
 import { getT } from "@/lib/i18n/server";
 import type { Restaurant } from "@/lib/restaurant";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,7 @@ export async function RestaurantHeader({
               </Link>
             </Button>
           )}
+          <DashboardThemeToggle />
           <LanguageSwitcher />
           <SignOutButton />
         </div>

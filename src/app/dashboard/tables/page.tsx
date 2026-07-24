@@ -3,13 +3,14 @@ import Link from "next/link";
 
 import { CopyLink } from "@/components/tables/copy-link";
 import { QrPreview } from "@/components/tables/qr-preview";
+import { RestaurantQr } from "@/components/tables/restaurant-qr";
 import { TableDialog } from "@/components/tables/table-dialog";
 import { TableList } from "@/components/tables/table-list";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { appUrl } from "@/lib/app-url";
 import { getT } from "@/lib/i18n/server";
-import { qrSvg, tableUrl } from "@/lib/qr";
+import { qrSvg, restaurantUrl, tableUrl } from "@/lib/qr";
 import { getRestaurant } from "@/lib/restaurant";
 import { createClient } from "@/lib/supabase/server";
 
@@ -84,7 +85,15 @@ export default async function TablesPage() {
             <p className="text-sm font-medium">{t.tables.deliveryLink}</p>
             <p className="text-muted-foreground text-xs">{t.tables.deliveryLinkHint}</p>
           </div>
-          <CopyLink url={`${origin.replace(/\/$/, "")}/r/${restaurant.slug}`} />
+          <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <CopyLink url={restaurantUrl(restaurant.slug, origin)} />
+            </div>
+            <RestaurantQr
+              url={restaurantUrl(restaurant.slug, origin)}
+              svg={await qrSvg(restaurantUrl(restaurant.slug, origin))}
+            />
+          </div>
         </div>
       )}
 

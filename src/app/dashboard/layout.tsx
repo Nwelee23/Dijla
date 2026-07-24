@@ -5,6 +5,8 @@ import {
   DashboardSidebar,
 } from "@/components/dashboard/dashboard-nav";
 import { RestaurantHeader } from "@/components/dashboard/restaurant-header";
+import { PushSetup } from "@/components/pwa/push-setup";
+import { StaffThemeScope } from "@/components/theme/staff-theme-scope";
 import { TrialBanner } from "@/components/dashboard/trial-banner";
 import { VerificationBanner } from "@/components/dashboard/verification-banner";
 import { TrialExpired } from "@/components/dashboard/trial-expired";
@@ -50,12 +52,11 @@ export default async function DashboardLayout({
   }
 
   return (
-    // River-night dark across the whole dashboard (ORDERS_DASHBOARD_SPEC §1).
-    // `dark` scopes the theme (and activates dark: variants) to this subtree
-    // only, so customer, auth and admin surfaces are untouched; `dj-dashboard`
-    // tints it teal and carries the print reset. text-foreground is set here so
-    // children recompute their colour from the dark tokens, not the light body.
-    <div className="dark dj-dashboard bg-background text-foreground flex flex-1 flex-col">
+    // Dark across the whole dashboard by default (ORDERS_DASHBOARD_SPEC §1),
+    // scoped to this subtree so customer and auth surfaces are untouched. The
+    // scope owns its own dark/light choice, independent of the public theme —
+    // see StaffThemeScope.
+    <StaffThemeScope className="flex flex-1 flex-col">
       {/* Chrome is screen-only: a printed report (cash sheet, QR sheet) must be
           the content alone, not the nav and header around it. */}
       <div className="print:hidden">
@@ -69,6 +70,7 @@ export default async function DashboardLayout({
           note={restaurant.verification_note}
         />
         <TrialBanner state={subscription} />
+        <PushSetup />
         <DashboardMobileNav />
       </div>
 
@@ -78,6 +80,6 @@ export default async function DashboardLayout({
         </div>
         <main className="min-w-0 flex-1">{children}</main>
       </div>
-    </div>
+    </StaffThemeScope>
   );
 }

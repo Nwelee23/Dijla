@@ -1,5 +1,8 @@
+import { after } from "next/server";
+
 import { normalizeIraqiPhone } from "@/lib/auth/phone";
 import { getOpenState } from "@/lib/opening";
+import { sendNewOrderPush } from "@/lib/push/send";
 import { canTakeDelivery, planFromRow } from "@/lib/plan";
 import {
   RATE_LIMIT_MAX_ORDERS,
@@ -391,6 +394,18 @@ export async function POST(request: Request) {
     await admin.from("orders").delete().eq("id", created.id);
     return fail("server_error", 500);
   }
+
+  // Web Push to the restaurant's staff (§11). Runs after the response is sent, so
+  // it never adds latency to — or fails — the customer's order confirmation.
+  after(() =>
+    sendNewOrderPush(restaurantId, {
+      orderNumber: created.order_number,
+      type: order.mode,
+      total,
+      context:
+        order.mode === "dine_in" ? null : order.customer.name || null,
+    })
+  );
 
   return Response.json({
     ok: true,

@@ -159,6 +159,34 @@ export async function markPickedUp(orderId: string): Promise<DriverActionResult>
 }
 
 /**
+ * Driver taps «وصلت» at the door (§C.3): stamps driver_arrived_at so the
+ * customer's tracking page shows the driver has arrived. Same ownership gate as
+ * every driver write; the whitelist is this one column and nothing else.
+ *
+ * A clean hook for a later WhatsApp/SMS "driver arrived" nudge (PHASE_6 module
+ * B) lives here — not built, so the live tracking-page update is the whole
+ * notification for now.
+ */
+export async function markArrived(orderId: string): Promise<DriverActionResult> {
+  const t = await getT();
+  const found = await assignedOrder(orderId);
+  if (!found) return { ok: false, error: t.driverApp.actionFailed };
+  if (found.order.status !== "out_for_delivery") {
+    return { ok: false, error: t.driverApp.actionFailed };
+  }
+
+  const { error } = await found.admin
+    .from("orders")
+    .update({ driver_arrived_at: new Date().toISOString() })
+    .eq("id", orderId);
+
+  if (error) return { ok: false, error: t.driverApp.actionFailed };
+
+  revalidatePath("/driver");
+  return { ok: true };
+}
+
+/**
  * Driver hands over the food and takes the cash, in one step because that is one
  * moment: out_for_delivery -> delivered, recording what was actually collected
  * and marking it paid. COD leaves no room for a delivered-but-unpaid limbo.

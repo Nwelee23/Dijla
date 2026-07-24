@@ -1,9 +1,8 @@
 import { cache } from "react";
-import Image from "next/image";
 import { Store, UtensilsCrossed } from "lucide-react";
 
 import { DeliveryView } from "@/components/customer/delivery-view";
-import { LanguageSwitcher } from "@/components/i18n/language-switcher";
+import { MenuHeader } from "@/components/customer/menu-header";
 import { getT } from "@/lib/i18n/server";
 import { parseRestaurantMenu } from "@/lib/menu";
 import { getOpenState } from "@/lib/opening";
@@ -37,17 +36,24 @@ async function loadContext(restaurantId: string) {
   const admin = createAdminClient();
 
   const [restaurant, subscription] = await Promise.all([
-    admin.from("restaurants").select("settings").eq("id", restaurantId).maybeSingle(),
+    admin
+      .from("restaurants")
+      .select("settings, menu_layout")
+      .eq("id", restaurantId)
+      .maybeSingle(),
     admin
       .from("subscriptions")
       .select("tier, status, end_date")
       .eq("restaurant_id", restaurantId)
       .maybeSingle(),
+    // Lazy next-service-day restore of sold-out items (§6). Best effort.
+    admin.rpc("restore_sold_out", { p_restaurant: restaurantId }),
   ]);
 
   return {
     openState: getOpenState(restaurant.data?.settings),
     canDeliver: canTakeDelivery(planFromRow(subscription.data)),
+    layout: restaurant.data?.menu_layout ?? null,
   };
 }
 
@@ -86,33 +92,15 @@ export default async function RestaurantMenuPage({
   }
 
   const { restaurant } = menu;
-  const { openState, canDeliver } = await loadContext(restaurant.id);
+  const { openState, canDeliver, layout } = await loadContext(restaurant.id);
 
   return (
     <main className="mx-auto w-full max-w-lg flex-1 px-4">
-      <header className="flex items-center gap-3 py-4">
-        {restaurant.logoUrl ? (
-          <Image
-            src={restaurant.logoUrl}
-            alt=""
-            width={48}
-            height={48}
-            className="size-12 shrink-0 rounded-xl object-cover"
-          />
-        ) : (
-          <span className="bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-xl">
-            <Store className="size-6" />
-          </span>
-        )}
-
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-lg font-bold leading-tight">
-            {restaurant.name}
-          </h1>
-        </div>
-
-        <LanguageSwitcher />
-      </header>
+      <MenuHeader
+        name={restaurant.name}
+        logoUrl={restaurant.logoUrl}
+        isOpen={openState.isOpen}
+      />
 
       {menu.categories.length === 0 ? (
         <div className="text-muted-foreground flex flex-col items-center gap-3 py-16 text-center">
@@ -125,7 +113,12 @@ export default async function RestaurantMenuPage({
           </div>
         </div>
       ) : (
-        <DeliveryView menu={menu} openState={openState} canDeliver={canDeliver} />
+        <DeliveryView
+          menu={menu}
+          openState={openState}
+          canDeliver={canDeliver}
+          layout={layout}
+        />
       )}
     </main>
   );

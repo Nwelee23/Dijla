@@ -1,10 +1,22 @@
 "use client";
 
-import { ChevronDown, ChevronUp, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  ClipboardList,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 
 import { CategoryDialog } from "@/components/menu/category-dialog";
 import { ItemDialog } from "@/components/menu/item-dialog";
-import { ItemList, type MenuItem } from "@/components/menu/item-list";
+import {
+  ItemList,
+  type MenuItem,
+  type OptionCounts,
+} from "@/components/menu/item-list";
+import { PasteLinesDialog } from "@/components/menu/paste-lines-dialog";
 import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -29,6 +41,7 @@ export function CategorySection({
   onMove,
   onToggleActive,
   onRequestDelete,
+  optionCounts,
 }: {
   category: CategoryWithItems;
   restaurantId: string;
@@ -38,6 +51,7 @@ export function CategorySection({
   onMove: (direction: -1 | 1) => void;
   onToggleActive: (isActive: boolean) => void;
   onRequestDelete: () => void;
+  optionCounts: OptionCounts;
 }) {
   const t = useT();
 
@@ -118,16 +132,25 @@ export function CategorySection({
         items={category.items}
         restaurantId={restaurantId}
         categoryId={category.id}
+        optionCounts={optionCounts}
       />
 
-      <div className="border-t p-2">
+      <div className="flex items-center gap-1 border-t p-2">
         <ItemDialog
           restaurantId={restaurantId}
           categoryId={category.id}
           trigger={
-            <Button variant="ghost" size="sm" className="w-full">
+            <Button variant="ghost" size="sm" className="flex-1">
               <Plus />
               {interpolate(t.menu.addItemTo, { name: category.name })}
+            </Button>
+          }
+        />
+        <PasteLinesDialog
+          categoryId={category.id}
+          trigger={
+            <Button variant="ghost" size="sm" aria-label={t.menu.pasteLines}>
+              <ClipboardList className="size-4" />
             </Button>
           }
         />

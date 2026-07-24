@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight, ChefHat, Wifi, WifiOff } from "lucide-react";
 
@@ -8,6 +7,7 @@ import { KitchenCard } from "@/components/orders/kitchen-card";
 import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { useRealtimeOrders, type LiveOrder } from "@/lib/hooks/use-realtime-orders";
+import { useScreenWakeLock } from "@/lib/hooks/use-screen-wake-lock";
 import { isActive } from "@/lib/order-status";
 import type { PrepThresholds } from "@/lib/order-timing";
 import { cn } from "@/lib/utils";
@@ -32,42 +32,8 @@ export function KitchenBoard({
   const t = useT();
   const { orders, isLive } = useRealtimeOrders(initialOrders);
 
-  useEffect(() => {
-    // Not in every browser (and requires HTTPS + a visible page); degrade
-    // quietly. Typed locally so the build does not depend on lib.dom shipping
-    // the Wake Lock definitions.
-    type Sentinel = { release: () => Promise<void> };
-    const wakeLock = (
-      navigator as Navigator & {
-        wakeLock?: { request: (type: "screen") => Promise<Sentinel> };
-      }
-    ).wakeLock;
-    if (!wakeLock) return;
-
-    let sentinel: Sentinel | null = null;
-    let released = false;
-
-    const request = async () => {
-      try {
-        sentinel = await wakeLock.request("screen");
-      } catch {
-        // Denied or not allowed right now — nothing to do but let the screen sleep.
-      }
-    };
-    void request();
-
-    // A hidden tab drops the lock; take it back when the tablet is looked at again.
-    const onVisible = () => {
-      if (document.visibilityState === "visible" && !released) void request();
-    };
-    document.addEventListener("visibilitychange", onVisible);
-
-    return () => {
-      released = true;
-      document.removeEventListener("visibilitychange", onVisible);
-      void sentinel?.release().catch(() => {});
-    };
-  }, []);
+  // The kitchen screen stays on the whole shift.
+  useScreenWakeLock(true);
 
   const cooking = orders.filter((order) => isActive(order.status)).sort(byOldest);
 

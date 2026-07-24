@@ -100,3 +100,66 @@ self.addEventListener("fetch", (event) => {
     );
   }
 });
+
+/*
+ * Web Push (REDESIGN_V2_SPEC §11). A new-order push arrives even when the
+ * dashboard is closed; the notification is Arabic (the dashboard is Arabic-first)
+ * and a tap focuses the orders board. The payload carries no PII beyond a first
+ * name / table label, and nothing is cached here.
+ */
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = {};
+  }
+
+  const number = data.orderNumber;
+  const typeLabel =
+    data.type === "delivery"
+      ? "توصيل"
+      : data.type === "pickup"
+        ? "استلام"
+        : "طاولة";
+
+  const parts = [typeLabel];
+  if (data.context) parts.push(data.context);
+  if (typeof data.total === "number") parts.push(`${data.total} د.ع`);
+
+  const title = number ? `طلب جديد #${number}` : "طلب جديد";
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: parts.join(" · "),
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      dir: "rtl",
+      lang: "ar",
+      tag: number ? `order-${number}` : "order",
+      renotify: true,
+      requireInteraction: true,
+      data: { url: "/dashboard/orders" },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target =
+    (event.notification.data && event.notification.data.url) ||
+    "/dashboard/orders";
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        for (const client of clientList) {
+          if (client.url.includes("/dashboard") && "focus" in client) {
+            return client.focus();
+          }
+        }
+        return self.clients.openWindow(target);
+      })
+  );
+});

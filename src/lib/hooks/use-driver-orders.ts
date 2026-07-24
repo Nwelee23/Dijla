@@ -27,6 +27,7 @@ export type DriverOrder = Pick<
   | "payment_status"
   | "cash_collected"
   | "created_at"
+  | "driver_arrived_at"
 > & { items: DriverOrderItem[] };
 
 /**
@@ -36,7 +37,7 @@ export type DriverOrder = Pick<
  * driver's hands: ready to collect, or already out.
  */
 const DRIVER_SELECT =
-  "id, order_number, status, customer_name, customer_phone, customer_landmark, customer_lat, customer_lng, delivery_notes, subtotal, delivery_fee, total, payment_status, cash_collected, created_at, order_items(id, name_snapshot, price_snapshot, quantity, notes)";
+  "id, order_number, status, customer_name, customer_phone, customer_landmark, customer_lat, customer_lng, delivery_notes, subtotal, delivery_fee, total, payment_status, cash_collected, created_at, driver_arrived_at, order_items(id, name_snapshot, price_snapshot, quantity, notes)";
 
 /** What a driver still has to do something about. Delivered ones drop off. */
 const ACTIVE = ["ready", "out_for_delivery"] as const;

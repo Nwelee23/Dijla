@@ -6,6 +6,7 @@ import { I18nProvider } from "@/components/i18n/i18n-provider";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { OfflineBanner } from "@/components/pwa/offline-banner";
 import { ServiceWorkerRegistrar } from "@/components/pwa/service-worker-registrar";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { LOCALE_META } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n";
@@ -45,8 +46,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // Matches --brand / manifest theme_color, so the status bar blends with the app.
-  themeColor: "#008383",
+  // One per mode, so the browser chrome matches the surface instead of fighting
+  // it (REDESIGN_V2_SPEC §2). Values are --background from each palette.
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fafaf9" },
+    { media: "(prefers-color-scheme: dark)", color: "#0c0a09" },
+  ],
   viewportFit: "cover",
 };
 
@@ -60,22 +65,27 @@ export default async function RootLayout({
   const { dir, tag } = LOCALE_META[locale];
 
   return (
+    // suppressHydrationWarning: next-themes writes the theme class onto <html>
+    // before React hydrates, so the server markup deliberately does not match.
     <html
       lang={tag}
       dir={dir}
       className={`${cairo.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <I18nProvider locale={locale} dictionary={dictionary}>
-          {/* Radix reads direction from here for menus, sliders and tabs. */}
-          <Direction.DirectionProvider dir={dir}>
-            <OfflineBanner />
-            {children}
-            <InstallPrompt />
-            <Toaster position="top-center" richColors />
-            <ServiceWorkerRegistrar />
-          </Direction.DirectionProvider>
-        </I18nProvider>
+        <ThemeProvider>
+          <I18nProvider locale={locale} dictionary={dictionary}>
+            {/* Radix reads direction from here for menus, sliders and tabs. */}
+            <Direction.DirectionProvider dir={dir}>
+              <OfflineBanner />
+              {children}
+              <InstallPrompt />
+              <Toaster position="top-center" richColors />
+              <ServiceWorkerRegistrar />
+            </Direction.DirectionProvider>
+          </I18nProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

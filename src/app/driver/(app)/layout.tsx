@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { StaffThemeScope } from "@/components/theme/staff-theme-scope";
 import { getProfile, getUser } from "@/lib/auth/user";
 
 /**
@@ -31,11 +32,11 @@ export default async function DriverAppLayout({
   if (!profile || profile.role !== "driver") redirect("/dashboard");
   if (profile.is_active === false) redirect("/driver/login?disabled=1");
 
-  // River-night dark for the driver app (DRIVER_REPORTS_ADMIN_SPEC §1), scoped
-  // to this subtree via the same tokens as the dashboard.
+  // Dark by default for the driver app (DRIVER_REPORTS_ADMIN_SPEC §1), on the
+  // same scope and the same tokens as the dashboard.
   return (
-    <div className="dark dj-dashboard bg-background text-foreground flex min-h-dvh flex-col">
+    <StaffThemeScope className="flex min-h-dvh flex-col">
       {children}
-    </div>
+    </StaffThemeScope>
   );
 }

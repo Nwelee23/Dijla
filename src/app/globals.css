@@ -2,12 +2,18 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+/* Dark applies inside any .dark scope, UNLESS a nearer .light scope overrides it
+   — the staff surfaces can be pinned light while the document root is dark. The
+   public light theme is marked with `theme-light` (not `.light`, see
+   theme-provider.tsx) precisely so it never counts as a .light ancestor and so
+   never suppresses a staff .dark scope nested beneath it. */
+@custom-variant dark (&:is(.dark *):not(.light *));
 
 @theme inline {
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
   --color-brand-muted: var(--brand-muted);
+  --color-brand-deep: var(--brand-deep);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans), system-ui, sans-serif;
@@ -30,6 +36,10 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-accent-wash: var(--accent-wash);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -51,120 +61,140 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-:root {
-  /* Dijla brand — Tigris teal */
-  --brand: oklch(0.55 0.096 195);
-  --brand-foreground: oklch(0.985 0 0);
-  --brand-muted: oklch(0.96 0.02 195);
+/* ---------------------------------------------------------------------------
+   Colour system (REDESIGN_V2_SPEC §1) — warm stone neutrals + a single deep
+   emerald accent. The whole brand changes by editing --brand. Values are the
+   spec's exact hex, mapped onto the shadcn semantic tokens so every component
+   keeps working. NOTE: shadcn's --accent is a subtle hover *surface*, not the
+   brand; the spec's "accent" emerald maps to --brand / --primary. Hex lives
+   only here in the token definitions — components never ship a literal colour.
 
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
+   :root and .light both carry the light palette so a subtree can be pinned
+   light with class="light" even inside a .dark ancestor (used by the staff
+   theme toggle). Light separates with shadow (--shadow-*); dark separates with
+   --border and sets shadow to none (§1.2 elevation rule).
+   --------------------------------------------------------------------------- */
+:root,
+.light {
+  /* Dijla brand — deep jewel emerald. Deepened from the spec's #0a8f64 to
+     emerald-700 so white button text and accent-coloured text both clear
+     4.5:1 on light (the spec's own DoD); #0a8f64 only reached ~4.1:1. */
+  --brand: #047857;
+  --brand-foreground: #ffffff;
+  --brand-muted: rgba(4, 120, 87, 0.12);
+  --brand-deep: #043d2c; /* darker stop for the customer header gradient (§4.1) */
+
+  --background: #fafaf9; /* stone-50 */
+  --foreground: #1c1917; /* stone-900 */
+  --card: #ffffff;
+  --card-foreground: #1c1917;
+  --popover: #ffffff;
+  --popover-foreground: #1c1917;
   --primary: var(--brand);
   --primary-foreground: var(--brand-foreground);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
+  --secondary: #f5f5f4; /* stone-100 */
+  --secondary-foreground: #1c1917;
+  --muted: #f5f5f4;
+  --muted-foreground: #6b645f; /* stone-500/600 — clears 4.5:1 on stone-50 & stone-100 */
+  --accent: #f5f5f4; /* hover surface, NOT the brand */
+  --accent-foreground: #1c1917;
+  --destructive: #b91c1c;
+  --success: #065f46;
+  --warning: #b45309;
+  --danger: #b91c1c;
+  --accent-wash: rgba(4, 120, 87, 0.12);
+  --border: #e7e5e4; /* stone-200 */
+  --input: #e7e5e4;
   --ring: var(--brand);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --chart-1: #047857; /* emerald */
+  --chart-2: #57534e; /* stone-600 */
+  --chart-3: #a8a29e; /* stone-400 */
+  --chart-4: #b45309; /* amber */
+  --chart-5: #1c1917; /* stone-900 */
   --radius: 0.75rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
+  --shadow-2xs: 0 1px 2px rgba(28, 25, 23, 0.05);
+  --shadow-xs: 0 1px 2px rgba(28, 25, 23, 0.05), 0 1px 10px rgba(28, 25, 23, 0.03);
+  --shadow-sm: 0 1px 2px rgba(28, 25, 23, 0.05), 0 1px 10px rgba(28, 25, 23, 0.03);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1c1917;
   --sidebar-primary: var(--brand);
   --sidebar-primary-foreground: var(--brand-foreground);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-accent: #f5f5f4;
+  --sidebar-accent-foreground: #1c1917;
+  --sidebar-border: #e7e5e4;
   --sidebar-ring: var(--brand);
 }
 
 .dark {
-  /* brand lifts in dark so it stays legible on near-black */
-  --brand: oklch(0.72 0.09 195);
-  --brand-foreground: oklch(0.16 0.02 195);
-  --brand-muted: oklch(0.28 0.03 195);
+  /* brand lifts in dark so it stays legible on near-black stone */
+  --brand: #14b885;
+  --brand-foreground: #04231a;
+  --brand-muted: rgba(20, 184, 133, 0.16);
+  --brand-deep: #0b3a2b; /* darker stop for the customer header gradient (§4.1) */
 
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
+  --background: #0c0a09; /* stone-950 */
+  --foreground: #fafaf9; /* stone-50 */
+  --card: #1c1917; /* stone-900 */
+  --card-foreground: #fafaf9;
+  --popover: #1c1917;
+  --popover-foreground: #fafaf9;
   --primary: var(--brand);
   --primary-foreground: var(--brand-foreground);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
+  --secondary: #292524; /* stone-800 */
+  --secondary-foreground: #fafaf9;
+  --muted: #292524;
+  --muted-foreground: #a8a29e; /* stone-400 — 6.5:1 on stone-950 */
+  --accent: #292524; /* hover surface, NOT the brand */
+  --accent-foreground: #fafaf9;
+  --destructive: #dc2626; /* functional red button; white text ≥ 4.5:1 */
+  --success: #6ee7b7;
+  --warning: #fbbf24;
+  --danger: #fca5a5;
+  --accent-wash: rgba(20, 184, 133, 0.16);
+  --border: #292524; /* stone-800 separates cards from stone-900 */
+  --input: #292524;
   --ring: var(--brand);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
+  --chart-1: #14b885; /* emerald */
+  --chart-2: #a8a29e; /* stone-400 */
+  --chart-3: #78716c; /* stone-500 */
+  --chart-4: #fbbf24; /* amber */
+  --chart-5: #fafaf9; /* stone-50 */
+  /* §1.2: shadows are invisible on dark — separate with borders instead. */
+  --shadow-2xs: none;
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --sidebar: #1c1917;
+  --sidebar-foreground: #fafaf9;
   --sidebar-primary: var(--brand);
   --sidebar-primary-foreground: var(--brand-foreground);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-accent: #292524;
+  --sidebar-accent-foreground: #fafaf9;
+  --sidebar-border: #292524;
   --sidebar-ring: var(--brand);
 }
 
-/* River-night dark, applied across the restaurant dashboard
-   (ORDERS_DASHBOARD_SPEC §1: dark reduces eye strain over long shifts). Reuses
-   the whole .dark token set for guaranteed contrast, then tints the surfaces
-   toward the Tigris deep-teal so the screen reads as "ليل النهر", not flat black.
-   The brand CTA is already teal in dark, which lands as the river-night accent. */
-.dark.dj-dashboard {
-  --background: oklch(0.18 0.03 214);
-  --card: oklch(0.23 0.028 214);
-  --popover: oklch(0.23 0.028 214);
-  --secondary: oklch(0.28 0.024 214);
-  --muted: oklch(0.28 0.024 214);
-  --accent: oklch(0.28 0.024 214);
-  --sidebar: oklch(0.21 0.03 214);
-  --sidebar-accent: oklch(0.28 0.024 214);
-}
-
-/* Paper is always light. A QR sheet or cash sheet prints from inside the
-   dashboard, so reset its tokens for print — dark ink on white, never white ink
-   on a dark card. The print outputs use only semantic tokens, so this is enough. */
+/* .dj-dashboard now only carries the print reset — the stone .dark above is the
+   designed dashboard dark (the old teal "river-night" tint is retired per
+   MASTER_INDEX §3). Paper is always light: a QR or cash sheet prints from inside
+   the dashboard, so reset its tokens to dark-ink-on-white regardless of theme.
+   Bound to .dj-dashboard (not .dark.dj-dashboard) so it also resets a
+   light-toggled dashboard. Print outputs use only semantic tokens. */
 @media print {
-  .dark.dj-dashboard {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.45 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --border: oklch(0.85 0 0);
-    --input: oklch(0.85 0 0);
+  .dj-dashboard {
+    --background: #ffffff;
+    --foreground: #1c1917;
+    --card: #ffffff;
+    --card-foreground: #1c1917;
+    --popover: #ffffff;
+    --popover-foreground: #1c1917;
+    --secondary: #f5f5f4;
+    --secondary-foreground: #1c1917;
+    --muted: #f5f5f4;
+    --muted-foreground: #57534e;
+    --accent: #f5f5f4;
+    --accent-foreground: #1c1917;
+    --border: #d6d3d1;
+    --input: #d6d3d1;
   }
 }
 
@@ -181,26 +211,28 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Auth surfaces — "ليل النهر" / river-night glassmorphism (AUTH_UI_SPEC §1).
+   Auth surfaces — dark stone-to-emerald gradient with a single glass layer.
+   Re-toned to the REDESIGN_V2_SPEC §1 palette (the old teal river-night is
+   retired); the glass structure itself is unchanged.
 
    Everything is scoped under .dj-auth so the deep gradient and glass never
-   bleed into the dashboard, which keeps its light shadcn theme untouched. The
-   light border — not the blur — is what reads as glass, so it is never dropped.
+   bleed into the other surfaces. The light border — not the blur — is what
+   reads as glass, so it is never dropped.
    --------------------------------------------------------------------------- */
 .dj-auth {
-  --dj-cta: #2ed3b7;
-  --dj-cta-fg: #03282b;
-  --dj-fg: #f1f8f8;
-  --dj-muted: rgba(241, 248, 248, 0.6);
-  --dj-placeholder: rgba(241, 248, 248, 0.42);
-  --dj-glass: rgba(255, 255, 255, 0.09);
-  --dj-line: rgba(255, 255, 255, 0.18);
-  --dj-success: #9fe1cb;
-  --dj-warning: #fac775;
-  --dj-danger: #f09595;
+  --dj-cta: #14b885;
+  --dj-cta-fg: #04231a;
+  --dj-fg: #fafaf9;
+  --dj-muted: rgba(250, 250, 249, 0.62);
+  --dj-placeholder: rgba(250, 250, 249, 0.44);
+  --dj-glass: rgba(255, 255, 255, 0.07);
+  --dj-line: rgba(255, 255, 255, 0.16);
+  --dj-success: #6ee7b7;
+  --dj-warning: #fbbf24;
+  --dj-danger: #fca5a5;
 
   color: var(--dj-fg);
-  background: linear-gradient(165deg, #062b33 0%, #0b4a54 55%, #0e6b70 100%);
+  background: linear-gradient(165deg, #0c0a09 0%, #10241c 55%, #04231a 100%);
   background-attachment: fixed;
 }
 

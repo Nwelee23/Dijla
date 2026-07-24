@@ -428,7 +428,10 @@ export function SignupWizard() {
                 disabled={isPending}
               >
                 {areaOptions(t).map((option) => (
-                  <option key={option.key} value={option.key} style={{ color: "#06333a" }}>
+                  // The native dropdown popup is drawn by the OS on its own
+                  // light background, not on the dark glass, so the option text
+                  // is pinned dark rather than inheriting --dj-fg (near-white).
+                  <option key={option.key} value={option.key} style={{ color: "#1c1917" }}>
                     {option.label}
                   </option>
                 ))}

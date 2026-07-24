@@ -8,6 +8,8 @@
  * and narrowed, and anything malformed is dropped rather than rendered.
  */
 
+import { sanitizeTags, type MenuTag } from "@/lib/menu-tags";
+
 export type MenuOption = {
   id: string;
   name: string;
@@ -23,13 +25,27 @@ export type MenuOptionGroup = {
   options: MenuOption[];
 };
 
+/** Menu content languages (REDESIGN_V2_SPEC §10). Arabic is the base + fallback. */
+export type ContentLang = "ar" | "en" | "fa";
+
 export type MenuItem = {
   id: string;
   name: string;
   description: string | null;
+  /** English (name_secondary/description_secondary) and Persian translations. */
+  nameEn: string | null;
+  descriptionEn: string | null;
+  nameFa: string | null;
+  descriptionFa: string | null;
   price: number;
   imageUrl: string | null;
   optionGroups: MenuOptionGroup[];
+  /** Owner-set labels, validated against the known set (REDESIGN_V2_SPEC §5). */
+  tags: MenuTag[];
+  /** Owner's prep estimate in minutes, or null. */
+  prepMinutes: number | null;
+  /** false = sold out: shown dimmed and unaddable (§6), never hidden. */
+  isAvailable: boolean;
 };
 
 export type MenuCategory = {
@@ -127,13 +143,26 @@ function parseItem(value: unknown): MenuItem | null {
         .filter((g): g is MenuOptionGroup => g !== null)
     : [];
 
+  const tags = Array.isArray(value.tags)
+    ? sanitizeTags(value.tags.filter((tag): tag is string => typeof tag === "string"))
+    : [];
+
   return {
     id,
     name,
     price,
     description: asString(value.description),
+    nameEn: asString(value.name_secondary),
+    descriptionEn: asString(value.description_secondary),
+    nameFa: asString(value.name_fa),
+    descriptionFa: asString(value.description_fa),
     imageUrl: asString(value.image_url),
     optionGroups,
+    tags,
+    prepMinutes: asNumber(value.prep_minutes),
+    // Absent (older payload) reads as available — a missing flag must never make
+    // a sellable dish look sold out.
+    isAvailable: value.is_available !== false,
   };
 }
 
@@ -208,6 +237,26 @@ export function parseRestaurantMenu(payload: unknown): RestaurantMenu | null {
   if (!restaurant) return null;
 
   return { restaurant, categories: parseCategories(payload.categories) };
+}
+
+/**
+ * The item's name in the chosen content language, falling back to Arabic when a
+ * translation is missing (§10 — never show an empty name).
+ */
+export function pickName(item: MenuItem, lang: ContentLang): string {
+  if (lang === "en") return item.nameEn ?? item.name;
+  if (lang === "fa") return item.nameFa ?? item.name;
+  return item.name;
+}
+
+/** The item's description in the chosen content language, Arabic as fallback. */
+export function pickDescription(
+  item: MenuItem,
+  lang: ContentLang
+): string | null {
+  if (lang === "en") return item.descriptionEn ?? item.description;
+  if (lang === "fa") return item.descriptionFa ?? item.description;
+  return item.description;
 }
 
 /** Returns null for anything that isn't a complete, usable dine-in menu. */

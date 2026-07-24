@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { normalizeIraqiPhone } from "@/lib/auth/phone";
+import { isMenuLayout } from "@/lib/menu-layout";
 import { getRestaurant } from "@/lib/restaurant";
 import { getSubscription } from "@/lib/subscription";
 import { slugify } from "@/lib/slug";
@@ -201,6 +202,32 @@ export async function setTemporarilyClosed(closed: boolean): Promise<ActionResul
   if (error) return { ok: false, error: error.message };
 
   // The customer menu reads open-state on the public routes.
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+/**
+ * How the customer menu renders (REDESIGN_V2_SPEC §8): a real column on
+ * restaurants, not the settings jsonb. Revalidate the whole app so the public
+ * routes pick up the new layout.
+ */
+export async function setMenuLayout(layout: string): Promise<ActionResult> {
+  const t = await getT();
+  if (!isMenuLayout(layout)) {
+    return { ok: false, error: t.onboarding.restaurantNotFound };
+  }
+
+  const restaurant = await getRestaurant();
+  if (!restaurant) return { ok: false, error: t.onboarding.restaurantNotFound };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("restaurants")
+    .update({ menu_layout: layout })
+    .eq("id", restaurant.id);
+
+  if (error) return { ok: false, error: error.message };
+
   revalidatePath("/", "layout");
   return { ok: true };
 }

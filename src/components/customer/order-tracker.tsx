@@ -139,8 +139,15 @@ export function OrderTracker({
       )}
 
       {status === "out_for_delivery" && (
-        <p className="text-center font-medium text-violet-700 dark:text-violet-400">
-          {t.track.outForDeliveryBody}
+        <p
+          className={cn(
+            "text-center font-medium",
+            live?.arrived
+              ? "text-brand font-bold"
+              : "text-violet-700 dark:text-violet-400"
+          )}
+        >
+          {live?.arrived ? t.track.driverArrived : t.track.outForDeliveryBody}
         </p>
       )}
 
